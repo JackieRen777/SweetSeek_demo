@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweetSeek - AI-Powered Sweetness Knowledge Platform</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1>SweetSeek</h1>
+                <p class="tagline"></p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link active">Home</a></li>
+                <li><a href="/search.html" class="nav-link">Literature Search</a></li>
+                <li><a href="/management.html" class="nav-link">Literature Management</a></li>
+                <li><a href="/about.html" class="nav-link">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Left: Chat Area -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>Professional Q&A</h2>
+                <button id="newChatBtn" class="btn-secondary">
+                    <span>New Chat</span>
+                </button>
+            </div>
+            
+            <div id="chatMessages" class="chat-messages">
+                <div class="welcome-message">
+                    <div class="welcome-icon"></div>
+                    <h3>Welcome to SweetSeek!</h3>
+                    <p>Ask me anything about sweetness-related topics:</p>
+                    <ul class="example-questions">
+                        <li>What are the main types of natural sweeteners?</li>
+                        <li>How do sweet taste receptors work?</li>
+                        <li>What are the health impacts of artificial sweeteners?</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <textarea 
+                    id="questionInput" 
+                    placeholder="Input your question here ..." 
+                    rows="3"
+                ></textarea>
+                <button id="sendBtn" class="btn-primary">
+                    <span>Send</span>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M2 10l16-8-8 16-2-8-6-0z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: References Panel -->
+        <div class="references-container">
+            <div class="references-header">
+                <h3>References</h3>
+                <div id="refCount" class="ref-count">0 references</div>
+            </div>
+            <div id="referencesList" class="references-list">
+                <div class="no-references">
+                    <p>References will be here when you ask a question</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <!-- 三个蓝色圆点流动式跳动动画 -->
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+        <p>Processing your question...</p>
+    </div>
+
+    <script src="/static/main.js"></script>
+</body>
+</html>

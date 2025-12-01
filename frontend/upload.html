@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload - SweetSeek</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1>SweetSeek</h1>
+                <p class="tagline"></p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/search.html" class="nav-link">Literature Search</a></li>
+                <li><a href="/management.html" class="nav-link">Literature Management</a></li>
+                <li><a href="/about.html" class="nav-link">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-container">
+        <div class="page-header">
+            <h1>Upload Literature</h1>
+            <p>Upload research papers to the knowledge base</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="management-card">
+            <h2>Upload New Document</h2>
+            <div class="upload-form">
+                <div class="form-group">
+                    <label for="categorySelect">Document Type:</label>
+                    <select id="categorySelect" class="form-input">
+                        <option value="papers">Research Papers</option>
+                        <option value="datasets">Datasets</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fileInput">Select Files:</label>
+                    <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt,.md,.csv,.json" class="form-input">
+                    <small>Supported formats: PDF, Word, TXT, MD, CSV, JSON</small>
+                </div>
+                
+                <button id="uploadBtn" class="btn-primary">
+                    <span>📤 Upload Files</span>
+                </button>
+            </div>
+            
+            <div id="uploadProgress" class="upload-progress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p class="progress-text">Uploading...</p>
+            </div>
+        </div>
+
+        <!-- Documents List -->
+        <div class="management-card">
+            <div class="card-header">
+                <h2>Uploaded Documents</h2>
+                <button id="refreshBtn" class="btn-secondary">
+                    <span>🔄 Refresh</span>
+                </button>
+            </div>
+            
+            <div class="documents-tabs">
+                <button class="tab-btn active" data-category="papers">📄 Research Papers</button>
+                <button class="tab-btn" data-category="datasets">📊 Datasets</button>
+            </div>
+            
+            <div id="documentsContainer" class="documents-list">
+                <div class="loading-state">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+        <p>Processing...</p>
+    </div>
+
+    <script src="/static/upload.js"></script>
+</body>
+</html>

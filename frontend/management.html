@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literature Management - SweetSeek</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1>SweetSeek</h1>
+                <p class="tagline"></p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/search.html" class="nav-link">Literature Search</a></li>
+                <li><a href="/management.html" class="nav-link active">Literature Management</a></li>
+                <li><a href="/about.html" class="nav-link">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-container">
+        <div class="page-header">
+            <h1>Literature Management</h1>
+            <p>Upload and manage research papers in the knowledge base</p>
+        </div>
+
+        <!-- Admin Login -->
+        <div id="loginSection" class="login-section">
+            <div class="login-card">
+                <h2>Admin Login</h2>
+                <p></p>
+                <div class="login-form">
+                    <input 
+                        type="password" 
+                        id="adminPassword" 
+                        placeholder="Admin password"
+                        class="form-input"
+                    >
+                    <button id="loginBtn" class="btn-primary">Login</button>
+                </div>
+                <div id="loginError" class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Management Section (Hidden until logged in) -->
+        <div id="managementSection" style="display: none;">
+            <!-- Upload Section -->
+            <div class="management-card">
+                <h2>Upload New Paper</h2>
+                <form id="uploadForm" class="upload-form">
+                    <div class="form-group">
+                        <label for="pdfFile">PDF File *</label>
+                        <input 
+                            type="file" 
+                            id="pdfFile" 
+                            accept=".pdf" 
+                            required
+                            class="form-input"
+                        >
+                        <small>Max file size: 10MB</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paperTitle">Paper Title *</label>
+                        <input 
+                            type="text" 
+                            id="paperTitle" 
+                            placeholder="Enter paper title"
+                            required
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paperAuthors">Authors *</label>
+                        <input 
+                            type="text" 
+                            id="paperAuthors" 
+                            placeholder="e.g., Smith J, Johnson A, Williams B"
+                            required
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="paperYear">Year</label>
+                            <input 
+                                type="text" 
+                                id="paperYear" 
+                                placeholder="e.g., 2024"
+                                class="form-input"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paperJournal">Journal</label>
+                            <input 
+                                type="text" 
+                                id="paperJournal" 
+                                placeholder="e.g., Nature, Science"
+                                class="form-input"
+                            >
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <span>Upload & Process</span>
+                    </button>
+                </form>
+                <div id="uploadStatus" class="status-message" style="display: none;"></div>
+            </div>
+
+            <!-- Documents List -->
+            <div class="management-card">
+                <div class="card-header">
+                    <h2>Current Documents</h2>
+                    <button id="refreshBtn" class="btn-secondary">
+                        <span>Refresh</span>
+                    </button>
+                </div>
+                
+                <div id="documentsList" class="documents-list">
+                    <div class="loading-state">Loading documents...</div>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <div class="logout-section">
+                <button id="logoutBtn" class="btn-secondary">
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <!-- 三个蓝色圆点流动式跳动动画 -->
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+        <p id="loadingText">Processing...</p>
+    </div>
+
+    <script src="/static/management.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - SweetSeek</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1>SweetSeek</h1>
+                <p class="tagline"></p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/search.html" class="nav-link">Literature Search</a></li>
+                <li><a href="/management.html" class="nav-link">Literature Management</a></li>
+                <li><a href="/about.html" class="nav-link active">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-container">
+        <div class="about-content">
+            <div class="about-header">
+                <div class="about-icon"></div>
+                <h1>About SweetSeek</h1>
+                <p class="subtitle"></p>
+            </div>
+
+            <section class="about-section">
+                <h2>How It Works</h2>
+                <div class="workflow">
+                    <div class="workflow-step">
+                        <div class="step-number">1</div>
+                        <h3>Document Processing</h3>
+                        <p></p>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">2</div>
+                        <h3>Vectorization</h3>
+                        <p></p>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">3</div>
+                        <h3>Retrieval</h3>
+                        <p></p>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">4</div>
+                        <h3>Generation</h3>
+                        <p></p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Load statistics
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('docCount').textContent = data.total_documents;
+                document.getElementById('chunkCount').textContent = data.total_chunks;
+                document.getElementById('convCount').textContent = data.total_conversations;
+            })
+            .catch(error => {
+                console.error('Error loading stats:', error);
+                document.getElementById('docCount').textContent = 'N/A';
+                document.getElementById('chunkCount').textContent = 'N/A';
+                document.getElementById('convCount').textContent = 'N/A';
+            });
+        
+        // Navigation event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const href = link.getAttribute('href');
+                    window.location.href = href;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

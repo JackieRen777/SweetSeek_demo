@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literature Search - SweetSeek</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1>SweetSeek</h1>
+                <p class="tagline"></p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/search.html" class="nav-link active">Literature Search</a></li>
+                <li><a href="/management.html" class="nav-link">Literature Management</a></li>
+                <li><a href="/about.html" class="nav-link">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-container">
+        <div class="page-header">
+            <h1>Literature Search</h1>
+            <p>Search through our knowledge base of sweetness-related research papers</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-section">
+            <div class="search-bar">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder=""
+                    class="search-input"
+                >
+                <button id="searchBtn" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8 14A6 6 0 108 2a6 6 0 000 12zm0 2a8 8 0 110-16 8 8 0 010 16zm7-2l5 5-2 2-5-5 2-2z"/>
+                    </svg>
+                    <span>Search</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results-section">
+            <div id="resultsHeader" class="results-header" style="display: none;">
+                <h3>Search Results</h3>
+                <div id="resultCount" class="result-count"></div>
+            </div>
+            
+            <div id="searchResults" class="search-results">
+                <div class="empty-state">
+                    <div class="empty-icon"></div>
+                    <h3>Start Searching</h3>
+                    <p>Enter keywords above to search for relevant literature</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <!-- 三个蓝色圆点流动式跳动动画 -->
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+        <p>Searching literature...</p>
+    </div>
+
+    <script src="/static/search.js"></script>
+</body>
+</html>
