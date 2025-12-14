@@ -9,6 +9,12 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.openai_like import OpenAILike
 from dotenv import load_dotenv
 
+# 使用国内镜像加速HuggingFace模型下载
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+# 设置离线模式，使用本地已下载的模型
+os.environ['TRANSFORMERS_OFFLINE'] = '1'
+os.environ['HF_HUB_OFFLINE'] = '1'
+
 load_dotenv()
 
 class PersistentRAGSystem:
@@ -34,9 +40,11 @@ class PersistentRAGSystem:
             max_tokens=2000
         )
         
+        # 使用本地模型路径
+        local_model_path = "./models/models--BAAI--bge-small-zh-v1.5/snapshots/7999e1d3359715c523056ef9478215996d62a620"
         Settings.embed_model = HuggingFaceEmbedding(
-            model_name="BAAI/bge-small-zh-v1.5",
-            cache_folder="./models"
+            model_name=local_model_path,
+            trust_remote_code=True
         )
     
     def load_or_create_index(self):

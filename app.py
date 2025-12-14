@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-食品AI科研问答系统 - Flask后端
-适配前端HTML界面
+SweetSeek - Flask Backend
+AI-powered research Q&A system
 """
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
@@ -331,7 +331,7 @@ def serve_static(filename):
     return send_from_directory('static', filename)
 
 if __name__ == '__main__':
-    print("食品AI科研问答系统启动中...")
+    print("SweetSeek 启动中...")
     print("=" * 50)
     
     # 自动初始化系统
