@@ -96,8 +96,8 @@ async function handleSendQuestion() {
     // Add user message
     addMessage('user', question);
     
-    // Show loading
-    showLoading('Processing your question...');
+    // Show typing indicator
+    showTypingIndicator();
     
     try {
         const response = await fetch('/api/ask', {
@@ -110,6 +110,9 @@ async function handleSendQuestion() {
         
         const data = await response.json();
         
+        // Hide typing indicator
+        hideTypingIndicator();
+        
         if (data.success) {
             // Add assistant message
             addMessage('assistant', data.answer);
@@ -121,9 +124,8 @@ async function handleSendQuestion() {
         }
     } catch (error) {
         console.error('Query error:', error);
+        hideTypingIndicator();
         addMessage('assistant', 'Sorry, an error occurred. Please try again.');
-    } finally {
-        hideLoading();
     }
 }
 
@@ -193,11 +195,12 @@ function handleNewChat() {
         <div class="welcome-message">
             <div class="welcome-icon"></div>
             <h3>Welcome to SweetSeek!</h3>
-            <p>Ask me anything about sweetness-related topics:</p>
+            <p>Ask me anything about food science and nutrition:</p>
             <ul class="example-questions">
                 <li>What are the main types of natural sweeteners?</li>
                 <li>How do sweet taste receptors work?</li>
                 <li>What are the health impacts of artificial sweeteners?</li>
+                <li>Compare the nutritional profiles of different sugars</li>
             </ul>
         </div>
     `;
@@ -216,18 +219,53 @@ function handleNewChat() {
     setupEventListeners();
 }
 
-// Show loading overlay
+// Show typing indicator
+function showTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'typing-indicator';
+    typingDiv.id = 'typingIndicator';
+    
+    const typingDots = document.createElement('div');
+    typingDots.className = 'typing-dots';
+    typingDots.innerHTML = `
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+    `;
+    
+    typingDiv.appendChild(typingDots);
+    chatMessages.appendChild(typingDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Hide typing indicator
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+// Show loading overlay (for system initialization)
 function showLoading(message = 'Processing...') {
     const overlay = document.getElementById('loadingOverlay');
-    const text = overlay.querySelector('p');
-    if (text) {
-        text.textContent = message;
+    if (overlay) {
+        const text = overlay.querySelector('p');
+        if (text) {
+            text.textContent = message;
+        }
+        overlay.style.display = 'flex';
     }
-    overlay.style.display = 'flex';
 }
 
 // Hide loading overlay
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    overlay.style.display = 'none';
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
 }

@@ -93,7 +93,7 @@ function showError(message) {
     const searchResults = document.getElementById('searchResults');
     searchResults.innerHTML = `
         <div class="empty-state">
-            <div class="empty-icon">❌</div>
+            <div class="empty-icon"></div>
             <h3>Error</h3>
             <p>${message}</p>
         </div>

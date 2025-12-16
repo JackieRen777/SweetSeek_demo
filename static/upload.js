@@ -25,9 +25,9 @@ function setupEventListeners() {
         fileInput.addEventListener('change', (e) => {
             const files = e.target.files;
             if (files.length > 0) {
-                uploadBtn.innerHTML = `<span>📤 Upload ${files.length} file${files.length > 1 ? 's' : ''}</span>`;
+                uploadBtn.innerHTML = `<span>Upload ${files.length} file${files.length > 1 ? 's' : ''}</span>`;
             } else {
-                uploadBtn.innerHTML = '<span>📤 Upload Files</span>';
+                uploadBtn.innerHTML = '<span>Upload Files</span>';
             }
         });
     }
@@ -68,16 +68,16 @@ async function handleUpload() {
         const data = await response.json();
         
         if (data.success) {
-            alert(`✅ ${data.message}`);
+            alert(`${data.message}`);
             fileInput.value = '';
-            document.getElementById('uploadBtn').innerHTML = '<span>📤 Upload Files</span>';
+            document.getElementById('uploadBtn').innerHTML = '<span>Upload Files</span>';
             loadDocuments();
         } else {
-            alert(`❌ Upload failed: ${data.error}`);
+            alert(`Upload failed: ${data.error}`);
         }
     } catch (error) {
         console.error('Upload error:', error);
-        alert(`❌ Upload error: ${error.message}`);
+        alert(`Upload error: ${error.message}`);
     } finally {
         showProgress(false);
         hideLoading();
@@ -110,7 +110,7 @@ function displayDocuments(documents) {
     if (categoryDocs.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <div class="empty-icon">📁</div>
+                <div class="empty-icon"></div>
                 <h3>No ${currentCategory === 'papers' ? 'Papers' : 'Datasets'}</h3>
                 <p>Upload files using the form above</p>
             </div>
@@ -121,12 +121,12 @@ function displayDocuments(documents) {
     container.innerHTML = categoryDocs.map(doc => `
         <div class="document-item animate-slide-in">
             <div class="doc-info">
-                <h4>📄 ${doc.filename}</h4>
+                <h4>${doc.filename}</h4>
                 <p>Size: ${formatFileSize(doc.size)} | Modified: ${formatDate(doc.modified)}</p>
             </div>
             <div class="doc-actions">
                 <button class="btn-danger" onclick="deleteDocument('${doc.filename}')">
-                    🗑️ Delete
+                    Delete
                 </button>
             </div>
         </div>
@@ -161,14 +161,14 @@ async function deleteDocument(filename) {
         const data = await response.json();
         
         if (data.success) {
-            alert('✅ Deleted successfully');
+            alert('Deleted successfully');
             loadDocuments();
         } else {
-            alert(`❌ Delete failed: ${data.error}`);
+            alert(`Delete failed: ${data.error}`);
         }
     } catch (error) {
         console.error('Delete error:', error);
-        alert(`❌ Delete error: ${error.message}`);
+        alert(`Delete error: ${error.message}`);
     } finally {
         hideLoading();
     }
