@@ -210,15 +210,44 @@ def api_ask():
         retriever = rag_system.index.as_retriever(similarity_top_k=3)
         nodes = retriever.retrieve(question)
         
-        # 提取参考文档
+        # 提取参考文档（增强版，包含元数据）
         references = []
         context_texts = []
-        for node in nodes:
-            references.append({
-                'filename': node.metadata.get('file_name', '未知文档'),
-                'score': float(node.score) if hasattr(node, 'score') else 0.0,
-                'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
-            })
+        for idx, node in enumerate(nodes, 1):
+            file_path = node.metadata.get('file_path', '')
+            filename = node.metadata.get('file_name', '未知文档')
+            
+            # 获取元数据
+            metadata = rag_system.metadata_storage.get_metadata(file_path) if file_path else None
+            
+            if metadata:
+                # 有元数据的情况（PDF文件）
+                references.append({
+                    'ref_id': f'ref_{idx}',
+                    'journal': metadata.get('journal', 'Unknown Journal'),
+                    'year': metadata.get('year', 'N/A'),
+                    'title': metadata.get('title', 'Unknown Title'),
+                    'authors': metadata.get('authors', []),
+                    'doi': metadata.get('doi', 'Not Available'),
+                    'filename': filename,
+                    'score': float(node.score) if hasattr(node, 'score') else 0.0,
+                    'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
+                })
+            else:
+                # 没有元数据的情况（如datasets文件）
+                is_dataset = 'datasets' in file_path.lower() or 'dataset' in filename.lower()
+                references.append({
+                    'ref_id': f'ref_{idx}',
+                    'journal': '营养数据集' if is_dataset else 'Unknown',
+                    'year': 'N/A',
+                    'title': filename,
+                    'authors': [],
+                    'doi': 'Not Available',
+                    'filename': filename,
+                    'score': float(node.score) if hasattr(node, 'score') else 0.0,
+                    'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
+                })
+            
             context_texts.append(node.text)
         
         # 构建提示词
@@ -232,19 +261,37 @@ def api_ask():
 
 请用中文回答："""
         
-        # 调用DeepSeek API
+        # 调用DeepSeek API（带重试机制）
         import persistent_storage
+        answer = None
+        max_retries = 3
+        retry_delay = 2
+        
         if hasattr(persistent_storage, 'deepseek_client'):
-            response = persistent_storage.deepseek_client.chat.completions.create(
-                model=persistent_storage.deepseek_model,
-                messages=[
-                    {"role": "system", "content": "你是一个专业的食品研究助手，擅长分析和解答食品科学相关问题。"},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=2000
-            )
-            answer = response.choices[0].message.content
+            for attempt in range(max_retries):
+                try:
+                    response = persistent_storage.deepseek_client.chat.completions.create(
+                        model=persistent_storage.deepseek_model,
+                        messages=[
+                            {"role": "system", "content": "你是一个专业的食品研究助手，擅长分析和解答食品科学相关问题。"},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.7,
+                        max_tokens=2000
+                    )
+                    answer = response.choices[0].message.content
+                    break  # 成功则退出重试循环
+                except Exception as api_error:
+                    error_str = str(api_error)
+                    if '503' in error_str or 'service_unavailable' in error_str.lower():
+                        if attempt < max_retries - 1:
+                            print(f"[警告] DeepSeek API繁忙，{retry_delay}秒后重试... (尝试 {attempt + 1}/{max_retries})")
+                            time.sleep(retry_delay)
+                            retry_delay *= 2  # 指数退避
+                        else:
+                            answer = f"抱歉，DeepSeek服务当前繁忙，请稍后再试。\n\n基于检索到的文档，我可以提供以下参考信息：\n\n{context[:500]}..."
+                    else:
+                        raise  # 其他错误直接抛出
         else:
             answer = "DeepSeek API 未配置，无法生成回答。"
         

@@ -144,6 +144,7 @@ body {
 .chat-header h2 {
     color: var(--primary-color);
     font-size: 1.5rem;
+    font-weight: 600;
 }
 
 .chat-messages {
@@ -273,7 +274,7 @@ body {
 
 /* 按钮 */
 .btn-primary, .btn-secondary {
-    padding: 0.75rem 2rem;
+    padding: 0.5rem 1.5rem;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
@@ -319,6 +320,7 @@ body {
 
 .references-header {
     padding: 1.5rem 2rem;
+    background: var(--white);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
@@ -327,20 +329,24 @@ body {
 
 .references-header h3 {
     color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
 .ref-count {
-    background: var(--gray-light);
+    background: var(--gray-100);
     padding: 0.25rem 0.75rem;
     border-radius: 12px;
     font-size: 0.9rem;
-    color: var(--gray-medium);
+    color: var(--text-secondary);
 }
 
 .references-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: visible;
     padding: 1.5rem;
+    background: var(--white);
 }
 
 .no-references {
@@ -367,6 +373,90 @@ body {
     font-size: 0.9rem;
     color: var(--text-color);
     line-height: 1.5;
+}
+
+/* 简洁的参考文献显示 */
+.reference-item-compact {
+    position: relative;
+    margin-bottom: 1rem;
+    overflow: visible;
+}
+
+.ref-identifier {
+    display: block;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--white);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.ref-identifier:hover {
+    background: #f0f9ff;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+/* Tooltip样式 */
+.ref-tooltip {
+    position: fixed;
+    background: #E0F2FE;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-lg);
+    z-index: 10000;
+    min-width: 400px;
+    max-width: 500px;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: auto;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.tooltip-content h4 {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+    font-weight: 600;
+}
+
+.tooltip-content p {
+    color: var(--text-color);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.tooltip-content p:last-child {
+    margin-bottom: 0;
+}
+
+.tooltip-content strong {
+    color: var(--text-color);
+    font-weight: 700;
+    display: inline-block;
+    min-width: 70px;
+}
+
+.tooltip-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.2s;
+    word-break: break-all;
+}
+
+.tooltip-content a:hover {
+    text-decoration: underline;
+    color: var(--primary-hover);
 }
 
 /* 加载动画 - 正在输入效果 */

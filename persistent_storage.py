@@ -46,6 +46,12 @@ class PersistentRAGSystem:
         self.index: Optional[VectorStoreIndex] = None
         self.query_engine = None
         self.models_configured = False
+        
+        # 初始化元数据管理器
+        from metadata_storage import MetadataStorage
+        from pdf_metadata_extractor import PDFMetadataExtractor
+        self.metadata_storage = MetadataStorage()
+        self.metadata_extractor = PDFMetadataExtractor()
 
     def _configure_models(self) -> None:
         """延迟配置模型/嵌入；尽量保持轻量。
@@ -173,6 +179,23 @@ class PersistentRAGSystem:
             documents = reader.load_data()
 
             logging.info(f"读取到 {len(documents)} 个文档，开始构建向量索引...")
+            
+            # 提取PDF元数据
+            logging.info("开始提取PDF元数据...")
+            pdf_count = 0
+            for doc in documents:
+                file_path = doc.metadata.get('file_path', '')
+                if file_path.lower().endswith('.pdf'):
+                    try:
+                        # 检查是否已有元数据
+                        if not self.metadata_storage.has_metadata(file_path):
+                            metadata = self.metadata_extractor.extract_metadata(file_path)
+                            self.metadata_storage.save_metadata(file_path, metadata)
+                            pdf_count += 1
+                    except Exception as e:
+                        logging.error(f"提取元数据失败 {file_path}: {str(e)}")
+            
+            logging.info(f"成功提取 {pdf_count} 个PDF文件的元数据")
 
             # 构造嵌入实现：使用 HuggingFace 本地模型
             emb = None

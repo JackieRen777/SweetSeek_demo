@@ -180,12 +180,148 @@ function displayReferences(references) {
     refCount.textContent = `${references.length} reference${references.length > 1 ? 's' : ''}`;
     
     referencesList.innerHTML = references.map((ref, index) => `
-        <div class="reference-item">
-            <h4>${ref.filename || 'Unknown Document'}</h4>
-            <p>${ref.content || ref.text || 'No content available'}</p>
-            ${ref.score ? `<div class="result-score">Relevance: ${(ref.score * 100).toFixed(1)}%</div>` : ''}
+        <div class="reference-item-compact" data-ref-id="${ref.ref_id || `ref_${index + 1}`}">
+            <div class="ref-identifier" 
+                 onmouseenter="showRefTooltip(event, ${index})"
+                 onmouseleave="hideRefTooltip()"
+                 onclick="event.stopPropagation()">
+                ${ref.ref_id || `ref_${index + 1}`}: ${ref.journal || 'Unknown'} ${ref.year || 'N/A'}
+            </div>
         </div>
     `).join('');
+    
+    // 在body中添加tooltip（避免被容器裁剪）
+    references.forEach((ref, index) => {
+        const existingTooltip = document.getElementById(`tooltip-${index}`);
+        if (existingTooltip) {
+            existingTooltip.remove();
+        }
+        
+        const tooltip = document.createElement('div');
+        tooltip.className = 'ref-tooltip';
+        tooltip.id = `tooltip-${index}`;
+        tooltip.style.display = 'none';
+        tooltip.innerHTML = `
+            <div class="tooltip-content">
+                <h4>${ref.title || ref.filename || 'Unknown Title'}</h4>
+                <p><strong>Authors:</strong> ${formatAuthors(ref.authors || [])}</p>
+                <p><strong>Year:</strong> ${ref.year || 'N/A'}</p>
+                <p><strong>DOI:</strong> 
+                    ${ref.doi && ref.doi !== 'Not Available' 
+                        ? `<a href="https://doi.org/${ref.doi}" target="_blank" rel="noopener">${ref.doi}</a>`
+                        : 'Not Available'}
+                </p>
+            </div>
+        `;
+        document.body.appendChild(tooltip);
+    });
+}
+
+// Format authors list
+function formatAuthors(authors) {
+    if (!authors || authors.length === 0) return 'Unknown';
+    if (authors.length <= 3) return authors.join(', ');
+    return authors.slice(0, 3).join(', ') + ' et al.';
+}
+
+// 全局变量用于管理tooltip
+let currentTooltip = null;
+let tooltipTimeout = null;
+let isMouseOverTooltip = false;
+
+// Show reference tooltip
+function showRefTooltip(event, index) {
+    // 清除之前的隐藏定时器
+    if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+        tooltipTimeout = null;
+    }
+    
+    // 隐藏其他tooltip
+    document.querySelectorAll('.ref-tooltip').forEach(t => {
+        if (t.id !== `tooltip-${index}`) {
+            t.style.display = 'none';
+            t.style.opacity = '0';
+        }
+    });
+    
+    const tooltip = document.getElementById(`tooltip-${index}`);
+    if (tooltip) {
+        const target = event.currentTarget;
+        const rect = target.getBoundingClientRect();
+        
+        // 先显示tooltip以获取其高度
+        tooltip.style.display = 'block';
+        tooltip.style.opacity = '0';
+        
+        // 等待一帧以确保tooltip已渲染
+        requestAnimationFrame(() => {
+            const tooltipHeight = tooltip.offsetHeight;
+            const tooltipWidth = tooltip.offsetWidth;
+            
+            // 计算tooltip位置（在引用标识符上方）
+            let left = rect.left;
+            let top = rect.top - tooltipHeight - 10;
+            
+            // 确保tooltip不会超出屏幕左侧
+            if (left < 10) {
+                left = 10;
+            }
+            
+            // 确保tooltip不会超出屏幕右侧
+            if (left + tooltipWidth > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipWidth - 10;
+            }
+            
+            // 如果上方空间不够，显示在下方
+            if (top < 10) {
+                top = rect.bottom + 10;
+            }
+            
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            
+            // 淡入显示
+            setTimeout(() => {
+                tooltip.style.opacity = '1';
+            }, 10);
+        });
+        
+        currentTooltip = tooltip;
+        
+        // 添加tooltip的鼠标事件监听
+        tooltip.onmouseenter = () => {
+            isMouseOverTooltip = true;
+            if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = null;
+            }
+        };
+        
+        tooltip.onmouseleave = () => {
+            isMouseOverTooltip = false;
+            hideRefTooltip();
+        };
+    }
+}
+
+// Hide reference tooltip
+function hideRefTooltip() {
+    // 延迟隐藏，给用户时间阅读或移动到tooltip上
+    tooltipTimeout = setTimeout(() => {
+        // 如果鼠标在tooltip上，不隐藏
+        if (isMouseOverTooltip) {
+            return;
+        }
+        
+        document.querySelectorAll('.ref-tooltip').forEach(tooltip => {
+            tooltip.style.opacity = '0';
+            setTimeout(() => {
+                tooltip.style.display = 'none';
+            }, 200);
+        });
+        currentTooltip = null;
+    }, 125); // 125ms延迟
 }
 
 // Handle new chat
