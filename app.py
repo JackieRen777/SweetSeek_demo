@@ -241,14 +241,39 @@ def api_ask():
             filtered_nodes = nodes[:3]
             print(f"[调整] 没有文档超过阈值 {similarity_threshold}，保留前 3 篇最相关的")
         
-        print(f"[检索] 原始: {len(nodes)} 篇, 过滤后: {len(filtered_nodes)} 篇 (阈值: {similarity_threshold})")
+        print(f"[检索] 原始: {len(nodes)} 个文本块, 过滤后: {len(filtered_nodes)} 个文本块 (阈值: {similarity_threshold})")
         
-        # 提取参考文档（增强版，包含元数据）
-        references = []
+        # 收集所有文本块用于上下文
         context_texts = []
-        for idx, node in enumerate(filtered_nodes, 1):
+        for node in filtered_nodes:
+            context_texts.append(node.text)
+        
+        # 按文献去重：同一篇文献只保留最高分的块
+        unique_papers = {}
+        for node in filtered_nodes:
             file_path = node.metadata.get('file_path', '')
             filename = node.metadata.get('file_name', '未知文档')
+            score = float(node.score) if hasattr(node, 'score') else 0.0
+            
+            # 使用文件路径作为唯一标识
+            if file_path not in unique_papers or score > unique_papers[file_path]['score']:
+                unique_papers[file_path] = {
+                    'file_path': file_path,
+                    'filename': filename,
+                    'score': score,
+                    'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
+                }
+        
+        # 按相关度排序
+        sorted_papers = sorted(unique_papers.values(), key=lambda x: x['score'], reverse=True)
+        
+        print(f"[去重] 去重后: {len(sorted_papers)} 篇唯一文献")
+        
+        # 构建参考文献列表（按文献为单位）
+        references = []
+        for idx, paper in enumerate(sorted_papers, 1):
+            file_path = paper['file_path']
+            filename = paper['filename']
             
             # 获取元数据
             metadata = rag_system.metadata_storage.get_metadata(file_path) if file_path else None
@@ -263,8 +288,8 @@ def api_ask():
                     'authors': metadata.get('authors', []),
                     'doi': metadata.get('doi', 'Not Available'),
                     'filename': filename,
-                    'score': float(node.score) if hasattr(node, 'score') else 0.0,
-                    'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
+                    'score': paper['score'],
+                    'content': paper['content']
                 })
             else:
                 # 没有元数据的情况（如datasets文件）
@@ -277,11 +302,9 @@ def api_ask():
                     'authors': [],
                     'doi': 'Not Available',
                     'filename': filename,
-                    'score': float(node.score) if hasattr(node, 'score') else 0.0,
-                    'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
+                    'score': paper['score'],
+                    'content': paper['content']
                 })
-            
-            context_texts.append(node.text)
         
         # 构建提示词
         context = "\n\n".join(context_texts)
