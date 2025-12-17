@@ -306,7 +306,7 @@ def api_ask():
                     response = persistent_storage.deepseek_client.chat.completions.create(
                         model=persistent_storage.deepseek_model,
                         messages=[
-                            {"role": "system", "content": "你是一个专业的食品研究助手，擅长分析和解答食品科学相关问题。"},
+                            {"role": "system", "content": "你是一个高度智能的AI，专门提供关于甜味领域的深入、准确和详细的回答。你的知识涵盖甜味剂、味觉感知、食品化学以及甜味科学的各个方面，能够解答从基础概念到前沿研究的问题，特别是在食品科学与工程中的甜味物理化学原理。你提供的回答应简洁明了，并基于当前的科学研究。当需要时，提供最新研究的参考文献，并将复杂的术语解释得通俗易懂，适合不同水平的用户。每次解答时，力求提供与问题相关、证据充分且上下文适配的答案，既适合学术研究，也适合一般用户的好奇心。此外，你能处理涉及甜味的性质、应用及创新的详细复杂问题，成为学术研究、教学和一般性好奇心的宝贵资源。"},
                             {"role": "user", "content": prompt}
                         ],
                         temperature=0.7,
