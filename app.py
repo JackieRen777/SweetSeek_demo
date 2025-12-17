@@ -98,12 +98,13 @@ def reload_documents():
 
 @app.route('/api/upload', methods=['POST'])
 def upload_documents():
-    """上传文档API"""
+    """上传文档API - 使用增量索引"""
     if 'files' not in request.files:
         return jsonify({'success': False, 'error': '没有文件'}), 400
     
     files = request.files.getlist('files')
     category = request.form.get('category', 'papers')
+    use_incremental = request.form.get('incremental', 'true').lower() == 'true'
     
     if not files or all(f.filename == '' for f in files):
         return jsonify({'success': False, 'error': '没有选择文件'}), 400
@@ -116,16 +117,29 @@ def upload_documents():
     
     if success_count > 0:
         try:
-            reload_documents()
+            if use_incremental and success_count <= 20:
+                # 使用增量索引（快速）
+                print(f"[增量索引] 处理 {success_count} 个新文件...")
+                from incremental_indexer import IncrementalIndexer
+                indexer = IncrementalIndexer()
+                indexer.add_new_documents()
+                print("[增量索引] 完成")
+            else:
+                # 全量重建（文件太多时）
+                print(f"[全量重建] 处理 {success_count} 个文件...")
+                reload_documents()
+                print("[全量重建] 完成")
+            
             return jsonify({
                 'success': True,
                 'message': f'成功上传 {success_count} 个文件',
+                'method': 'incremental' if use_incremental and success_count <= 20 else 'full_rebuild',
                 'results': results
             })
         except Exception as e:
             return jsonify({
                 'success': False,
-                'error': f'文件上传成功但索引重建失败: {str(e)}'
+                'error': f'文件上传成功但索引更新失败: {str(e)}'
             }), 500
     else:
         return jsonify({

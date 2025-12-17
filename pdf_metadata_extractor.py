@@ -32,6 +32,9 @@ class PDFMetadataExtractor:
         'cell': 'Cell',
         'plos': 'PLOS ONE',
         'bmc': 'BMC',
+        'diabetes care': 'Diabetes Care',
+        'molecules': 'Molecules',
+        'nihms': 'NIH Manuscript',
     }
     
     # DOI正则表达式
@@ -95,9 +98,12 @@ class PDFMetadataExtractor:
             pdf_info = reader.metadata
             
             if pdf_info:
-                # 提取标题
+                # 提取标题（但要验证是否是有效标题）
                 if pdf_info.title:
-                    metadata['title'] = pdf_info.title.strip()
+                    title = pdf_info.title.strip()
+                    # 如果标题看起来像文件名（包含.pdf或太短），忽略它
+                    if '.pdf' not in title.lower() and len(title) > 15:
+                        metadata['title'] = title
                 
                 # 提取作者
                 if pdf_info.author:
@@ -154,13 +160,30 @@ class PDFMetadataExtractor:
             # 提取标题（通常在第一页前几行，字体较大）
             lines = text.split('\n')
             title_candidates = []
-            for i, line in enumerate(lines[:10]):  # 只看前10行
+            for i, line in enumerate(lines[:15]):  # 看前15行
                 line = line.strip()
-                if len(line) > 20 and len(line) < 200:  # 标题长度合理
-                    title_candidates.append(line)
+                # 跳过太短或太长的行
+                if len(line) < 20 or len(line) > 300:
+                    continue
+                # 跳过包含特定关键词的行（可能是作者、日期等）
+                skip_keywords = ['doi:', 'http', 'www', '©', 'copyright', 'published', 'received']
+                if any(kw in line.lower() for kw in skip_keywords):
+                    continue
+                title_candidates.append(line)
             
+            # 合并多行标题
             if title_candidates:
-                metadata['title'] = title_candidates[0]
+                # 如果第一行和第二行看起来是连续的，合并它们
+                if len(title_candidates) >= 2:
+                    first_line = title_candidates[0]
+                    second_line = title_candidates[1]
+                    # 如果第一行不以句号结尾，且第二行首字母大写，可能是多行标题
+                    if not first_line.endswith('.') and second_line[0].isupper():
+                        metadata['title'] = f"{first_line} {second_line}"
+                    else:
+                        metadata['title'] = first_line
+                else:
+                    metadata['title'] = title_candidates[0]
             
             # 尝试提取期刊名
             journal = self._extract_journal_from_text(text)

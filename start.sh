@@ -35,6 +35,32 @@ if [ ! -f ".venv/installed" ]; then
     touch .venv/installed
 fi
 
+# Ask if user wants to enable file monitoring
+echo ""
+read -p "启用文件监控（自动处理新文献）? (y/n) " -n 1 -r
+echo ""
+
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "🔍 启动文件监控系统..."
+    python auto_update_system.py &
+    WATCHER_PID=$!
+    echo "✅ 文件监控已启动 (PID: $WATCHER_PID)"
+    echo "   现在可以直接拖文件到 food_research_data/papers/ 目录"
+    echo ""
+    
+    # Cleanup function
+    cleanup() {
+        echo ""
+        echo "🛑 停止文件监控..."
+        kill $WATCHER_PID 2>/dev/null
+        echo "👋 再见！"
+        exit 0
+    }
+    
+    # Register cleanup on exit
+    trap cleanup SIGINT SIGTERM
+fi
+
 # Start the application
 echo ""
 echo "================================"
@@ -42,3 +68,8 @@ echo "🚀 Starting SweetSeek..."
 echo "================================"
 echo ""
 python app.py
+
+# Cleanup on exit (if watcher was started)
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    kill $WATCHER_PID 2>/dev/null
+fi
