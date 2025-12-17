@@ -161,12 +161,12 @@ function displayDocuments(documents) {
     documentsList.innerHTML = allDocs.map(doc => `
         <div class="document-item">
             <div class="doc-info">
-                <h4>📄 ${doc.filename}</h4>
+                <h4>${doc.filename}</h4>
                 <p>Size: ${formatFileSize(doc.size)} | Modified: ${formatDate(doc.modified)}</p>
             </div>
             <div class="doc-actions">
                 <button class="btn-danger" onclick="deleteDocument('${doc.filename}', 'papers')">
-                    🗑️ Delete
+                    Delete
                 </button>
             </div>
         </div>

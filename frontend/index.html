@@ -12,7 +12,7 @@
         <div class="nav-container">
             <div class="nav-logo">
                 <h1>SweetSeek</h1>
-                <p class="tagline"></p>
+                <p class="tagline">Designed by FCN Lab</p>
             </div>
             <ul class="nav-menu">
                 <li><a href="/" class="nav-link active">Home</a></li>
@@ -38,11 +38,12 @@
                 <div class="welcome-message">
                     <div class="welcome-icon"></div>
                     <h3>Welcome to SweetSeek!</h3>
-                    <p>Ask me anything about sweetness-related topics:</p>
+                    <p>Ask me anything about food science and nutrition:</p>
                     <ul class="example-questions">
                         <li>What are the main types of natural sweeteners?</li>
                         <li>How do sweet taste receptors work?</li>
                         <li>What are the health impacts of artificial sweeteners?</li>
+                        <li>Compare the nutritional profiles of different sugars</li>
                     </ul>
                 </div>
             </div>
@@ -76,15 +77,10 @@
         </div>
     </div>
 
-    <!-- Loading Overlay -->
+    <!-- Loading Overlay (仅用于系统初始化) -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <!-- 三个蓝色圆点流动式跳动动画 -->
-        <div class="loading-dots">
-            <div class="loading-dot"></div>
-            <div class="loading-dot"></div>
-            <div class="loading-dot"></div>
-        </div>
-        <p>Processing your question...</p>
+        <div class="loading-spinner"></div>
+        <p>Initializing system...</p>
     </div>
 
     <script src="/static/main.js"></script>

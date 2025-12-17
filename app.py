@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-食品AI科研问答系统 - Flask后端
-适配前端HTML界面
+SweetSeek - Flask Backend
+AI-powered research Q&A system
 """
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
@@ -12,6 +12,10 @@ import time
 from datetime import datetime
 from upload_handler import uploader
 from persistent_storage import rag_system
+
+# NOTE: 文件中的函数多数通过 Flask 的 @app.route 装饰器在运行时被调用。
+# 静态分析工具（如 vulture）会将这些运行时注册的路由误判为未使用，
+# 所以请在复核 vulture 输出时忽略此文件中的路由标记。
 
 # 加载环境变量
 load_dotenv()
@@ -200,29 +204,104 @@ def api_ask():
         }), 400
     
     try:
-        # 获取查询引擎
-        query_engine = rag_system.get_query_engine()
-        
-        # 查询RAG系统
         start_time = time.time()
-        response = query_engine.query(question)
-        end_time = time.time()
         
-        # 提取参考文档
+        # 使用索引检索相关文档
+        retriever = rag_system.index.as_retriever(similarity_top_k=3)
+        nodes = retriever.retrieve(question)
+        
+        # 提取参考文档（增强版，包含元数据）
         references = []
-        if hasattr(response, 'source_nodes') and response.source_nodes:
-            for node in response.source_nodes:
+        context_texts = []
+        for idx, node in enumerate(nodes, 1):
+            file_path = node.metadata.get('file_path', '')
+            filename = node.metadata.get('file_name', '未知文档')
+            
+            # 获取元数据
+            metadata = rag_system.metadata_storage.get_metadata(file_path) if file_path else None
+            
+            if metadata:
+                # 有元数据的情况（PDF文件）
                 references.append({
-                    'filename': node.metadata.get('file_name', '未知文档'),
+                    'ref_id': f'ref_{idx}',
+                    'journal': metadata.get('journal', 'Unknown Journal'),
+                    'year': metadata.get('year', 'N/A'),
+                    'title': metadata.get('title', 'Unknown Title'),
+                    'authors': metadata.get('authors', []),
+                    'doi': metadata.get('doi', 'Not Available'),
+                    'filename': filename,
                     'score': float(node.score) if hasattr(node, 'score') else 0.0,
                     'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
                 })
+            else:
+                # 没有元数据的情况（如datasets文件）
+                is_dataset = 'datasets' in file_path.lower() or 'dataset' in filename.lower()
+                references.append({
+                    'ref_id': f'ref_{idx}',
+                    'journal': '营养数据集' if is_dataset else 'Unknown',
+                    'year': 'N/A',
+                    'title': filename,
+                    'authors': [],
+                    'doi': 'Not Available',
+                    'filename': filename,
+                    'score': float(node.score) if hasattr(node, 'score') else 0.0,
+                    'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
+                })
+            
+            context_texts.append(node.text)
+        
+        # 构建提示词
+        context = "\n\n".join(context_texts)
+        prompt = f"""基于以下参考文档回答问题。如果文档中没有相关信息，请说明无法从提供的文档中找到答案。
+
+参考文档：
+{context}
+
+问题：{question}
+
+请用中文回答："""
+        
+        # 调用DeepSeek API（带重试机制）
+        import persistent_storage
+        answer = None
+        max_retries = 3
+        retry_delay = 2
+        
+        if hasattr(persistent_storage, 'deepseek_client'):
+            for attempt in range(max_retries):
+                try:
+                    response = persistent_storage.deepseek_client.chat.completions.create(
+                        model=persistent_storage.deepseek_model,
+                        messages=[
+                            {"role": "system", "content": "你是一个专业的食品研究助手，擅长分析和解答食品科学相关问题。"},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.7,
+                        max_tokens=2000
+                    )
+                    answer = response.choices[0].message.content
+                    break  # 成功则退出重试循环
+                except Exception as api_error:
+                    error_str = str(api_error)
+                    if '503' in error_str or 'service_unavailable' in error_str.lower():
+                        if attempt < max_retries - 1:
+                            print(f"[警告] DeepSeek API繁忙，{retry_delay}秒后重试... (尝试 {attempt + 1}/{max_retries})")
+                            time.sleep(retry_delay)
+                            retry_delay *= 2  # 指数退避
+                        else:
+                            answer = f"抱歉，DeepSeek服务当前繁忙，请稍后再试。\n\n基于检索到的文档，我可以提供以下参考信息：\n\n{context[:500]}..."
+                    else:
+                        raise  # 其他错误直接抛出
+        else:
+            answer = "DeepSeek API 未配置，无法生成回答。"
+        
+        end_time = time.time()
         
         # 保存对话
         conversation = {
             'id': len(conversations) + 1,
             'question': question,
-            'answer': str(response),
+            'answer': answer,
             'references': references,
             'timestamp': datetime.now().isoformat(),
             'response_time': round(end_time - start_time, 2)
@@ -231,12 +310,14 @@ def api_ask():
         
         return jsonify({
             'success': True,
-            'answer': str(response),
+            'answer': answer,
             'references': references,
             'response_time': conversation['response_time']
         })
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': f'查询失败: {str(e)}'
@@ -331,7 +412,7 @@ def serve_static(filename):
     return send_from_directory('static', filename)
 
 if __name__ == '__main__':
-    print("食品AI科研问答系统启动中...")
+    print("SweetSeek 启动中...")
     print("=" * 50)
     
     # 自动初始化系统

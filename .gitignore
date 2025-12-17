@@ -94,3 +94,6 @@ Desktop.ini
 *.zip
 *.tar.gz
 *.rar
+
+# 代码分析报告（可选）
+vulture_report.md
