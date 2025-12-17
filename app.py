@@ -199,7 +199,23 @@ def api_init():
 
 @app.route('/api/ask', methods=['POST'])
 def api_ask():
-    """处理问答请求"""
+    """
+    处理问答请求
+    
+    重要概念区分：
+    - Chunk（文本块）：一篇文献被分割成的小段文本，用于向量检索
+    - Paper（文献）：完整的学术论文，一篇文献包含多个chunks
+    
+    处理流程：
+    1. 检索相关的文本块（chunks）
+    2. 过滤低相关度的文本块
+    3. 使用所有文本块生成回答
+    4. 按文献去重，返回唯一的文献引用（papers）
+    
+    返回结果：
+    - answer: 基于所有相关文本块生成的回答
+    - references: 去重后的文献列表（按文献为单位，不是文本块）
+    """
     global system_ready, conversations
     
     if not system_ready:
@@ -225,89 +241,122 @@ def api_ask():
     try:
         start_time = time.time()
         
-        # 检索文档
+        # ============================================================
+        # 第一步：检索文本块（chunks）
+        # 注意：这里返回的是文本块，不是完整文献
+        # 一篇文献可能被分成多个块
+        # ============================================================
         retriever = rag_system.index.as_retriever(similarity_top_k=max_results)
-        nodes = retriever.retrieve(question)
+        retrieved_chunks = retriever.retrieve(question)  # 明确命名：chunks
         
-        # 根据相关度阈值过滤文档（不限制数量）
-        filtered_nodes = []
-        for node in nodes:
-            score = float(node.score) if hasattr(node, 'score') else 0.0
-            if score >= similarity_threshold:
-                filtered_nodes.append(node)
+        print(f"[检索] 检索到 {len(retrieved_chunks)} 个文本块（chunks）")
         
-        # 如果没有文档超过阈值，至少保留最相关的3篇
-        if len(filtered_nodes) == 0 and len(nodes) > 0:
-            filtered_nodes = nodes[:3]
-            print(f"[调整] 没有文档超过阈值 {similarity_threshold}，保留前 3 篇最相关的")
+        # ============================================================
+        # 第二步：根据相关度阈值过滤文本块
+        # ============================================================
+        filtered_chunks = []  # 明确命名：chunks
+        for chunk in retrieved_chunks:
+            chunk_score = float(chunk.score) if hasattr(chunk, 'score') else 0.0
+            if chunk_score >= similarity_threshold:
+                filtered_chunks.append(chunk)
         
-        print(f"[检索] 原始: {len(nodes)} 个文本块, 过滤后: {len(filtered_nodes)} 个文本块 (阈值: {similarity_threshold})")
+        # 如果没有文本块超过阈值，至少保留最相关的3个块
+        if len(filtered_chunks) == 0 and len(retrieved_chunks) > 0:
+            filtered_chunks = retrieved_chunks[:3]
+            print(f"[调整] 没有文本块超过阈值 {similarity_threshold}，保留前 3 个最相关的块")
         
-        # 收集所有文本块用于上下文
-        context_texts = []
-        for node in filtered_nodes:
-            context_texts.append(node.text)
+        print(f"[过滤] 过滤后保留 {len(filtered_chunks)} 个文本块（阈值: {similarity_threshold}）")
         
-        # 按文献去重：同一篇文献只保留最高分的块
-        unique_papers = {}
-        for node in filtered_nodes:
-            file_path = node.metadata.get('file_path', '')
-            filename = node.metadata.get('file_name', '未知文档')
-            score = float(node.score) if hasattr(node, 'score') else 0.0
+        # ============================================================
+        # 第三步：收集所有文本块的内容用于生成回答
+        # 注意：这里使用所有相关的文本块，不去重
+        # ============================================================
+        context_chunks = []  # 明确命名：chunks
+        for chunk in filtered_chunks:
+            context_chunks.append(chunk.text)
+        
+        print(f"[上下文] 使用 {len(context_chunks)} 个文本块生成回答")
+        
+        # ============================================================
+        # 第四步：按文献去重（重要！）
+        # 目的：将多个文本块合并为唯一的文献引用
+        # 策略：同一篇文献只保留相关度最高的块的分数
+        # ============================================================
+        unique_papers_dict = {}  # 明确命名：papers（文献）
+        
+        for chunk in filtered_chunks:
+            # 提取文献标识信息
+            paper_file_path = chunk.metadata.get('file_path', '')
+            paper_filename = chunk.metadata.get('file_name', '未知文档')
+            chunk_score = float(chunk.score) if hasattr(chunk, 'score') else 0.0
             
-            # 使用文件路径作为唯一标识
-            if file_path not in unique_papers or score > unique_papers[file_path]['score']:
-                unique_papers[file_path] = {
-                    'file_path': file_path,
-                    'filename': filename,
-                    'score': score,
-                    'content': node.text[:200] + '...' if len(node.text) > 200 else node.text
+            # 使用文件路径作为文献的唯一标识
+            # 如果该文献已存在，只在新块分数更高时更新
+            if paper_file_path not in unique_papers_dict or chunk_score > unique_papers_dict[paper_file_path]['max_score']:
+                unique_papers_dict[paper_file_path] = {
+                    'file_path': paper_file_path,
+                    'filename': paper_filename,
+                    'max_score': chunk_score,  # 该文献的最高相关度
+                    'sample_content': chunk.text[:200] + '...' if len(chunk.text) > 200 else chunk.text
                 }
         
-        # 按相关度排序
-        sorted_papers = sorted(unique_papers.values(), key=lambda x: x['score'], reverse=True)
+        # 按相关度排序文献
+        unique_papers_list = sorted(
+            unique_papers_dict.values(), 
+            key=lambda paper: paper['max_score'], 
+            reverse=True
+        )
         
-        print(f"[去重] 去重后: {len(sorted_papers)} 篇唯一文献")
+        print(f"[去重] {len(filtered_chunks)} 个文本块 → {len(unique_papers_list)} 篇唯一文献")
         
-        # 构建参考文献列表（按文献为单位）
-        references = []
-        for idx, paper in enumerate(sorted_papers, 1):
-            file_path = paper['file_path']
-            filename = paper['filename']
+        # ============================================================
+        # 第五步：构建参考文献列表（按文献为单位）
+        # 注意：这里返回的是文献（papers），不是文本块（chunks）
+        # ============================================================
+        references = []  # 明确：这是文献列表
+        
+        for paper_index, paper_info in enumerate(unique_papers_list, 1):
+            paper_file_path = paper_info['file_path']
+            paper_filename = paper_info['filename']
+            paper_max_score = paper_info['max_score']
+            paper_sample_content = paper_info['sample_content']
             
-            # 获取元数据
-            metadata = rag_system.metadata_storage.get_metadata(file_path) if file_path else None
+            # 获取文献的元数据（期刊、年份、标题等）
+            paper_metadata = rag_system.metadata_storage.get_metadata(paper_file_path) if paper_file_path else None
             
-            if metadata:
-                # 有元数据的情况（PDF文件）
+            if paper_metadata:
+                # 有元数据的情况（PDF文献）
                 references.append({
-                    'ref_id': f'ref_{idx}',
-                    'journal': metadata.get('journal', 'Unknown Journal'),
-                    'year': metadata.get('year', 'N/A'),
-                    'title': metadata.get('title', 'Unknown Title'),
-                    'authors': metadata.get('authors', []),
-                    'doi': metadata.get('doi', 'Not Available'),
-                    'filename': filename,
-                    'score': paper['score'],
-                    'content': paper['content']
+                    'ref_id': f'ref_{paper_index}',
+                    'journal': paper_metadata.get('journal', 'Unknown Journal'),
+                    'year': paper_metadata.get('year', 'N/A'),
+                    'title': paper_metadata.get('title', 'Unknown Title'),
+                    'authors': paper_metadata.get('authors', []),
+                    'doi': paper_metadata.get('doi', 'Not Available'),
+                    'filename': paper_filename,
+                    'score': paper_max_score,  # 该文献的最高相关度
+                    'content': paper_sample_content
                 })
             else:
                 # 没有元数据的情况（如datasets文件）
-                is_dataset = 'datasets' in file_path.lower() or 'dataset' in filename.lower()
+                is_dataset = 'datasets' in paper_file_path.lower() or 'dataset' in paper_filename.lower()
                 references.append({
-                    'ref_id': f'ref_{idx}',
+                    'ref_id': f'ref_{paper_index}',
                     'journal': '营养数据集' if is_dataset else 'Unknown',
                     'year': 'N/A',
-                    'title': filename,
+                    'title': paper_filename,
                     'authors': [],
                     'doi': 'Not Available',
-                    'filename': filename,
-                    'score': paper['score'],
-                    'content': paper['content']
+                    'filename': paper_filename,
+                    'score': paper_max_score,
+                    'content': paper_sample_content
                 })
         
-        # 构建提示词
-        context = "\n\n".join(context_texts)
+        # ============================================================
+        # 第六步：构建提示词（使用所有文本块的内容）
+        # 注意：这里使用的是chunks的内容，不是papers
+        # ============================================================
+        context = "\n\n".join(context_chunks)
         prompt = f"""基于以下参考文档回答问题。如果文档中没有相关信息，请说明无法从提供的文档中找到答案。
 
 参考文档：
