@@ -210,6 +210,14 @@ def api_ask():
     
     data = request.json
     question = data.get('question', '').strip()
+    # 相关度阈值：只保留相似度分数高于此值的文档
+    # 分数范围是0-1，基于实际测试：
+    # - 0.38: 较严格，高质量文献
+    # - 0.35: 平衡
+    # - 0.30: 较宽松
+    similarity_threshold = data.get('similarity_threshold', 0.38)
+    # 最大检索数量（防止返回过多文档）
+    max_results = data.get('max_results', 20)
     
     if not question:
         return jsonify({
@@ -220,14 +228,33 @@ def api_ask():
     try:
         start_time = time.time()
         
-        # 使用索引检索相关文档
-        retriever = rag_system.index.as_retriever(similarity_top_k=3)
+        # 先检索较多文档，然后根据相关度过滤
+        retriever = rag_system.index.as_retriever(similarity_top_k=max_results)
         nodes = retriever.retrieve(question)
+        
+        # 根据相关度阈值过滤文档
+        filtered_nodes = []
+        for node in nodes:
+            score = float(node.score) if hasattr(node, 'score') else 0.0
+            if score >= similarity_threshold:
+                filtered_nodes.append(node)
+        
+        # 智能调整：如果文档太少，降低阈值；如果太多，提高阈值
+        if len(filtered_nodes) < 3 and len(nodes) > 0:
+            # 文档太少，降低阈值或保留top 3-5
+            filtered_nodes = nodes[:min(5, len(nodes))]
+            print(f"[调整] 文档数不足，保留前 {len(filtered_nodes)} 篇最相关的")
+        elif len(filtered_nodes) > 10:
+            # 文档太多，只保留前10篇
+            filtered_nodes = filtered_nodes[:10]
+            print(f"[调整] 文档数过多，限制为前 10 篇")
+        
+        print(f"[检索] 原始: {len(nodes)} 篇, 过滤后: {len(filtered_nodes)} 篇 (阈值: {similarity_threshold})")
         
         # 提取参考文档（增强版，包含元数据）
         references = []
         context_texts = []
-        for idx, node in enumerate(nodes, 1):
+        for idx, node in enumerate(filtered_nodes, 1):
             file_path = node.metadata.get('file_path', '')
             filename = node.metadata.get('file_name', '未知文档')
             
