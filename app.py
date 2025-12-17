@@ -12,6 +12,8 @@ import time
 from datetime import datetime
 from upload_handler import uploader
 from persistent_storage import rag_system
+from query_expander import SweetnessQueryExpander
+from evidence_ranker import EvidenceRanker
 
 # NOTE: 文件中的函数多数通过 Flask 的 @app.route 装饰器在运行时被调用。
 # 静态分析工具（如 vulture）会将这些运行时注册的路由误判为未使用，
@@ -28,6 +30,10 @@ CORS(app)
 # 全局变量
 system_ready = False
 conversations = []
+
+# 初始化查询扩展器和证据分级器
+query_expander = SweetnessQueryExpander()
+evidence_ranker = EvidenceRanker()
 
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
@@ -242,12 +248,25 @@ def api_ask():
         start_time = time.time()
         
         # ============================================================
+        # 第零步：查询扩展（新增）
+        # 扩展同义词和相关术语，提高检索召回率
+        # ============================================================
+        query_expansion = query_expander.expand_query(question)
+        expanded_query = query_expansion['search_query'] if query_expansion['expanded_terms'] else question
+        
+        print(f"[查询扩展] 原始: {question}")
+        if query_expansion['matched_concepts']:
+            print(f"[查询扩展] 匹配概念: {query_expansion['matched_concepts']}")
+            print(f"[查询扩展] 扩展术语: {len(query_expansion['expanded_terms'])} 个")
+        
+        # ============================================================
         # 第一步：检索文本块（chunks）
         # 注意：这里返回的是文本块，不是完整文献
         # 一篇文献可能被分成多个块
         # ============================================================
         retriever = rag_system.index.as_retriever(similarity_top_k=max_results)
-        retrieved_chunks = retriever.retrieve(question)  # 明确命名：chunks
+        # 使用扩展后的查询进行检索
+        retrieved_chunks = retriever.retrieve(expanded_query)  # 明确命名：chunks
         
         print(f"[检索] 检索到 {len(retrieved_chunks)} 个文本块（chunks）")
         
@@ -313,7 +332,7 @@ def api_ask():
         # 第五步：构建参考文献列表（按文献为单位）
         # 注意：这里返回的是文献（papers），不是文本块（chunks）
         # ============================================================
-        references = []  # 明确：这是文献列表
+        references_raw = []  # 原始文献列表
         
         for paper_index, paper_info in enumerate(unique_papers_list, 1):
             paper_file_path = paper_info['file_path']
@@ -326,7 +345,7 @@ def api_ask():
             
             if paper_metadata:
                 # 有元数据的情况（PDF文献）
-                references.append({
+                references_raw.append({
                     'ref_id': f'ref_{paper_index}',
                     'journal': paper_metadata.get('journal', 'Unknown Journal'),
                     'year': paper_metadata.get('year', 'N/A'),
@@ -340,7 +359,7 @@ def api_ask():
             else:
                 # 没有元数据的情况（如datasets文件）
                 is_dataset = 'datasets' in paper_file_path.lower() or 'dataset' in paper_filename.lower()
-                references.append({
+                references_raw.append({
                     'ref_id': f'ref_{paper_index}',
                     'journal': '营养数据集' if is_dataset else 'Unknown',
                     'year': 'N/A',
@@ -351,6 +370,28 @@ def api_ask():
                     'score': paper_max_score,
                     'content': paper_sample_content
                 })
+        
+        # ============================================================
+        # 第五步半：证据分级（新增）
+        # 对文献进行质量评估和分级
+        # ============================================================
+        print(f"[证据分级] 对 {len(references_raw)} 篇文献进行分级...")
+        references_ranked = evidence_ranker.rank_papers(references_raw)
+        
+        # 重新排序：综合考虑相关度和证据质量
+        # 策略：相关度权重60%，证据质量权重40%
+        for ref in references_ranked:
+            ref['final_score'] = ref['score'] * 0.6 + (ref['total_score'] / 5.0) * 0.4
+        
+        references_ranked.sort(key=lambda x: x['final_score'], reverse=True)
+        
+        # 重新分配ref_id
+        references = []
+        for idx, ref in enumerate(references_ranked, 1):
+            ref['ref_id'] = f'ref_{idx}'
+            references.append(ref)
+        
+        print(f"[证据分级] 完成，最高质量: Level {references[0]['evidence_level']} ({references[0]['evidence_label']})")
         
         # ============================================================
         # 第六步：构建提示词（使用所有文本块的内容）
