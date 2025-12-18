@@ -101,3 +101,6 @@ vulture_report.md
 # 服务器日志
 server.log
 nohup.out
+
+# 自动启动日志
+autostart.log
