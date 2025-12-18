@@ -23,10 +23,13 @@
 
 ```bash
 # 安装开机自动启动
-./install_autostart.sh
+./autostart.sh install
+
+# 查看状态
+./autostart.sh status
 
 # 卸载开机自动启动
-./uninstall_autostart.sh
+./autostart.sh uninstall
 ```
 
 安装后，每次开机 SweetSeek 会自动在后台启动。
