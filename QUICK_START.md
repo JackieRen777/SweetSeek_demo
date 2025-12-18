@@ -5,11 +5,14 @@
 **每次使用前必须先启动服务器！**
 
 ```bash
-# 启动
-./start_server.sh
+# 后台启动（推荐，日常使用）
+./start.sh -d
 
-# 关闭
-./stop_server.sh
+# 前台启动（开发调试）
+./start.sh
+
+# 停止服务器
+./stop.sh
 ```
 
 访问：http://localhost:5001

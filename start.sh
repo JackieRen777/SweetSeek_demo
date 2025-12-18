@@ -1,75 +1,69 @@
 #!/bin/bash
-# SweetSeek Startup Script
+# SweetSeek 启动脚本
+# 用法：
+#   ./start.sh          # 前台运行（开发模式）
+#   ./start.sh -d       # 后台运行（日常使用）
 
-echo "================================"
-echo "   SweetSeek Starting..."
-echo "================================"
-echo ""
+# 切换到脚本所在目录
+cd "$(dirname "$0")" || exit 1
 
-# Check if .env exists
-if [ ! -f .env ]; then
-    echo "⚠️  Warning: .env file not found"
-    echo "   Please copy .env.example to .env and configure your API key"
-    echo ""
-    read -p "Continue anyway? (y/n) " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
+# 检查是否后台模式
+DAEMON_MODE=false
+if [[ "$1" == "-d" ]] || [[ "$1" == "--daemon" ]]; then
+    DAEMON_MODE=true
 fi
 
-# Check if virtual environment exists
+# 检查虚拟环境
 if [ ! -d ".venv" ]; then
-    echo "📦 Creating virtual environment..."
+    echo "📦 创建虚拟环境..."
     python3 -m venv .venv
 fi
 
-# Activate virtual environment
-echo "🔧 Activating virtual environment..."
+# 激活虚拟环境
 source .venv/bin/activate
 
-# Install dependencies if needed
+# 安装依赖（仅首次）
 if [ ! -f ".venv/installed" ]; then
-    echo "📥 Installing dependencies..."
-    pip install -r requirements.txt
+    echo "📥 安装依赖..."
+    pip install -r requirements.txt > /dev/null 2>&1
     touch .venv/installed
 fi
 
-# Ask if user wants to enable file monitoring
-echo ""
-read -p "启用文件监控（自动处理新文献）? (y/n) " -n 1 -r
-echo ""
-
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo "🔍 启动文件监控系统..."
-    python auto_update_system.py &
-    WATCHER_PID=$!
-    echo "✅ 文件监控已启动 (PID: $WATCHER_PID)"
-    echo "   现在可以直接拖文件到 food_research_data/papers/ 目录"
+# 后台模式
+if [ "$DAEMON_MODE" = true ]; then
+    # 检查是否已运行
+    if pgrep -f "python.*app.py" > /dev/null; then
+        echo "⚠️  服务器已在运行"
+        echo "   停止: ./stop.sh"
+        exit 1
+    fi
+    
+    # 后台启动
+    nohup python3 app.py > /dev/null 2>&1 &
+    
+    echo "⏳ 启动中..."
+    sleep 3
+    
+    if pgrep -f "python.*app.py" > /dev/null; then
+        echo "✅ SweetSeek 已启动（后台）"
+        echo "   访问: http://localhost:5001"
+        echo "   停止: ./stop.sh"
+        echo ""
+        echo "💡 提示: 首次启动需要加载模型，请等待30秒后访问"
+    else
+        echo "❌ 启动失败，请查看日志"
+        exit 1
+    fi
+else
+    # 前台模式
+    echo "================================"
+    echo "   SweetSeek 启动中..."
+    echo "================================"
+    echo ""
+    echo "访问: http://localhost:5001"
+    echo "停止: Ctrl+C"
     echo ""
     
-    # Cleanup function
-    cleanup() {
-        echo ""
-        echo "🛑 停止文件监控..."
-        kill $WATCHER_PID 2>/dev/null
-        echo "👋 再见！"
-        exit 0
-    }
-    
-    # Register cleanup on exit
-    trap cleanup SIGINT SIGTERM
-fi
-
-# Start the application
-echo ""
-echo "================================"
-echo "🚀 Starting SweetSeek..."
-echo "================================"
-echo ""
-python app.py
-
-# Cleanup on exit (if watcher was started)
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    kill $WATCHER_PID 2>/dev/null
+    # 前台运行
+    python3 app.py
 fi
