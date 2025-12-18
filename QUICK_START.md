@@ -8,13 +8,19 @@
 
 ```bash
 # 后台启动（推荐，日常使用）
-./start.sh -d
+./server.sh start
 
 # 前台启动（开发调试）
-./start.sh
+./server.sh dev
 
 # 停止服务器
-./stop.sh
+./server.sh stop
+
+# 重启服务器
+./server.sh restart
+
+# 查看状态
+./server.sh status
 ```
 
 ### 方式2：开机自动启动（可选）
