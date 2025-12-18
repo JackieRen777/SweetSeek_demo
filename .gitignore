@@ -97,3 +97,7 @@ Desktop.ini
 
 # 代码分析报告（可选）
 vulture_report.md
+
+# 服务器日志
+server.log
+nohup.out
