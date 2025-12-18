@@ -18,9 +18,12 @@ cat > "$PLIST_FILE" << EOF
     
     <key>ProgramArguments</key>
     <array>
-        <string>$PROJECT_DIR/start.sh</string>
-        <string>-d</string>
+        <string>$PROJECT_DIR/.venv/bin/python3</string>
+        <string>$PROJECT_DIR/app.py</string>
     </array>
+    
+    <key>WorkingDirectory</key>
+    <string>$PROJECT_DIR</string>
     
     <key>RunAtLoad</key>
     <true/>
