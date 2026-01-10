@@ -41,15 +41,15 @@ qdrant_db/
 *.index
 
 # 用户上传的文档（隐私保护）
-food_research_data/papers/*.pdf
-food_research_data/papers/*.doc
-food_research_data/papers/*.docx
-food_research_data/datasets/*.csv
-food_research_data/datasets/*.xlsx
+sweet_related_paper/papers/*.pdf
+sweet_related_paper/papers/*.doc
+sweet_related_paper/papers/*.docx
+sweet_related_paper/datasets/*.csv
+sweet_related_paper/datasets/*.xlsx
 
 # 但保留示例文件
-!food_research_data/papers/*.txt
-!food_research_data/datasets/*.txt
+!sweet_related_paper/papers/*.txt
+!sweet_related_paper/datasets/*.txt
 
 # 系统文件
 .DS_Store

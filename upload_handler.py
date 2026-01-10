@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 
 class DocumentUploader:
-    def __init__(self, upload_folder='food_research_data'):
+    def __init__(self, upload_folder='sweet_related_paper'):
         self.upload_folder = upload_folder
         self.allowed_extensions = {'txt', 'pdf', 'doc', 'docx', 'md', 'csv', 'json'}
         

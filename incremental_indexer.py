@@ -14,7 +14,7 @@ class IncrementalIndexer:
     """增量索引管理器"""
     
     def __init__(self, 
-                 data_dir: str = "./food_research_data",
+                 data_dir: str = "./sweet_related_paper",
                  tracking_file: str = "./storage/indexed_files.json"):
         self.data_dir = data_dir
         self.tracking_file = tracking_file

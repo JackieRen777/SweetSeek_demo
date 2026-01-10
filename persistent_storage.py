@@ -40,7 +40,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 class PersistentRAGSystem:
-    def __init__(self, data_dir: str = "./food_research_data", persist_dir: str = "./storage"):
+    def __init__(self, data_dir: str = "./sweet_related_paper", persist_dir: str = "./storage"):
         self.data_dir = data_dir
         self.persist_dir = persist_dir
         self.index: Optional[VectorStoreIndex] = None
@@ -216,14 +216,31 @@ class PersistentRAGSystem:
 
             # 构建索引
             try:
+                # 使用Token分割器避免递归问题（不使用句子分割）
+                from llama_index.core.node_parser import TokenTextSplitter
+                
+                # 创建基于Token的分割器（避免递归）
+                text_splitter = TokenTextSplitter(
+                    chunk_size=512,
+                    chunk_overlap=50,
+                    separator=" "  # 使用空格分割，避免复杂的句子解析
+                )
+                
                 if emb is not None:
-                    # 使用自定义嵌入模型
-                    self.index = VectorStoreIndex.from_documents(documents, embed_model=emb)
-                    logging.info("使用自定义嵌入模型构建索引")
+                    # 使用自定义嵌入模型和Token分割器
+                    self.index = VectorStoreIndex.from_documents(
+                        documents, 
+                        embed_model=emb,
+                        transformations=[text_splitter]
+                    )
+                    logging.info("使用自定义嵌入模型和Token分割器构建索引")
                 else:
                     # 使用默认配置（需要设置 OPENAI_API_KEY）
-                    self.index = VectorStoreIndex.from_documents(documents)
-                    logging.info("使用默认嵌入模型构建索引")
+                    self.index = VectorStoreIndex.from_documents(
+                        documents,
+                        transformations=[text_splitter]
+                    )
+                    logging.info("使用默认嵌入模型和Token分割器构建索引")
             except Exception as e:
                 logging.exception("索引构建失败：")
                 return False

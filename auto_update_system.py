@@ -86,7 +86,7 @@ class PaperWatcher(FileSystemEventHandler):
 class AutoUpdateSystem:
     """自动更新系统"""
     
-    def __init__(self, watch_dir: str = "./food_research_data"):
+    def __init__(self, watch_dir: str = "./sweet_related_paper"):
         self.watch_dir = watch_dir
         self.indexer = IncrementalIndexer()
         self.observer = None

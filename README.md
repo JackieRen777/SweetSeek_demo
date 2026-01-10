@@ -121,7 +121,7 @@ SweetSeek/
 │       └── management.js          # 管理功能
 │
 ├── 📚 数据目录
-│   ├── food_research_data/         # 文献存储
+│   ├── sweet_related_paper/        # 文献存储
 │   │   ├── papers/                # 论文目录
 │   │   └── datasets/              # 数据集目录
 │   │
@@ -148,8 +148,8 @@ SweetSeek/
 ### 方式2: 直接复制文件
 ```bash
 # 将文件放入对应目录
-cp your_paper.pdf food_research_data/papers/
-cp your_data.csv food_research_data/datasets/
+cp your_paper.pdf sweet_related_paper/papers/
+cp your_data.csv sweet_related_paper/datasets/
 
 # 重启系统（自动向量化）
 python app.py
@@ -279,7 +279,7 @@ os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 ### Q: 如何添加文献？
 **A:** 两种方式：
 1. 访问上传页面 http://localhost:5001/upload.html
-2. 直接将文件放入 `food_research_data/papers/` 目录
+2. 直接将文件放入 `sweet_related_paper/papers/` 目录
 
 ### Q: 索引需要重建吗？
 **A:** 不需要！索引会自动保存到 `storage/` 目录，重启后自动加载。只有上传新文档时才会重建。
