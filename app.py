@@ -10,7 +10,6 @@ import os
 from dotenv import load_dotenv
 import time
 from datetime import datetime
-from upload_handler import uploader
 from persistent_storage import rag_system
 from query_expander import SweetnessQueryExpander
 from evidence_ranker import EvidenceRanker
@@ -69,117 +68,18 @@ def search():
     """文献搜索页面"""
     return render_template('search.html')
 
-@app.route('/management.html')
-def management():
-    """文献管理页面"""
-    return render_template('management.html')
+
 
 @app.route('/about.html')
 def about():
     """关于页面"""
     return render_template('about.html')
 
-@app.route('/upload.html')
-def upload():
-    """文献上传页面"""
-    return render_template('upload.html')
+
 
 # API路由
-def reload_documents():
-    """重新加载文档并构建索引"""
-    global system_ready
-    
-    print("[系统] 重新构建索引...")
-    
-    # 重建索引（会删除旧索引并重新构建）
-    success = rag_system.rebuild_index()
-    
-    if success:
-        system_ready = True
-        stats = rag_system.get_stats()
-        print(f"[成功] 索引重建完成，文档数: {stats['total_documents']}")
-    else:
-        system_ready = False
-        print("[失败] 索引重建失败")
 
-@app.route('/api/upload', methods=['POST'])
-def upload_documents():
-    """上传文档API - 使用增量索引"""
-    if 'files' not in request.files:
-        return jsonify({'success': False, 'error': '没有文件'}), 400
-    
-    files = request.files.getlist('files')
-    category = request.form.get('category', 'papers')
-    use_incremental = request.form.get('incremental', 'true').lower() == 'true'
-    
-    if not files or all(f.filename == '' for f in files):
-        return jsonify({'success': False, 'error': '没有选择文件'}), 400
-    
-    # 上传文件
-    results = uploader.upload_multiple_files(files, category)
-    
-    # 检查是否有成功上传的文件
-    success_count = sum(1 for r in results if r['success'])
-    
-    if success_count > 0:
-        try:
-            if use_incremental and success_count <= 20:
-                # 使用增量索引（快速）
-                print(f"[增量索引] 处理 {success_count} 个新文件...")
-                from incremental_indexer import IncrementalIndexer
-                indexer = IncrementalIndexer()
-                indexer.add_new_documents()
-                print("[增量索引] 完成")
-            else:
-                # 全量重建（文件太多时）
-                print(f"[全量重建] 处理 {success_count} 个文件...")
-                reload_documents()
-                print("[全量重建] 完成")
-            
-            return jsonify({
-                'success': True,
-                'message': f'成功上传 {success_count} 个文件',
-                'method': 'incremental' if use_incremental and success_count <= 20 else 'full_rebuild',
-                'results': results
-            })
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'文件上传成功但索引更新失败: {str(e)}'
-            }), 500
-    else:
-        return jsonify({
-            'success': False,
-            'error': '所有文件上传失败',
-            'results': results
-        }), 400
 
-@app.route('/api/documents', methods=['GET'])
-def list_documents():
-    """获取文档列表"""
-    documents = uploader.list_documents()
-    return jsonify({
-        'success': True,
-        'documents': documents,
-        'total': sum(len(docs) for docs in documents.values())
-    })
-
-@app.route('/api/documents/<category>/<filename>', methods=['DELETE'])
-def delete_document(category, filename):
-    """删除文档"""
-    result = uploader.delete_document(filename, category)
-    
-    if result['success']:
-        try:
-            reload_documents()
-            return jsonify(result)
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'文件删除成功但索引重建失败: {str(e)}'
-            }), 500
-    else:
-        return jsonify(result), 400
 
 @app.route('/api/init', methods=['POST'])
 def api_init():
@@ -233,10 +133,10 @@ def api_ask():
     data = request.json
     question = data.get('question', '').strip()
     # 相关度阈值：只保留相似度分数高于此值的文档
-    # 分数范围是0-1，0.38表示高质量相关文献
-    similarity_threshold = data.get('similarity_threshold', 0.38)
-    # 最大检索数量（从所有文档中检索）
-    max_results = data.get('max_results', 50)
+    # 分数范围是0-1，0.45表示高质量相关文献（优化：从0.38提高到0.45）
+    similarity_threshold = data.get('similarity_threshold', 0.45)
+    # 最大检索数量（从所有文档中检索）（优化：从50减少到20）
+    max_results = data.get('max_results', 20)
     
     if not question:
         return jsonify({
@@ -289,12 +189,21 @@ def api_ask():
         # ============================================================
         # 第三步：收集所有文本块的内容用于生成回答
         # 注意：这里使用所有相关的文本块，不去重
+        # 优化：限制上下文总长度，避免过长的输入
         # ============================================================
         context_chunks = []  # 明确命名：chunks
-        for chunk in filtered_chunks:
-            context_chunks.append(chunk.text)
+        max_context_length = 8000  # 优化：限制上下文长度为8000字符
+        total_length = 0
         
-        print(f"[上下文] 使用 {len(context_chunks)} 个文本块生成回答")
+        for chunk in filtered_chunks:
+            chunk_text = chunk.text
+            if total_length + len(chunk_text) > max_context_length:
+                print(f"[优化] 达到上下文长度限制 {max_context_length} 字符，停止添加更多文本块")
+                break
+            context_chunks.append(chunk_text)
+            total_length += len(chunk_text)
+        
+        print(f"[上下文] 使用 {len(context_chunks)} 个文本块（共 {total_length} 字符）生成回答")
         
         # ============================================================
         # 第四步：按文献去重（重要！）
@@ -423,7 +332,7 @@ def api_ask():
                             {"role": "user", "content": prompt}
                         ],
                         temperature=0.7,
-                        max_tokens=2000
+                        max_tokens=1500  # 优化：从2000减少到1500
                     )
                     answer = response.choices[0].message.content
                     break  # 成功则退出重试循环
@@ -471,7 +380,7 @@ def api_ask():
 
 @app.route('/api/search', methods=['POST'])
 def api_search():
-    """文献搜索"""
+    """文献元数据搜索（支持中英文互查）"""
     global system_ready
     
     if not system_ready:
@@ -490,29 +399,73 @@ def api_search():
         }), 400
     
     try:
-        # 获取查询引擎
-        query_engine = rag_system.get_query_engine()
+        # 使用查询扩展器获取同义词和相关术语
+        query_expansion = query_expander.expand_query(query)
         
-        # 使用RAG引擎检索相关文档
-        response = query_engine.query(query)
+        # 构建搜索关键词列表（原始查询 + 扩展术语）
+        search_terms = [query.lower()]
+        if query_expansion['expanded_terms']:
+            search_terms.extend([term.lower() for term in query_expansion['expanded_terms']])
         
+        print(f"[搜索] 原始查询: {query}")
+        if query_expansion['matched_concepts']:
+            print(f"[搜索] 匹配概念: {query_expansion['matched_concepts']}")
+            print(f"[搜索] 扩展术语: {len(query_expansion['expanded_terms'])} 个")
+        
+        # 获取所有元数据
+        all_metadata = rag_system.metadata_storage.get_all_metadata()
+        
+        # 搜索匹配的文献
         results = []
-        if hasattr(response, 'source_nodes') and response.source_nodes:
-            for node in response.source_nodes:
+        seen_files = set()  # 避免重复
+        
+        for file_path, metadata in all_metadata.items():
+            if file_path in seen_files:
+                continue
+                
+            # 搜索字段：标题、作者、期刊、DOI、文件名
+            searchable_text = ' '.join([
+                metadata.get('title', ''),
+                metadata.get('journal', ''),
+                metadata.get('doi', ''),
+                metadata.get('filename', ''),
+                ' '.join(metadata.get('authors', []))
+            ]).lower()
+            
+            # 检查是否匹配任何搜索词
+            matched = False
+            for term in search_terms:
+                if term in searchable_text:
+                    matched = True
+                    break
+            
+            if matched:
+                seen_files.add(file_path)
                 results.append({
-                    'title': node.metadata.get('file_name', '未知文档'),
-                    'content': node.text[:300] + '...' if len(node.text) > 300 else node.text,
-                    'score': float(node.score) if hasattr(node, 'score') else 0.0,
-                    'metadata': node.metadata
+                    'title': metadata.get('title', 'Unknown Title'),
+                    'authors': metadata.get('authors', []),
+                    'journal': metadata.get('journal', 'Unknown Journal'),
+                    'year': metadata.get('year', 'N/A'),
+                    'doi': metadata.get('doi', 'Not Available'),
+                    'filename': metadata.get('filename', ''),
+                    'file_path': file_path
                 })
+        
+        # 按年份排序（新的在前）
+        results.sort(key=lambda x: x['year'], reverse=True)
+        
+        print(f"[搜索] 找到 {len(results)} 篇文献")
         
         return jsonify({
             'success': True,
             'results': results,
-            'count': len(results)
+            'count': len(results),
+            'expanded_terms': query_expansion['expanded_terms'][:5] if query_expansion['expanded_terms'] else []
         })
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': f'搜索失败: {str(e)}'

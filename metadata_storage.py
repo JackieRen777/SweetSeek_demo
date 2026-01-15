@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class MetadataStorage:
     """元数据存储管理器"""
     
-    def __init__(self, storage_path: str = "./storage/metadata.json"):
+    def __init__(self, storage_path: str = "./chroma_db/metadata.json"):
         """
         初始化存储管理器
         

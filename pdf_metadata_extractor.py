@@ -21,20 +21,58 @@ logger = logging.getLogger(__name__)
 class PDFMetadataExtractor:
     """PDF元数据提取器"""
     
-    # 常见期刊名称映射
+    # 常见期刊名称映射（扩展版）
     JOURNAL_PATTERNS = {
-        'nutrients': 'Nutrients',
-        'ijms': 'International Journal of Molecular Sciences',
-        'life': 'Life',
-        'scientific reports': 'Scientific Reports',
+        # 高影响力期刊
         'nature': 'Nature',
         'science': 'Science',
         'cell': 'Cell',
+        'lancet': 'The Lancet',
+        'jama': 'JAMA',
+        'nejm': 'New England Journal of Medicine',
+        
+        # 食品科学期刊
+        'food chemistry': 'Food Chemistry',
+        'food research international': 'Food Research International',
+        'journal of agricultural and food chemistry': 'Journal of Agricultural and Food Chemistry',
+        'food hydrocolloids': 'Food Hydrocolloids',
+        'food quality and preference': 'Food Quality and Preference',
+        'lwt': 'LWT - Food Science and Technology',
+        'trends in food science': 'Trends in Food Science & Technology',
+        'comprehensive reviews in food science': 'Comprehensive Reviews in Food Science and Food Safety',
+        'journal of food science': 'Journal of Food Science',
+        'food science and nutrition': 'Food Science & Nutrition',
+        
+        # 营养学期刊
+        'nutrients': 'Nutrients',
+        'nutrition': 'Nutrition',
+        'american journal of clinical nutrition': 'American Journal of Clinical Nutrition',
+        'journal of nutrition': 'Journal of Nutrition',
+        'british journal of nutrition': 'British Journal of Nutrition',
+        'frontiers in nutrition': 'Frontiers in Nutrition',
+        
+        # 感官科学期刊
+        'chemical senses': 'Chemical Senses',
+        'physiology & behavior': 'Physiology & Behavior',
+        'appetite': 'Appetite',
+        
+        # 综合期刊
+        'plos one': 'PLOS ONE',
         'plos': 'PLOS ONE',
+        'scientific reports': 'Scientific Reports',
         'bmc': 'BMC',
-        'diabetes care': 'Diabetes Care',
+        'frontiers': 'Frontiers',
+        
+        # 分子生物学期刊
+        'ijms': 'International Journal of Molecular Sciences',
         'molecules': 'Molecules',
+        'life': 'Life',
+        'foods': 'Foods',
+        
+        # 其他
+        'diabetes care': 'Diabetes Care',
         'nihms': 'NIH Manuscript',
+        'proceedings': 'Proceedings',
     }
     
     # DOI正则表达式
@@ -78,7 +116,13 @@ class PDFMetadataExtractor:
                     if value and (not metadata.get(key) or metadata[key] in ['Unknown Journal', 'Unknown Title', 'Not Available', 'N/A']):
                         metadata[key] = value
             
-            # 尝试从文件名推断期刊
+            # 尝试从DOI推断期刊（如果期刊仍然未知）
+            if metadata['journal'] == 'Unknown Journal' and metadata['doi'] != 'Not Available':
+                journal_from_doi = self._extract_journal_from_doi(metadata['doi'])
+                if journal_from_doi:
+                    metadata['journal'] = journal_from_doi
+            
+            # 尝试从文件名推断期刊（最后的备选）
             if metadata['journal'] == 'Unknown Journal':
                 metadata['journal'] = self._extract_journal_from_filename(pdf_path)
             
@@ -214,9 +258,98 @@ class PDFMetadataExtractor:
         """从文本中提取期刊名"""
         text_lower = text.lower()
         
-        for pattern, journal_name in self.JOURNAL_PATTERNS.items():
+        # 按匹配长度排序，优先匹配长的期刊名
+        sorted_patterns = sorted(self.JOURNAL_PATTERNS.items(), key=lambda x: len(x[0]), reverse=True)
+        
+        for pattern, journal_name in sorted_patterns:
             if pattern in text_lower:
                 return journal_name
+        
+        return None
+    
+    def _extract_journal_from_doi(self, doi: str) -> Optional[str]:
+        """从DOI推断期刊名"""
+        if not doi or doi == 'Not Available':
+            return None
+        
+        doi_lower = doi.lower()
+        
+        # 特殊期刊的完整DOI模式匹配（扩展版）
+        special_journals = {
+            '10.1038/srep': 'Scientific Reports',
+            '10.1038/s41538': 'npj Science of Food',
+            '10.1038/s41467': 'Nature Communications',
+            '10.1038/s41586': 'Nature',
+            '10.1038/s41598': 'Scientific Reports',
+            '10.1038/ijo': 'International Journal of Obesity',
+            '10.1017/s0029665': 'Proceedings of the Nutrition Society',
+            '10.1039/': 'Royal Society of Chemistry',
+        }
+        
+        # 先检查特殊期刊
+        for pattern, journal in special_journals.items():
+            if doi_lower.startswith(pattern):
+                return journal
+        
+        # DOI前缀到出版商/期刊的映射（扩展版）
+        doi_publisher_map = {
+            '10.3390': 'MDPI',
+            '10.1038': 'Nature Publishing Group',
+            '10.1126': 'Science',
+            '10.1016': 'Elsevier',
+            '10.1371': 'PLOS',
+            '10.3389': 'Frontiers',
+            '10.1186': 'BMC',
+            '10.1002': 'Wiley',
+            '10.1021': 'ACS Publications',
+            '10.1093': 'Oxford University Press',
+            '10.1080': 'Taylor & Francis',
+            '10.1007': 'Springer',
+            '10.1111': 'Wiley',
+            '10.1177': 'SAGE Publications',
+            '10.1152': 'American Physiological Society',
+            '10.2337': 'American Diabetes Association',
+            '10.21203': 'Research Square',
+            '10.1017': 'Cambridge University Press',
+            '10.1039': 'Royal Society of Chemistry',
+        }
+        
+        # 检查DOI前缀
+        for prefix, publisher in doi_publisher_map.items():
+            if doi_lower.startswith(prefix):
+                # 如果是MDPI，尝试从DOI中提取具体期刊
+                if prefix == '10.3390':
+                    # DOI格式: 10.3390/foods14061034
+                    parts = doi.split('/')
+                    if len(parts) >= 2:
+                        journal_code = ''.join([c for c in parts[1] if c.isalpha()])
+                        if journal_code:
+                            # 常见MDPI期刊
+                            mdpi_journals = {
+                                'nutrients': 'Nutrients',
+                                'foods': 'Foods',
+                                'molecules': 'Molecules',
+                                'ijms': 'International Journal of Molecular Sciences',
+                                'sensors': 'Sensors',
+                                'life': 'Life',
+                            }
+                            return mdpi_journals.get(journal_code.lower(), f'MDPI - {journal_code.capitalize()}')
+                
+                # 如果是Springer，尝试识别具体期刊
+                elif prefix == '10.1007':
+                    # 常见Springer期刊代码
+                    springer_journals = {
+                        's00217': 'European Food Research and Technology',
+                        's10068': 'Food Science and Biotechnology',
+                        's11694': 'Journal of Food Measurement and Characterization',
+                        's11248': 'Transgenic Research',
+                        's002170': 'European Food Research and Technology',
+                    }
+                    for code, journal in springer_journals.items():
+                        if code in doi_lower:
+                            return journal
+                
+                return publisher
         
         return None
     

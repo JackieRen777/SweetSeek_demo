@@ -45,7 +45,7 @@ async function handleSearch() {
         const data = await response.json();
         
         if (data.success) {
-            displayResults(data.results || [], query);
+            displayResults(data.results || [], query, data.expanded_terms || []);
         } else {
             showError(data.error || 'Search failed');
         }
@@ -57,13 +57,10 @@ async function handleSearch() {
     }
 }
 
-function displayResults(results, query) {
-    const resultsHeader = document.getElementById('resultsHeader');
-    const resultCount = document.getElementById('resultCount');
+function displayResults(results, query, expandedTerms = []) {
     const searchResults = document.getElementById('searchResults');
     
     if (results.length === 0) {
-        resultsHeader.style.display = 'none';
         searchResults.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon"></div>
@@ -74,19 +71,26 @@ function displayResults(results, query) {
         return;
     }
     
-    resultsHeader.style.display = 'flex';
-    resultCount.textContent = `${results.length} result${results.length > 1 ? 's' : ''} for "${query}"`;
-    
-    searchResults.innerHTML = results.map((result, index) => `
-        <div class="result-item animate-slide-in" style="animation-delay: ${index * 0.1}s">
-            <h4>${result.title || result.filename || 'Untitled Document'}</h4>
-            <p>${result.content || result.text || 'No content available'}</p>
-            <div class="result-meta">
-                ${result.score ? `<span class="result-score">Relevance: ${(result.score * 100).toFixed(1)}%</span>` : ''}
-                ${result.metadata && result.metadata.file_name ? `<span>Source: ${result.metadata.file_name}</span>` : ''}
+    searchResults.innerHTML = results.map((result, index) => {
+        const authors = result.authors && result.authors.length > 0 
+            ? result.authors.slice(0, 3).join(', ') + (result.authors.length > 3 ? ' et al.' : '')
+            : 'Unknown Authors';
+        
+        return `
+            <div class="literature-card animate-slide-in" style="animation-delay: ${index * 0.05}s">
+                <div class="lit-header">
+                    <h4 class="lit-title">${result.title}</h4>
+                    <span class="lit-year">${result.year}</span>
+                </div>
+                <div class="lit-authors">${authors}</div>
+                <div class="lit-journal">${result.journal}</div>
+                <div class="lit-footer">
+                    <span class="lit-doi">${result.doi !== 'Not Available' ? 'DOI: ' + result.doi : ''}</span>
+                    <span class="lit-filename">${result.filename}</span>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function showError(message) {

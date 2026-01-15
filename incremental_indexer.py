@@ -15,7 +15,7 @@ class IncrementalIndexer:
     
     def __init__(self, 
                  data_dir: str = "./sweet_related_paper",
-                 tracking_file: str = "./storage/indexed_files.json"):
+                 tracking_file: str = "./chroma_db/indexed_files.json"):
         self.data_dir = data_dir
         self.tracking_file = tracking_file
         self.indexed_files = self._load_tracking()
