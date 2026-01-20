@@ -2,6 +2,92 @@
 
 let systemReady = false;
 
+// 过滤思考内容中的敏感信息（增强版）
+function filterReasoningContent(content) {
+    // 第一步：移除明显的格式指令段落
+    const lines = content.split('\n');
+    const filteredLines = [];
+    let skipBlock = false;
+    let skipUntilEmptyLine = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // 检测格式指令块的开始（增强版）
+        if (/^(回答要求|输出格式|格式要求|核心原则|工作方式|输出规范|重要规则|可用的参考文献列表|参考文档内容)[:：]/i.test(line)) {
+            skipBlock = true;
+            skipUntilEmptyLine = true;
+            continue;
+        }
+        
+        // 检测包含敏感关键词的行，开始跳过块
+        if (/^(1\.|一、|第一).*(规则|原则|要求|规范|格式)/i.test(line)) {
+            skipBlock = true;
+            continue;
+        }
+        
+        // 如果在跳过块中
+        if (skipBlock) {
+            // 遇到两个连续空行或新的主题段落时结束跳过
+            if (line === '') {
+                if (skipUntilEmptyLine) {
+                    skipUntilEmptyLine = false;
+                    continue;
+                }
+                skipBlock = false;
+            } else if (/^[^0-9\-·\s]/.test(line) && line.length > 30 && !/规则|原则|要求|规范|格式|编号|ref_/i.test(line)) {
+                skipBlock = false;
+            } else {
+                continue; // 继续跳过
+            }
+        }
+        
+        // 过滤包含格式指令的单行（增强版）
+        const sensitivePatterns = [
+            /使用多级编号/i,
+            /一级用.*二级用.*三级用/i,
+            /禁止使用.*符号/i,
+            /使用方括号/i,
+            /按技术主题分类/i,
+            /包含具体参数/i,
+            /首次注明全称/i,
+            /保持简洁专业/i,
+            /Markdown/i,
+            /只能使用.*ref/i,
+            /只能引用.*ref/i,
+            /不要使用.*编号/i,
+            /不要使用列表之外/i,
+            /ref_1到ref_/i,
+            /这\d+篇文献/i,
+            /重要规则/i,
+            /核心原则/i,
+            /输出规范/i,
+            /输出格式/i,
+            /回答要求/i,
+            /技术点后标注/i,
+            /结构化.*格式/i
+        ];
+        
+        if (sensitivePatterns.some(pattern => pattern.test(line))) {
+            continue;
+        }
+        
+        filteredLines.push(lines[i]);
+    }
+    
+    // 第二步：统一文献引用格式
+    let result = filteredLines.join('\n');
+    result = result.replace(/文献\s*(\d+)/g, '[ref_$1]');
+    result = result.replace(/编号\s*(\d+)/g, '[ref_$1]');
+    result = result.replace(/Document\s*(\d+)/gi, '[ref_$1]');
+    result = result.replace(/参考文献\s*(\d+)/g, '[ref_$1]');
+    
+    // 第三步：清理多余空行
+    result = result.replace(/\n{3,}/g, '\n\n');
+    
+    return result.trim();
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializeSystem();
@@ -69,7 +155,7 @@ function setupEventListeners() {
     });
 }
 
-// Handle send question
+// Handle send question (with streaming)
 async function handleSendQuestion() {
     const questionInput = document.getElementById('questionInput');
     const question = questionInput.value.trim();
@@ -96,11 +182,29 @@ async function handleSendQuestion() {
     // Add user message
     addMessage('user', question);
     
-    // Show typing indicator
-    showTypingIndicator();
+    // Create assistant message container for streaming
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message message-assistant';
+    
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    messageDiv.appendChild(messageContent);
+    chatMessages.appendChild(messageDiv);
+    
+    // 智能滚动函数：只有用户在底部时才自动滚动
+    function smartScroll() {
+        const isNearBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 100;
+        if (isNearBottom) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+    
+    // 初始滚动到底部
+    chatMessages.scrollTop = chatMessages.scrollHeight;
     
     try {
-        const response = await fetch('/api/ask', {
+        const response = await fetch('/api/ask_stream', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -108,24 +212,110 @@ async function handleSendQuestion() {
             body: JSON.stringify({ question })
         });
         
-        const data = await response.json();
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
         
-        // Hide typing indicator
-        hideTypingIndicator();
+        let reasoningContent = '';
+        let answerContent = '';
+        let references = [];
+        let isReasoningPhase = false;
+        let isAnswerPhase = false;
         
-        if (data.success) {
-            // Add assistant message
-            addMessage('assistant', data.answer);
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
             
-            // Display references
-            displayReferences(data.references || []);
-        } else {
-            addMessage('assistant', `Error: ${data.error}`);
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        
+                        switch (data.type) {
+                            case 'status':
+                                messageContent.innerHTML = `<em style="color: #64748b;">${data.message}</em>`;
+                                break;
+                            
+                            case 'references':
+                                references = data.references;
+                                displayReferences(references);
+                                break;
+                            
+                            case 'reasoning_start':
+                                isReasoningPhase = true;
+                                messageContent.innerHTML = `
+                                    <div class="thinking-section">
+                                        <div class="thinking-header">
+                                            <span class="thinking-icon">💭</span>
+                                            <span class="thinking-title">深度思考</span>
+                                            <button class="thinking-toggle" onclick="toggleThinking(this)">
+                                                <span class="toggle-text">收起</span>
+                                                <span class="toggle-icon">▲</span>
+                                            </button>
+                                        </div>
+                                        <div class="thinking-content"></div>
+                                    </div>
+                                `;
+                                break;
+                            
+                            case 'reasoning':
+                                if (isReasoningPhase) {
+                                    // 先累加原始内容
+                                    reasoningContent += data.content;
+                                    // 对完整内容进行过滤
+                                    const filteredContent = filterReasoningContent(reasoningContent);
+                                    const reasoningDiv = messageContent.querySelector('.thinking-content');
+                                    if (reasoningDiv) {
+                                        reasoningDiv.textContent = filteredContent;
+                                    }
+                                }
+                                smartScroll(); // 使用智能滚动
+                                break;
+                            
+                            case 'reasoning_end':
+                                isReasoningPhase = false;
+                                break;
+                            
+                            case 'answer_start':
+                                isAnswerPhase = true;
+                                if (reasoningContent) {
+                                    messageContent.innerHTML += '<div class="answer-section"><div class="answer-content"></div></div>';
+                                } else {
+                                    messageContent.innerHTML = '<div class="answer-section"><div class="answer-content"></div></div>';
+                                }
+                                break;
+                            
+                            case 'answer':
+                                if (isAnswerPhase) {
+                                    answerContent += data.content;
+                                    const answerDiv = messageContent.querySelector('.answer-content');
+                                    if (answerDiv) {
+                                        answerDiv.innerHTML = formatMessage(answerContent);
+                                    }
+                                }
+                                smartScroll(); // 使用智能滚动
+                                break;
+                            
+                            case 'done':
+                                console.log('Stream completed');
+                                break;
+                            
+                            case 'error':
+                                messageContent.innerHTML = `<span style="color: #ef4444;">错误: ${data.error}</span>`;
+                                break;
+                        }
+                    } catch (e) {
+                        console.error('Parse error:', e);
+                    }
+                }
+            }
         }
+        
     } catch (error) {
         console.error('Query error:', error);
-        hideTypingIndicator();
-        addMessage('assistant', 'Sorry, an error occurred. Please try again.');
+        messageContent.innerHTML = '<span style="color: #ef4444;">抱歉，发生错误，请重试。</span>';
     }
 }
 
@@ -155,17 +345,36 @@ function addMessage(role, content) {
 
 // Format message content
 function formatMessage(text) {
+    // 先移除 Markdown 标题符号（###、##、#）
+    text = text.replace(/^#{1,6}\s+/gm, '');
+    
     // Convert markdown-style formatting
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    text = text.replace(/\n/g, '<br>');
-    return text;
+    
+    // Split by newlines to process each line
+    const lines = text.split('\n');
+    const formattedLines = lines.map(line => {
+        const trimmedLine = line.trim();
+        
+        // 匹配一级标题：一、二、三、四、五、六、七、八、九、十、十一、十二...
+        if (/^[一二三四五六七八九十百千]+、/.test(trimmedLine)) {
+            return `<div class="chinese-primary-heading">${line}</div>`;
+        }
+        
+        return line;
+    });
+    
+    return formattedLines.join('<br>');
 }
 
 // Display references
 function displayReferences(references) {
     const referencesList = document.getElementById('referencesList');
     const refCount = document.getElementById('refCount');
+    
+    // 调试：打印接收到的数据
+    console.log('displayReferences 接收到的数据:', references);
     
     if (references.length === 0) {
         referencesList.innerHTML = `
@@ -179,16 +388,21 @@ function displayReferences(references) {
     
     refCount.textContent = `${references.length} reference${references.length > 1 ? 's' : ''}`;
     
-    referencesList.innerHTML = references.map((ref, index) => `
-        <div class="reference-item-compact" data-ref-id="${ref.ref_id || `ref_${index + 1}`}">
-            <div class="ref-identifier" 
-                 onmouseenter="showRefTooltip(event, ${index})"
-                 onmouseleave="hideRefTooltip()"
-                 onclick="event.stopPropagation()">
-                ${ref.ref_id || `ref_${index + 1}`}: ${ref.journal || 'Unknown'} ${ref.year || 'N/A'}
+    referencesList.innerHTML = references.map((ref, index) => {
+        // 调试：打印每个引用的数据
+        console.log(`Reference ${index + 1}:`, ref);
+        
+        return `
+            <div class="reference-item-compact" data-ref-id="${ref.ref_id || `ref_${index + 1}`}">
+                <div class="ref-identifier" 
+                     onmouseenter="showRefTooltip(event, ${index})"
+                     onmouseleave="hideRefTooltip()"
+                     onclick="event.stopPropagation()">
+                    ${ref.ref_id || `ref_${index + 1}`}: ${ref.journal || 'Unknown'} ${ref.year || 'N/A'}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
     
     // 在body中添加tooltip（避免被容器裁剪）
     references.forEach((ref, index) => {
@@ -403,5 +617,23 @@ function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
         overlay.style.display = 'none';
+    }
+}
+
+// Toggle thinking section
+function toggleThinking(button) {
+    const thinkingSection = button.closest('.thinking-section');
+    const thinkingContent = thinkingSection.querySelector('.thinking-content');
+    const toggleText = button.querySelector('.toggle-text');
+    const toggleIcon = button.querySelector('.toggle-icon');
+    
+    if (thinkingContent.style.display === 'none') {
+        thinkingContent.style.display = 'block';
+        toggleText.textContent = '收起';
+        toggleIcon.textContent = '▲';
+    } else {
+        thinkingContent.style.display = 'none';
+        toggleText.textContent = '展开';
+        toggleIcon.textContent = '▼';
     }
 }

@@ -16,22 +16,13 @@ import logging
 import os
 from typing import List, Optional
 
-try:
-    from llama_index.core import (
-        VectorStoreIndex,
-        SimpleDirectoryReader,
-        Settings,
-        StorageContext,
-    )
-    from llama_index.vector_stores.chroma import ChromaVectorStore
-except Exception:
-    from llama_index import (
-        VectorStoreIndex,
-        SimpleDirectoryReader,
-        Settings,
-        StorageContext,
-    )
-    from llama_index.vector_stores import ChromaVectorStore
+from llama_index.core import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    Settings,
+    StorageContext,
+)
+from llama_index.vector_stores.chroma import ChromaVectorStore
 
 import chromadb
 

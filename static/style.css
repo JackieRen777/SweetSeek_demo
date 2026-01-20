@@ -65,7 +65,7 @@ body {
 .nav-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 1rem 2rem;
+    padding: 0.75rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -73,29 +73,29 @@ body {
 
 .nav-logo h1 {
     color: var(--primary-color);
-    font-size: 1.75rem;
+    font-size: 2rem;
     font-weight: 700;
     letter-spacing: -0.02em;
 }
 
 .tagline {
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 1rem;
     margin-top: 0.125rem;
 }
 
 .nav-menu {
     display: flex;
     list-style: none;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .nav-link {
     color: var(--text-color);
     text-decoration: none;
     font-weight: 500;
-    font-size: 0.9375rem;
-    padding: 0.625rem 1.25rem;
+    font-size: 1.125rem;
+    padding: 0.5rem 1.5rem;
     border-radius: 0.5rem;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -134,16 +134,17 @@ body {
 }
 
 .chat-header {
-    padding: 1.5rem 2rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .chat-header h2 {
     color: var(--primary-color);
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 600;
 }
 
@@ -250,21 +251,26 @@ body {
 
 /* 输入区域 */
 .chat-input-container {
-    padding: 1.5rem 2rem;
+    padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-color);
     background: var(--gray-light);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 #questionInput {
-    width: 100%;
-    padding: 1rem;
+    flex: 1;
+    padding: 0.75rem 1rem;
     border: 2px solid var(--border-color);
     border-radius: 12px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-family: inherit;
     resize: none;
-    margin-bottom: 1rem;
     transition: border-color 0.3s;
+    min-height: 42px;
+    max-height: 120px;
+    line-height: 1.5;
 }
 
 #questionInput:focus {
@@ -272,12 +278,46 @@ body {
     border-color: var(--primary-color);
 }
 
+/* Send 按钮 */
+.btn-send {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary-color);
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 100px;
+    height: 42px;
+    flex-shrink: 0;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.btn-send:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-send:active {
+    transform: translateY(0);
+}
+
+.btn-send svg {
+    transform: rotate(45deg);
+}
+
 /* 按钮 */
 .btn-primary, .btn-secondary {
-    padding: 0.5rem 1.5rem;
+    padding: 0.5rem 1rem;
     border: none;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
@@ -1304,4 +1344,161 @@ body {
 .animate-slide-in {
     animation: slide-in 0.4s ease-out forwards;
     opacity: 0;
+}
+
+/* ==================== 思维链样式 ==================== */
+.thinking-section {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+}
+
+.thinking-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-bottom: 1px solid #bae6fd;
+    cursor: default;
+}
+
+.thinking-icon {
+    font-size: 1.25rem;
+    animation: thinking-pulse 2s ease-in-out infinite;
+}
+
+@keyframes thinking-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.thinking-title {
+    font-weight: 600;
+    color: #1e40af;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    flex: 1;
+}
+
+.thinking-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    border: 1px solid #93c5fd;
+    border-radius: 6px;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    color: #1e40af;
+    font-weight: 500;
+}
+
+.thinking-toggle:hover {
+    background: #f0f9ff;
+    border-color: #60a5fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+}
+
+.thinking-toggle:active {
+    transform: translateY(0);
+}
+
+.toggle-icon {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+}
+
+.thinking-content {
+    padding: 1.25rem;
+    color: #1e40af;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+    background: rgba(255, 255, 255, 0.5);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.thinking-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.thinking-content::-webkit-scrollbar-track {
+    background: #e0f2fe;
+    border-radius: 3px;
+}
+
+.thinking-content::-webkit-scrollbar-thumb {
+    background: #93c5fd;
+    border-radius: 3px;
+}
+
+.thinking-content::-webkit-scrollbar-thumb:hover {
+    background: #60a5fa;
+}
+
+/* ==================== 答案区域样式 ==================== */
+.answer-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.answer-content {
+    color: var(--text-color);
+    font-size: 1rem;
+    line-height: 1.8;
+}
+
+.answer-content strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.answer-content em {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* 当没有思维链时，答案直接显示 */
+.message-content > .answer-section:only-child {
+    margin-top: 0;
+}
+
+/* ==================== 中文一级标题样式优化 ==================== */
+/* 只对一级标题（一、二、三...）应用蓝色加粗样式 */
+.answer-content .chinese-primary-heading {
+    font-weight: 700 !important;
+    color: var(--primary-color) !important;
+    margin-top: 1.2rem;
+    margin-bottom: 0.6rem;
+    font-size: 1.05rem;
+    display: block;
+    line-height: 1.6;
+}
+
+/* 确保答案内容中的其他元素不会意外变蓝 */
+.answer-content {
+    color: var(--text-color);
+}
+
+.answer-content > div:not(.chinese-primary-heading) {
+    color: var(--text-color);
 }
