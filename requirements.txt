@@ -1,18 +1,19 @@
 # 核心依赖 - LlamaIndex RAG 框架
 llama-index-core==0.14.10
 llama-index-embeddings-huggingface==0.6.1
-llama-index-vector-stores-chroma==0.4.2
-
-# LLM依赖（支持OpenAI兼容API如DeepSeek）
+llama-index-vector-stores-chroma==0.5.5
 llama-index-llms-openai==0.6.11
-openai==2.11.0
 
 # 向量数据库
-chromadb==0.6.5
+chromadb==1.4.0
+
+# LLM依赖
+openai==2.11.0
 
 # Web框架
 Flask==3.1.2
 flask-cors==6.0.2
+Werkzeug==3.1.4
 
 # 环境变量
 python-dotenv==1.2.1
@@ -21,10 +22,7 @@ python-dotenv==1.2.1
 pypdf==6.4.1
 python-docx==1.2.0
 
-# 工具库
-Werkzeug==3.1.4
-
-# 文件监控（自动化系统）
+# 文件监控
 watchdog==6.0.0
 
 # 机器学习和NLP
@@ -34,8 +32,15 @@ torch==2.9.1
 
 # 数据处理
 numpy==2.2.6
-pandas==2.2.3
 
 # HTTP客户端
 requests==2.32.5
 httpx==0.28.1
+
+# 重要的依赖（自动安装，但明确列出以确保版本一致）
+pydantic==2.12.5
+aiohttp==3.13.2
+tiktoken==0.12.0
+nltk==3.9.2
+tenacity==9.1.2
+typing-extensions==4.15.0
