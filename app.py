@@ -893,10 +893,15 @@ if __name__ == '__main__':
     print("正在初始化RAG系统...")
     initialize_rag_system()
     
+    # 从环境变量获取配置
+    host = os.getenv('HOST', '0.0.0.0')
+    port = int(os.getenv('PORT', 5001))
+    debug = os.getenv('DEBUG', 'True').lower() == 'true'
+    
     print("\n" + "=" * 50)
     print("服务器启动成功")
-    print("访问地址: http://localhost:5001")
+    print(f"访问地址: http://localhost:{port}")
     print("停止服务: 按 Ctrl+C")
     print("=" * 50 + "\n")
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host=host, port=port, debug=debug)

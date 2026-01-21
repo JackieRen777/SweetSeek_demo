@@ -297,5 +297,13 @@ class PersistentRAGSystem:
         return stats
 
 
-# 创建全局实例
-rag_system = PersistentRAGSystem()
+# 创建全局实例（支持环境变量配置）
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+data_dir = os.getenv('DATA_DIR', './sweet_related_paper')
+persist_dir = os.getenv('PERSIST_DIR', './chroma_db')
+
+rag_system = PersistentRAGSystem(data_dir=data_dir, persist_dir=persist_dir)

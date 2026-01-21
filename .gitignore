@@ -78,6 +78,9 @@ temp/
 .pytest_cache/
 .coverage
 htmlcov/
+test_*.py
+quick_test.py
+debug_*.py
 
 # macOS
 .DS_Store
