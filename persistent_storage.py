@@ -12,6 +12,14 @@
 
 from __future__ import annotations
 
+# 修复 SQLite 版本问题
+try:
+    __import__('pysqlite3')
+    import sys
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass  # 如果没有 pysqlite3，使用系统 sqlite3
+
 import logging
 import os
 from typing import List, Optional
