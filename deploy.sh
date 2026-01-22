@@ -29,9 +29,9 @@ git status --short
 git commit -m "$COMMIT_MSG" || echo "没有新的修改需要提交"
 echo ""
 
-# 第二步：推送到远程仓库（可选，如果 GitHub 连接慢可以跳过）
-echo -e "${GREEN}[2/4] 推送到远程仓库...${NC}"
-git push origin $(git branch --show-current) 2>/dev/null || echo "GitHub 推送失败，跳过（不影响部署）"
+# 第二步：推送到 GitHub（代码备份）
+echo -e "${GREEN}[2/4] 推送到 GitHub...${NC}"
+git push origin $(git branch --show-current)
 echo ""
 
 # 第三步：直接推送到服务器
