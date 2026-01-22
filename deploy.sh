@@ -36,12 +36,14 @@ echo ""
 
 # 第三步：直接推送到服务器
 echo -e "${GREEN}[3/4] 推送代码到服务器...${NC}"
-# 使用 rsync 直接同步文件到服务器（更快更可靠）
-rsync -avz --exclude 'venv' --exclude '__pycache__' --exclude '.git' \
-  --exclude 'chroma_db' --exclude 'models' --exclude '.env' \
-  --exclude 'sweet_related_paper/papers/*.pdf' \
-  ./ root@8.137.32.247:/www/wwwroot/FCN_SweetSeek/
-echo "代码同步完成！"
+# 从 GitHub 拉取代码到服务器
+ssh root@$SERVER_IP << 'ENDSSH'
+cd /www/wwwroot/FCN_SweetSeek
+echo "当前目录: $(pwd)"
+echo "从 GitHub 拉取最新代码..."
+git pull origin RenJiaqi
+echo "代码更新完成！"
+ENDSSH
 echo ""
 
 # 第四步：重启服务
