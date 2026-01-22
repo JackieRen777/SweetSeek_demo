@@ -26,20 +26,19 @@ git status --short
 git commit -m "$COMMIT_MSG" || echo "没有新的修改需要提交"
 echo ""
 
-# 第二步：推送到远程仓库
+# 第二步：推送到远程仓库（可选，如果 GitHub 连接慢可以跳过）
 echo -e "${GREEN}[2/4] 推送到远程仓库...${NC}"
-git push origin $(git branch --show-current)
+git push origin $(git branch --show-current) 2>/dev/null || echo "GitHub 推送失败，跳过（不影响部署）"
 echo ""
 
-# 第三步：连接服务器更新代码
-echo -e "${GREEN}[3/4] 连接服务器更新代码...${NC}"
-ssh root@8.137.32.247 << 'ENDSSH'
-cd /www/wwwroot/FCN_SweetSeek
-echo "当前目录: $(pwd)"
-echo "拉取最新代码..."
-git pull origin RenJiaqi
-echo "代码更新完成！"
-ENDSSH
+# 第三步：直接推送到服务器
+echo -e "${GREEN}[3/4] 推送代码到服务器...${NC}"
+# 使用 rsync 直接同步文件到服务器（更快更可靠）
+rsync -avz --exclude 'venv' --exclude '__pycache__' --exclude '.git' \
+  --exclude 'chroma_db' --exclude 'models' --exclude '.env' \
+  --exclude 'sweet_related_paper/papers/*.pdf' \
+  ./ root@8.137.32.247:/www/wwwroot/FCN_SweetSeek/
+echo "代码同步完成！"
 echo ""
 
 # 第四步：重启服务
