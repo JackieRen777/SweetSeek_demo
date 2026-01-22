@@ -128,10 +128,10 @@ read -p "> " DEPLOY_NOW
 if [ "$DEPLOY_NOW" = "y" ] || [ "$DEPLOY_NOW" = "Y" ]; then
     echo ""
     echo -e "${BLUE}开始部署到服务器...${NC}"
-    ./deploy-v2.sh
+    ./deploy.sh
 else
     echo ""
-    echo -e "${YELLOW}已跳过部署。稍后可运行 ./deploy-v2.sh 部署${NC}"
+    echo -e "${YELLOW}已跳过部署。稍后可运行 ./deploy.sh 部署${NC}"
 fi
 
 echo ""

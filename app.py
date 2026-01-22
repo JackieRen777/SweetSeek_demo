@@ -708,12 +708,23 @@ def api_ask_stream():
             for paper_index, paper_info in enumerate(unique_papers_list, 1):
                 # 将绝对路径转换为相对路径
                 file_path = paper_info['file_path']
+                original_path = file_path
                 if file_path.startswith('/'):
                     # 提取相对路径部分
                     import os
                     file_path = os.path.relpath(file_path, os.getcwd())
                 
+                # 调试：打印路径信息
+                print(f"[调试] 原始路径: {original_path}")
+                print(f"[调试] 转换后路径: {file_path}")
+                
                 paper_metadata = rag_system.metadata_storage.get_metadata(file_path) if file_path else None
+                
+                # 调试：打印元数据获取结果
+                if paper_metadata:
+                    print(f"[调试] ✅ 找到元数据: {paper_metadata.get('title', 'N/A')[:50]}")
+                else:
+                    print(f"[调试] ❌ 未找到元数据")
                 
                 if paper_metadata:
                     references_raw.append({
