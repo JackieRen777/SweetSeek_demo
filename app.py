@@ -865,6 +865,10 @@ def api_ask_stream():
                         if not answer_started:
                             if reasoning_started:
                                 yield f"data: {json.dumps({'type': 'reasoning_end'}, ensure_ascii=False)}\n\n"
+                            
+                            # 在开始回答前发送references
+                            yield f"data: {json.dumps({'type': 'references', 'references': references}, ensure_ascii=False)}\n\n"
+                            
                             yield f"data: {json.dumps({'type': 'answer_start'}, ensure_ascii=False)}\n\n"
                             answer_started = True
                         yield f"data: {json.dumps({'type': 'answer', 'content': chunk.choices[0].delta.content}, ensure_ascii=False)}\n\n"
