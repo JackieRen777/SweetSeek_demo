@@ -3,7 +3,10 @@
 # SweetSeek 自动部署脚本
 # 用法: ./deploy.sh "提交信息"
 
-set -e  # 遇到错误立即退出
+# 服务器配置
+SERVER_IP="8.137.32.247"
+SERVER_USER="root"
+SERVER_PATH="/www/wwwroot/FCN_SweetSeek"
 
 # 颜色输出
 GREEN='\033[0;32m'
