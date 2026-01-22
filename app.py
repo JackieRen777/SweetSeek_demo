@@ -757,8 +757,22 @@ def api_ask_stream():
             
             print(f"[流式API-证据分级] 完成，共 {len(references)} 篇文献")
             
+            # 准备发送给前端的references数据（只包含必要字段）
+            references_for_frontend = []
+            for ref in references:
+                references_for_frontend.append({
+                    'ref_id': ref['ref_id'],
+                    'title': ref.get('title', ref.get('filename', 'Unknown')),
+                    'journal': ref.get('journal', 'Unknown'),
+                    'year': ref.get('year', 'N/A'),
+                    'authors': ref.get('authors', []),
+                    'doi': ref.get('doi', 'Not Available'),
+                    'filename': ref.get('filename', ''),
+                    'score': ref.get('final_score', 0)
+                })
+            
             # 发送参考文献
-            yield f"data: {json.dumps({'type': 'references', 'references': references}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'references', 'references': references_for_frontend}, ensure_ascii=False)}\n\n"
             
             # 开始生成答案
             yield f"data: {json.dumps({'type': 'status', 'message': '正在生成答案...'}, ensure_ascii=False)}\n\n"
