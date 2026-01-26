@@ -13,6 +13,11 @@ from datetime import datetime
 from persistent_storage import rag_system
 from query_expander import SweetnessQueryExpander
 from evidence_ranker import EvidenceRanker
+import logging
+from logging.handlers import RotatingFileHandler
+from functools import wraps
+import traceback
+import sys
 
 # NOTE: 文件中的函数多数通过 Flask 的 @app.route 装饰器在运行时被调用。
 # 静态分析工具（如 vulture）会将这些运行时注册的路由误判为未使用，
@@ -20,6 +25,104 @@ from evidence_ranker import EvidenceRanker
 
 # 加载环境变量
 load_dotenv()
+
+# ============================================================
+# 日志配置
+# ============================================================
+
+def setup_logging():
+    """配置应用日志"""
+    os.makedirs('logs', exist_ok=True)
+    
+    logger = logging.getLogger('sweetseek')
+    logger.setLevel(logging.INFO)
+    
+    # 文件处理器（自动轮转，最大 10MB，保留 5 个备份）
+    file_handler = RotatingFileHandler(
+        'logs/sweetseek.log',
+        maxBytes=10*1024*1024,
+        backupCount=5
+    )
+    file_handler.setLevel(logging.INFO)
+    
+    # 控制台处理器
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    
+    # 格式化
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+    
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    return logger
+
+app_logger = setup_logging()
+
+# ============================================================
+# 装饰器：错误处理和性能监控
+# ============================================================
+
+def handle_api_errors(f):
+    """统一的 API 错误处理装饰器"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            error_msg = str(e)
+            error_type = type(e).__name__
+            app_logger.error(f"API错误 [{f.__name__}]: {error_type} - {error_msg}")
+            traceback.print_exc()
+            return jsonify({
+                'success': False,
+                'error': error_msg,
+                'error_type': error_type
+            }), 500
+    return decorated_function
+
+def monitor_performance(f):
+    """监控 API 性能"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        start_time = time.time()
+        result = f(*args, **kwargs)
+        end_time = time.time()
+        
+        duration = end_time - start_time
+        app_logger.info(f"[性能] {f.__name__} 执行时间: {duration:.2f}秒")
+        
+        if duration > 10:
+            app_logger.warning(f"[性能警告] {f.__name__} 响应时间过长: {duration:.2f}秒")
+        
+        return result
+    return decorated_function
+
+# ============================================================
+# 配置验证
+# ============================================================
+
+def validate_config():
+    """验证必需的配置"""
+    required_vars = [
+        'DEEPSEEK_API_KEY',
+        'DEEPSEEK_BASE_URL',
+        'DEEPSEEK_MODEL'
+    ]
+    
+    missing_vars = []
+    for var in required_vars:
+        if not os.getenv(var):
+            missing_vars.append(var)
+    
+    if missing_vars:
+        raise ValueError(f"缺少必需的环境变量: {', '.join(missing_vars)}")
+    
+    app_logger.info("✅ 配置验证通过")
 
 app = Flask(__name__, 
             template_folder='frontend',
@@ -82,12 +185,17 @@ def about():
 
 
 @app.route('/api/init', methods=['POST'])
+@handle_api_errors
+@monitor_performance
 def api_init():
     """初始化系统"""
     global system_ready
     
+    app_logger.info("收到系统初始化请求")
+    
     if system_ready:
         stats = rag_system.get_stats()
+        app_logger.info(f"系统已初始化，文档数: {stats['total_documents']}")
         return jsonify({
             'success': True,
             'message': '系统已经初始化',
@@ -97,6 +205,11 @@ def api_init():
     success = initialize_rag_system()
     stats = rag_system.get_stats() if success else {}
     
+    if success:
+        app_logger.info(f"系统初始化成功，文档数: {stats.get('total_documents', 0)}")
+    else:
+        app_logger.error("系统初始化失败")
+    
     return jsonify({
         'success': success,
         'message': '系统初始化成功' if success else '系统初始化失败',
@@ -104,6 +217,8 @@ def api_init():
     })
 
 @app.route('/api/ask', methods=['POST'])
+@handle_api_errors
+@monitor_performance
 def api_ask():
     """
     处理问答请求
@@ -138,7 +253,10 @@ def api_ask():
     # 最大检索数量（从所有文档中检索）（增加到100以获取更多文献）
     max_results = data.get('max_results', 100)
     
+    app_logger.info(f"收到问答请求: {question[:100]}")
+    
     if not question:
+        app_logger.warning("问题为空")
         return jsonify({
             'success': False,
             'error': '问题不能为空'
@@ -494,11 +612,14 @@ def api_ask():
         }), 500
 
 @app.route('/api/search', methods=['POST'])
+@handle_api_errors
+@monitor_performance
 def api_search():
     """文献元数据搜索（支持中英文互查）"""
     global system_ready
     
     if not system_ready:
+        app_logger.warning("搜索请求失败：系统未初始化")
         return jsonify({
             'success': False,
             'error': '系统未初始化'
@@ -507,7 +628,10 @@ def api_search():
     data = request.json
     query = data.get('query', '').strip()
     
+    app_logger.info(f"收到搜索请求: {query}")
+    
     if not query:
+        app_logger.warning("搜索关键词为空")
         return jsonify({
             'success': False,
             'error': '搜索关键词不能为空'
@@ -587,10 +711,13 @@ def api_search():
         }), 500
 
 @app.route('/api/stats', methods=['GET'])
+@handle_api_errors
 def api_stats():
     """获取系统统计信息"""
     stats = rag_system.get_stats() if system_ready else {}
     doc_count = stats.get('total_documents', 0)
+    
+    app_logger.debug(f"返回系统统计: {doc_count} 个文档")
     
     return jsonify({
         'success': True,
@@ -602,24 +729,81 @@ def api_stats():
     })
 
 @app.route('/api/conversations', methods=['GET'])
+@handle_api_errors
 def api_conversations():
     """获取对话历史"""
+    app_logger.debug(f"返回 {len(conversations)} 条对话历史")
     return jsonify({
         'success': True,
         'conversations': conversations
     })
 
 @app.route('/api/clear_conversations', methods=['POST'])
+@handle_api_errors
 def api_clear_conversations():
     """清空对话历史"""
     global conversations
     conversations = []
+    app_logger.info("对话历史已清空")
     return jsonify({
         'success': True,
         'message': '对话历史已清空'
     })
 
+@app.route('/api/health', methods=['GET'])
+def api_health():
+    """系统健康检查"""
+    health_status = {
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'components': {}
+    }
+    
+    # 检查 RAG 系统
+    try:
+        stats = rag_system.get_stats()
+        health_status['components']['rag_system'] = {
+            'status': 'healthy' if system_ready else 'unhealthy',
+            'documents': stats.get('total_documents', 0)
+        }
+    except Exception as e:
+        health_status['components']['rag_system'] = {
+            'status': 'unhealthy',
+            'error': str(e)
+        }
+        health_status['status'] = 'degraded'
+    
+    # 检查 DeepSeek API
+    try:
+        import persistent_storage
+        health_status['components']['deepseek_api'] = {
+            'status': 'configured' if hasattr(persistent_storage, 'deepseek_client') else 'not_configured'
+        }
+    except Exception as e:
+        health_status['components']['deepseek_api'] = {
+            'status': 'error',
+            'error': str(e)
+        }
+    
+    # 检查元数据存储
+    try:
+        metadata_count = len(rag_system.metadata_storage.get_all_metadata())
+        health_status['components']['metadata_storage'] = {
+            'status': 'healthy',
+            'count': metadata_count
+        }
+    except Exception as e:
+        health_status['components']['metadata_storage'] = {
+            'status': 'unhealthy',
+            'error': str(e)
+        }
+    
+    status_code = 200 if health_status['status'] == 'healthy' else 503
+    app_logger.debug(f"健康检查: {health_status['status']}")
+    return jsonify(health_status), status_code
+
 @app.route('/api/ask_stream', methods=['POST'])
+@handle_api_errors
 def api_ask_stream():
     """
     流式问答 API（Server-Sent Events）
@@ -631,6 +815,7 @@ def api_ask_stream():
     global system_ready
     
     if not system_ready:
+        app_logger.warning("流式问答请求失败：系统未初始化")
         return jsonify({
             'success': False,
             'error': '系统未初始化'
@@ -641,7 +826,10 @@ def api_ask_stream():
     similarity_threshold = data.get('similarity_threshold', 0.40)  # 降低阈值
     max_results = data.get('max_results', 100)  # 增加到100
     
+    app_logger.info(f"收到流式问答请求: {question[:100]}")
+    
     if not question:
+        app_logger.warning("流式问答问题为空")
         return jsonify({
             'success': False,
             'error': '问题不能为空'
@@ -918,19 +1106,32 @@ if __name__ == '__main__':
     print("SweetSeek 启动中...")
     print("=" * 50)
     
-    # 自动初始化系统
-    print("正在初始化RAG系统...")
-    initialize_rag_system()
-    
-    # 从环境变量获取配置
-    host = os.getenv('HOST', '0.0.0.0')
-    port = int(os.getenv('PORT', 5001))
-    debug = os.getenv('DEBUG', 'True').lower() == 'true'
-    
-    print("\n" + "=" * 50)
-    print("服务器启动成功")
-    print(f"访问地址: http://localhost:{port}")
-    print("停止服务: 按 Ctrl+C")
-    print("=" * 50 + "\n")
-    
-    app.run(host=host, port=port, debug=debug)
+    try:
+        # 验证配置
+        app_logger.info("开始配置验证...")
+        validate_config()
+        
+        # 自动初始化系统
+        app_logger.info("正在初始化RAG系统...")
+        initialize_rag_system()
+        
+        # 从环境变量获取配置
+        host = os.getenv('HOST', '0.0.0.0')
+        port = int(os.getenv('PORT', 5001))
+        debug = os.getenv('DEBUG', 'True').lower() == 'true'
+        
+        print("\n" + "=" * 50)
+        print("✅ 服务器启动成功")
+        print(f"访问地址: http://localhost:{port}")
+        print(f"健康检查: http://localhost:{port}/api/health")
+        print("停止服务: 按 Ctrl+C")
+        print("=" * 50 + "\n")
+        
+        app_logger.info(f"服务器启动在 {host}:{port}")
+        
+        app.run(host=host, port=port, debug=debug)
+        
+    except Exception as e:
+        app_logger.error(f"❌ 启动失败: {e}")
+        traceback.print_exc()
+        sys.exit(1)

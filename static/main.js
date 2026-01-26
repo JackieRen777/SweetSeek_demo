@@ -1,5 +1,177 @@
 // SweetSeek - Main Page JavaScript
 
+// ============================================================
+// 错误处理增强模块
+// ============================================================
+
+class APIError extends Error {
+    constructor(message, type, statusCode) {
+        super(message);
+        this.name = 'APIError';
+        this.type = type;
+        this.statusCode = statusCode;
+    }
+}
+
+async function fetchWithErrorHandling(url, options = {}) {
+    try {
+        const response = await fetch(url, options);
+        
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new APIError(
+                data.error || `请求失败 (${response.status})`,
+                data.error_type || 'UnknownError',
+                response.status
+            );
+        }
+        
+        return await response.json();
+    } catch (error) {
+        if (error instanceof APIError) {
+            throw error;
+        }
+        
+        // 网络错误
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            throw new APIError(
+                '无法连接到服务器，请检查网络连接',
+                'NetworkError',
+                0
+            );
+        }
+        
+        // 其他错误
+        throw new APIError(
+            error.message || '未知错误',
+            'UnknownError',
+            0
+        );
+    }
+}
+
+// 系统健康检查
+async function checkSystemHealth() {
+    try {
+        const response = await fetch('/api/health');
+        const health = await response.json();
+        
+        if (health.status !== 'healthy') {
+            console.warn('System health degraded:', health);
+            showSystemWarning('系统部分功能异常，可能影响使用');
+        }
+        
+        return health;
+    } catch (error) {
+        console.error('Health check failed:', error);
+        return null;
+    }
+}
+
+// 每 5 分钟检查一次系统健康状态
+let healthCheckInterval = null;
+
+function startHealthCheck() {
+    if (healthCheckInterval) {
+        clearInterval(healthCheckInterval);
+    }
+    
+    // 立即执行一次
+    checkSystemHealth();
+    
+    // 定期检查
+    healthCheckInterval = setInterval(checkSystemHealth, 5 * 60 * 1000);
+}
+
+// 页面卸载时清理
+window.addEventListener('beforeunload', () => {
+    if (healthCheckInterval) {
+        clearInterval(healthCheckInterval);
+    }
+});
+
+// 用户友好的错误提示
+function showSystemWarning(message) {
+    // 检查是否已经有警告提示
+    if (document.getElementById('systemWarning')) {
+        return;
+    }
+    
+    const warning = document.createElement('div');
+    warning.id = 'systemWarning';
+    warning.className = 'system-warning';
+    warning.innerHTML = `
+        <div class="warning-content">
+            <span class="warning-icon">⚠️</span>
+            <span class="warning-message">${message}</span>
+            <button class="warning-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(warning);
+    
+    // 10秒后自动关闭
+    setTimeout(() => {
+        if (warning.parentElement) {
+            warning.remove();
+        }
+    }, 10000);
+}
+
+function showErrorMessage(message, type = 'error') {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = `error-message error-${type}`;
+    errorDiv.textContent = message;
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#f44336' : '#ff9800'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(errorDiv);
+    
+    // 3秒后自动移除
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 3000);
+}
+
+// 防抖函数
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// 节流函数
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// ============================================================
+// 原有代码
+// ============================================================
+
 let systemReady = false;
 
 // 过滤思考内容中的敏感信息（增强版）
@@ -90,6 +262,7 @@ function filterReasoningContent(content) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    startHealthCheck();  // 启动健康检查
     initializeSystem();
     setupEventListeners();
 });
@@ -99,27 +272,31 @@ async function initializeSystem() {
     showLoading('Initializing system...');
     
     try {
-        const response = await fetch('/api/init', {
+        const data = await fetchWithErrorHandling('/api/init', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             }
         });
         
-        const data = await response.json();
-        
         if (data.success) {
             systemReady = true;
-            console.log('[Success] System initialized');
+            hideLoading();
+            showMessage(`System initialized with ${data.documents_count} documents`, 'success');
         } else {
-            console.error('[Failed] System initialization failed');
+            throw new Error(data.error || 'Initialization failed');
         }
     } catch (error) {
-        console.error('Initialization error:', error);
-    } finally {
         hideLoading();
+        if (error instanceof APIError) {
+            showErrorMessage(error.message);
+        } else {
+            showErrorMessage('系统初始化失败，请刷新页面重试');
+        }
+        console.error('Initialization error:', error);
     }
 }
+
 
 // Setup event listeners
 function setupEventListeners() {
