@@ -106,3 +106,4 @@ nohup.out
 
 # 自动启动日志
 autostart.log
+.venv/
