@@ -116,8 +116,8 @@ REMOTE_CMDS="
     fi
 "
 
-# 使用 -t 参数强制分配伪终端，允许交互式输入密码
-ssh -t $SERVER_USER@$SERVER_IP "$REMOTE_CMDS"
+# 使用 -tt 参数强制分配伪终端，确保密码提示显示
+ssh -tt $SERVER_USER@$SERVER_IP "$REMOTE_CMDS"
 
 if [ $? -eq 0 ]; then
     echo ""
