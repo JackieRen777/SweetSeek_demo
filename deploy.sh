@@ -66,6 +66,10 @@ ssh -T $SERVER_USER@$SERVER_IP << ENDSSH
     # 2. 检查并修复环境
     echo ">> [2/4] 检查并修复服务器环境..."
     
+    # 同步 API Key (确保服务器使用最新的 Key)
+    echo "  同步 API Key..."
+    sed -i 's/DEEPSEEK_API_KEY=.*/DEEPSEEK_API_KEY=sk-vhasvsfskdkwhzafgyftrvyjikxodvwfngzyazexwsybucdc/' .env
+    
     # 检查 .env 配置
     if ! grep -q "HF_HUB_OFFLINE=1" .env 2>/dev/null; then
         echo "  添加 HF_HUB_OFFLINE=1"
