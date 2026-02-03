@@ -8,7 +8,7 @@ echo ""
 
 SERVER="root@8.137.32.247"
 
-ssh $SERVER << 'ENDSSH'
+ssh -T $SERVER << 'ENDSSH'
     cd /www/wwwroot/FCN_SweetSeek
     
     echo "📍 当前目录: $(pwd)"

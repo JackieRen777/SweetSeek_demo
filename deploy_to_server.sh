@@ -39,7 +39,7 @@ fi
 
 echo ""
 echo "步骤 3/5: 连接服务器并拉取代码..."
-ssh $SERVER << ENDSSH
+ssh -T $SERVER << ENDSSH
     cd $PROJECT_DIR
     echo "当前目录: \$(pwd)"
     echo "拉取最新代码..."
@@ -60,7 +60,7 @@ fi
 
 echo ""
 echo "步骤 4/5: 重启服务器应用..."
-ssh $SERVER << ENDSSH
+ssh -T $SERVER << ENDSSH
     cd $PROJECT_DIR
     
     echo "停止旧进程..."
@@ -87,7 +87,7 @@ fi
 
 echo ""
 echo "步骤 5/5: 健康检查..."
-ssh $SERVER << ENDSSH
+ssh -T $SERVER << ENDSSH
     curl -s http://localhost:5001/api/health | python3 -m json.tool
 ENDSSH
 
