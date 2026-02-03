@@ -282,7 +282,7 @@ async function initializeSystem() {
         if (data.success) {
             systemReady = true;
             hideLoading();
-            showMessage(`System initialized with ${data.documents_count} documents`, 'success');
+            console.log(`System initialized with ${data.documents_count} documents`);
         } else {
             throw new Error(data.error || 'Initialization failed');
         }
