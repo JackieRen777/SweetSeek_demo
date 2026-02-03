@@ -16,7 +16,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  SweetSeek 自动部署脚本 v2.1 (优化版)${NC}"
+echo -e "${BLUE}  SweetSeek 自动部署脚本 v2.1 (交互式版)${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
@@ -48,72 +48,76 @@ echo ""
 echo -e "${GREEN}[3/3] 连接服务器执行部署...${NC}"
 echo -e "${YELLOW}注意：只需输入一次密码即可完成所有步骤${NC}"
 
-ssh -T $SERVER_USER@$SERVER_IP << ENDSSH
+# 构建远程命令字符串
+REMOTE_CMDS="
     # 遇到错误不立即退出，手动处理
     
     # 1. 拉取代码
-    echo ">> [1/4] 拉取最新代码..."
+    echo '>> [1/4] 拉取最新代码...'
     cd $SERVER_PATH
-    echo "当前目录: \$(pwd)"
+    echo '当前目录: \$(pwd)'
     git pull origin $CURRENT_BRANCH
     if [ \$? -ne 0 ]; then
-        echo "❌ 代码拉取失败"
+        echo '❌ 代码拉取失败'
         exit 1
     fi
-    echo "✅ 代码更新完成"
-    echo ""
+    echo '✅ 代码更新完成'
+    echo ''
 
     # 2. 检查并修复环境
-    echo ">> [2/4] 检查并修复服务器环境..."
+    echo '>> [2/4] 检查并修复服务器环境...'
     
     # 同步 API Key (确保服务器使用最新的 Key)
-    echo "  同步 API Key..."
+    echo '  同步 API Key...'
     sed -i 's/DEEPSEEK_API_KEY=.*/DEEPSEEK_API_KEY=sk-vhasvsfskdkwhzafgyftrvyjikxodvwfngzyazexwsybucdc/' .env
     
     # 检查 .env 配置
-    if ! grep -q "HF_HUB_OFFLINE=1" .env 2>/dev/null; then
-        echo "  添加 HF_HUB_OFFLINE=1"
-        echo "HF_HUB_OFFLINE=1" >> .env
+    if ! grep -q 'HF_HUB_OFFLINE=1' .env 2>/dev/null; then
+        echo '  添加 HF_HUB_OFFLINE=1'
+        echo 'HF_HUB_OFFLINE=1' >> .env
     fi
-    if ! grep -q "TRANSFORMERS_OFFLINE=1" .env 2>/dev/null; then
-        echo "  添加 TRANSFORMERS_OFFLINE=1"
-        echo "TRANSFORMERS_OFFLINE=1" >> .env
+    if ! grep -q 'TRANSFORMERS_OFFLINE=1' .env 2>/dev/null; then
+        echo '  添加 TRANSFORMERS_OFFLINE=1'
+        echo 'TRANSFORMERS_OFFLINE=1' >> .env
     fi
     
     # 检查日志目录
     mkdir -p logs
-    echo "✅ 环境检查通过"
-    echo ""
+    echo '✅ 环境检查通过'
+    echo ''
 
     # 3. 重启服务
-    echo ">> [3/4] 重启服务..."
-    echo "停止旧进程..."
-    pkill -f "python.*app.py" || echo "没有运行中的进程"
+    echo '>> [3/4] 重启服务...'
+    echo '停止旧进程...'
+    pkill -f 'python.*app.py' || echo '没有运行中的进程'
     sleep 2
     
-    echo "启动新进程..."
+    echo '启动新进程...'
     # 使用虚拟环境（如果存在）
-    if [ -f "venv/bin/activate" ]; then
+    if [ -f 'venv/bin/activate' ]; then
         source venv/bin/activate
     fi
     nohup python3 app.py > logs/app.log 2>&1 &
     
-    echo "等待服务启动 (8秒)..."
+    echo '等待服务启动 (8秒)...'
     sleep 8
     
     # 4. 验证部署
-    echo ">> [4/4] 验证部署..."
+    echo '>> [4/4] 验证部署...'
     if netstat -tunlp | grep 5001 > /dev/null; then
-        echo "✅ 服务启动成功！端口 5001 正在监听"
-        echo ""
-        echo "最新日志:"
+        echo '✅ 服务启动成功！端口 5001 正在监听'
+        echo ''
+        echo '最新日志:'
         tail -n 10 logs/app.log
     else
-        echo "❌ 服务启动失败！查看最近日志："
+        echo '❌ 服务启动失败！查看最近日志：'
         tail -n 30 logs/app.log
         exit 1
     fi
-ENDSSH
+"
+
+# 使用 -t 参数强制分配伪终端，允许交互式输入密码
+ssh -t $SERVER_USER@$SERVER_IP "$REMOTE_CMDS"
 
 if [ $? -eq 0 ]; then
     echo ""
