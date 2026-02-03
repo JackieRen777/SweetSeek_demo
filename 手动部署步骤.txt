@@ -1,0 +1,107 @@
+========================================
+手动部署步骤（分步执行）
+========================================
+
+【第一步：本地提交代码】
+========================================
+
+在本地Mac终端执行：
+
+cd /Users/jackieren/Desktop/FCN_SweetSeek  # 或你的项目路径
+
+# 查看状态
+git status
+
+# 添加所有更改
+git add .
+
+# 提交
+git commit -m "修正结构逻辑错误"
+
+# 推送到GitHub
+git push origin RenJiaqi
+
+
+【第二步：SSH连接服务器】
+========================================
+
+ssh root@8.137.32.247
+
+
+【第三步：服务器重置（在服务器上执行）】
+========================================
+
+# 停止应用
+pkill -9 -f "python.*app.py"
+sleep 2
+
+# 进入项目目录
+cd /www/wwwroot/FCN_SweetSeek
+
+# 删除向量数据库（关键！）
+rm -rf chroma_db
+
+# 重置Git
+git reset --hard HEAD
+
+# 拉取最新代码
+git pull origin RenJiaqi
+
+# 查看最新提交
+git log -1 --oneline
+
+
+【第四步：启动应用（在服务器上执行）】
+========================================
+
+# 启动应用（后台运行）
+nohup /www/wwwroot/FCN_SweetSeek/venv/bin/python app.py > logs/app.log 2>&1 &
+
+# 等待10秒
+sleep 10
+
+# 查看日志（按Ctrl+C停止）
+tail -f logs/app.log
+
+
+【第五步：等待索引重建】
+========================================
+
+在日志中等待看到以下信息：
+
+1. "📚 将从 ./sweet_related_paper 读取 XXX 个文档"
+2. "📝 开始提取PDF元数据..."
+3. "✅ 成功提取 XX 个PDF文件的元数据"
+4. "✅ 索引构建完成并存储到Chroma"
+5. "✅ 服务器启动成功"
+
+⏳ 这个过程需要2-5分钟，请耐心等待！
+
+
+【第六步：测试网站】
+========================================
+
+1. 打开浏览器访问：http://sweetseek.top
+2. 强制刷新：Cmd+Shift+R（Mac）或 Ctrl+Shift+R（Windows）
+3. 提问测试，例如："甜味剂的种类有哪些？"
+4. 检查References是否显示期刊名和年份
+
+
+【故障排查】
+========================================
+
+如果索引构建卡住：
+- 按Ctrl+C停止查看日志
+- 执行：ps aux | grep "python.*app.py" | grep -v grep
+- 如果进程还在，继续等待
+- 如果进程退出，查看：tail -100 logs/app.log
+
+如果启动失败：
+- 查看完整日志：tail -100 logs/app.log
+- 检查磁盘空间：df -h
+- 手动启动测试：/www/wwwroot/FCN_SweetSeek/venv/bin/python app.py
+
+
+========================================
+完成！
+========================================

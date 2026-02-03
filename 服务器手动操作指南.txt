@@ -1,0 +1,251 @@
+========================================
+SweetSeek 服务器手动修复指南
+========================================
+
+请按照以下步骤在服务器上操作：
+
+【步骤 1】SSH 连接到服务器
+-----------------------------------------
+ssh root@8.137.32.247
+cd /www/wwwroot/FCN_SweetSeek
+
+
+【步骤 2】停止所有旧进程
+-----------------------------------------
+# 停止所有 app.py 进程
+pkill -f "python.*app.py"
+
+# 等待3秒
+sleep 3
+
+# 验证进程已停止
+ps aux | grep "python.*app.py" | grep -v grep
+
+
+【步骤 3】创建修复脚本
+-----------------------------------------
+# 创建修复脚本文件
+cat > fix_paths_simple.py << 'ENDOFFILE'
+#!/usr/bin/env python3
+"""
+简化版路径修复脚本
+在服务器上运行，修复向量数据库中的绝对路径
+"""
+
+# 修复 SQLite 版本问题（必须在导入chromadb之前）
+try:
+    __import__('pysqlite3')
+    import sys
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+    print("✅ 已加载 pysqlite3")
+except ImportError:
+    print("⚠️  未找到 pysqlite3，使用系统 sqlite3")
+
+import chromadb
+import os
+
+def fix_vector_db_paths():
+    """修复向量数据库中的路径"""
+    
+    print("=" * 60)
+    print("开始修复向量数据库路径")
+    print("=" * 60)
+    
+    # 连接到Chroma数据库
+    print("\n[1/5] 连接到Chroma数据库...")
+    client = chromadb.PersistentClient(path='./chroma_db')
+    collection = client.get_collection('sweetseek_papers')
+    
+    doc_count = collection.count()
+    print(f"✅ 连接成功，文档数量: {doc_count}")
+    
+    # 获取所有文档
+    print("\n[2/5] 获取所有文档元数据...")
+    results = collection.get(include=['metadatas'])
+    
+    ids = results['ids']
+    metadatas = results['metadatas']
+    print(f"✅ 获取到 {len(ids)} 个文档")
+    
+    # 分析路径格式
+    print("\n[3/5] 分析路径格式...")
+    absolute_count = 0
+    relative_count = 0
+    
+    for metadata in metadatas[:10]:  # 检查前10个
+        file_path = metadata.get('file_path', '')
+        if file_path.startswith('/'):
+            absolute_count += 1
+        else:
+            relative_count += 1
+    
+    print(f"前10个文档中：")
+    print(f"  - 绝对路径: {absolute_count} 个")
+    print(f"  - 相对路径: {relative_count} 个")
+    
+    # 修复路径
+    print("\n[4/5] 开始修复路径...")
+    
+    fixed_count = 0
+    updated_metadatas = []
+    updated_ids = []
+    
+    # 服务器的基础路径
+    server_base = '/www/wwwroot/FCN_SweetSeek'
+    
+    for doc_id, metadata in zip(ids, metadatas):
+        file_path = metadata.get('file_path', '')
+        
+        if file_path.startswith('/'):
+            # 绝对路径，需要转换为相对路径
+            if file_path.startswith(server_base):
+                # 移除服务器基础路径
+                relative_path = file_path[len(server_base):].lstrip('/')
+            else:
+                # 尝试提取相对路径部分
+                if 'sweet_related_paper' in file_path:
+                    idx = file_path.index('sweet_related_paper')
+                    relative_path = file_path[idx:]
+                else:
+                    # 无法转换，跳过
+                    continue
+            
+            # 更新元数据
+            metadata['file_path'] = relative_path
+            updated_metadatas.append(metadata)
+            updated_ids.append(doc_id)
+            
+            fixed_count += 1
+            
+            # 显示前3个示例
+            if fixed_count <= 3:
+                print(f"\n示例 {fixed_count}:")
+                print(f"  原路径: {file_path[:80]}")
+                print(f"  新路径: {relative_path[:80]}")
+    
+    # 批量更新
+    print(f"\n[5/5] 批量更新 {len(updated_ids)} 个文档...")
+    
+    if updated_ids:
+        collection.update(
+            ids=updated_ids,
+            metadatas=updated_metadatas
+        )
+        print(f"✅ 成功修复 {fixed_count} 个文档的路径格式")
+    else:
+        print("✅ 所有路径已经是相对格式，无需修复")
+    
+    # 验证修复结果
+    print("\n" + "=" * 60)
+    print("验证修复结果")
+    print("=" * 60)
+    
+    results = collection.get(limit=5, include=['metadatas'])
+    print("\n前5个文档的路径:")
+    for i, meta in enumerate(results['metadatas'][:5], 1):
+        path = meta.get('file_path', 'NO PATH')
+        print(f"{i}. {path[:80]}")
+    
+    print("\n" + "=" * 60)
+    print("修复完成！")
+    print("=" * 60)
+
+if __name__ == '__main__':
+    fix_vector_db_paths()
+ENDOFFILE
+
+# 验证文件创建成功
+ls -lh fix_paths_simple.py
+
+
+【步骤 4】运行修复脚本
+-----------------------------------------
+# 使用虚拟环境的Python运行（重要！）
+/www/wwwroot/FCN_SweetSeek/venv/bin/python fix_paths_simple.py
+
+# 预期输出：
+# ✅ 已加载 pysqlite3
+# ============================================================
+# 开始修复向量数据库路径
+# ============================================================
+# [1/5] 连接到Chroma数据库...
+# ✅ 连接成功，文档数量: 4096
+# ...
+# ✅ 成功修复 XXXX 个文档的路径格式
+
+
+【步骤 5】重启应用
+-----------------------------------------
+# 启动应用（后台运行）
+nohup /www/wwwroot/FCN_SweetSeek/venv/bin/python app.py > logs/app.log 2>&1 &
+
+# 等待5秒让应用启动
+sleep 5
+
+# 检查进程状态
+ps aux | grep "python.*app.py" | grep -v grep
+
+# 预期输出：
+# root      XXXXX  X.X XX.X XXXXXXX XXXXXX ?     Sl   时间   X:XX /www/wwwroot/FCN_SweetSeek/venv/bin/python app.py
+
+
+【步骤 6】验证服务
+-----------------------------------------
+# 检查端口监听
+netstat -tlnp | grep 5001
+
+# 或者使用 ss 命令
+ss -tlnp | grep 5001
+
+# 预期输出：
+# tcp   0   0 0.0.0.0:5001   0.0.0.0:*   LISTEN   XXXXX/python
+
+# 查看最新日志
+tail -30 logs/app.log
+
+# 预期输出应包含：
+# [系统] 初始化RAG系统...
+# [成功] 系统初始化完成
+# [统计] 文档数: 4096
+# ✅ 服务器启动成功
+
+
+【步骤 7】测试网站
+-----------------------------------------
+1. 打开浏览器访问：http://sweetseek.top
+2. 强制刷新浏览器（Cmd+Shift+R 或 Ctrl+Shift+R）
+3. 提一个问题，例如："甜味剂的种类有哪些？"
+4. 检查 References 部分是否正常显示期刊名和年份
+   - 应该显示：Journal Name (Year)
+   - 不应该显示：Unknown N/A
+
+
+【故障排查】
+-----------------------------------------
+如果修复脚本运行失败：
+1. 检查Python版本：
+   /www/wwwroot/FCN_SweetSeek/venv/bin/python --version
+   # 应该是 Python 3.9.x
+
+2. 检查chromadb是否安装：
+   /www/wwwroot/FCN_SweetSeek/venv/bin/python -c "import chromadb; print(chromadb.__version__)"
+
+3. 检查数据库文件：
+   ls -lh chroma_db/
+   # 应该看到 chroma.sqlite3 文件
+
+如果应用启动失败：
+1. 查看完整日志：
+   tail -100 logs/app.log
+
+2. 检查端口占用：
+   lsof -i :5001
+
+3. 手动测试启动：
+   /www/wwwroot/FCN_SweetSeek/venv/bin/python app.py
+   # 按 Ctrl+C 停止后再用 nohup 启动
+
+
+========================================
+完成！
+========================================
