@@ -1,0 +1,87 @@
+========================================
+🚨 服务器修复命令 - 直接复制粘贴执行
+========================================
+
+第一步：SSH连接服务器
+------------------------
+ssh root@8.137.32.247
+# 输入密码后继续
+
+
+第二步：进入项目目录
+------------------------
+cd /www/wwwroot/FCN_SweetSeek
+
+
+第三步：拉取最新代码
+------------------------
+git pull origin RenJiaqi
+
+
+第四步：修复向量数据库路径（关键！）
+------------------------
+python3 fix_vector_db_paths.py
+
+
+第五步：重启Flask应用
+------------------------
+pkill -f "python3 app.py"
+sleep 3
+nohup python3 app.py > logs/app.log 2>&1 &
+
+
+第六步：验证服务运行
+------------------------
+ps aux | grep "python3 app.py" | grep -v grep
+curl http://localhost:5001/api/health
+
+
+第七步：查看日志（可选）
+------------------------
+tail -30 logs/sweetseek.log
+
+
+========================================
+✅ 完成后测试
+========================================
+
+1. 浏览器访问: http://sweetseek.top
+2. 强制刷新: Cmd+Shift+R (Mac) 或 Ctrl+Shift+R (Windows)
+3. 提问测试: "甜味剂有哪些类型？"
+4. 检查References: 应该显示期刊名和年份
+
+========================================
+🔍 如果还是不行
+========================================
+
+检查向量数据库路径是否修复成功：
+------------------------
+python3 -c "
+import chromadb
+client = chromadb.PersistentClient(path='./chroma_db')
+collection = client.get_collection('sweetseek_papers')
+results = collection.get(limit=3, include=['metadatas'])
+for i, meta in enumerate(results['metadatas'][:3], 1):
+    path = meta.get('file_path', 'NO PATH')
+    print(f'{i}. {path[:80]}')
+    if path.startswith('/'):
+        print('   ❌ 仍然是绝对路径！')
+    else:
+        print('   ✅ 已转换为相对路径')
+"
+
+检查元数据数据库：
+------------------------
+python3 -c "
+import json
+data = json.load(open('chroma_db/metadata.json'))
+print(f'元数据数量: {len(data)}')
+print(f'示例路径: {list(data.keys())[0]}')
+"
+
+查看实时日志：
+------------------------
+tail -f logs/sweetseek.log
+# 按 Ctrl+C 退出
+
+========================================
