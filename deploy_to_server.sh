@@ -38,31 +38,23 @@ else
 fi
 
 echo ""
-echo "步骤 3/5: 连接服务器并拉取代码..."
+echo "步骤 3-5: 连接服务器执行部署 (代码拉取 + 重启服务 + 健康检查)..."
 ssh -T $SERVER << ENDSSH
     cd $PROJECT_DIR
     echo "当前目录: \$(pwd)"
-    echo "拉取最新代码..."
-    git pull origin RenJiaqi
     
+    # --- 3. 拉取代码 ---
+    echo ">> [3/5] 拉取最新代码..."
+    git pull origin RenJiaqi
     if [ \$? -eq 0 ]; then
         echo "✅ 代码拉取成功"
     else
         echo "❌ 代码拉取失败"
         exit 1
     fi
-ENDSSH
 
-if [ $? -ne 0 ]; then
-    echo "❌ 服务器操作失败"
-    exit 1
-fi
-
-echo ""
-echo "步骤 4/5: 重启服务器应用..."
-ssh -T $SERVER << ENDSSH
-    cd $PROJECT_DIR
-    
+    # --- 4. 重启服务 ---
+    echo ">> [4/5] 重启服务器应用..."
     echo "停止旧进程..."
     pkill -f "python3 app.py"
     sleep 3
@@ -78,17 +70,16 @@ ssh -T $SERVER << ENDSSH
         echo "❌ 应用启动失败"
         exit 1
     fi
-ENDSSH
 
-if [ $? -ne 0 ]; then
-    echo "❌ 应用重启失败"
-    exit 1
-fi
-
-echo ""
-echo "步骤 5/5: 健康检查..."
-ssh -T $SERVER << ENDSSH
-    curl -s http://localhost:5001/api/health | python3 -m json.tool
+    # --- 5. 健康检查 ---
+    echo ">> [5/5] 健康检查..."
+    sleep 2
+    if curl -s http://localhost:5001/api/health | grep -q "status"; then
+        curl -s http://localhost:5001/api/health | python3 -m json.tool
+        echo "✅ 健康检查通过"
+    else
+        echo "⚠️  健康检查无响应，但进程已启动"
+    fi
 ENDSSH
 
 echo ""
