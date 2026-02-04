@@ -24,15 +24,16 @@ import logging
 import os
 from typing import List, Optional
 
+import chromadb
 from llama_index.core import (
-    VectorStoreIndex,
-    SimpleDirectoryReader,
     Settings,
+    SimpleDirectoryReader,
     StorageContext,
+    VectorStoreIndex,
 )
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
-import chromadb
+from config import config
 
 logging.basicConfig(level=logging.INFO)
 
@@ -63,13 +64,12 @@ class PersistentRAGSystem:
         # 配置DeepSeek LLM
         try:
             from openai import OpenAI as OpenAIClient
-            from dotenv import load_dotenv
-            
-            load_dotenv()
-            
-            api_key = os.getenv("DEEPSEEK_API_KEY")
-            base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
-            model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+
+            from config import config
+
+            api_key = config.DEEPSEEK_API_KEY
+            base_url = config.DEEPSEEK_BASE_URL
+            model = config.DEEPSEEK_MODEL
             
             if api_key:
                 import sys
@@ -86,11 +86,12 @@ class PersistentRAGSystem:
             logging.warning(f"配置 DeepSeek 客户端失败: {e}")
 
         # 配置嵌入模型
-        embed_model_type = os.getenv("EMBED_MODEL_TYPE", "huggingface").lower()
+        from config import config
+        embed_model_type = config.EMBED_MODEL_TYPE
         
         try:
             if embed_model_type == "huggingface":
-                embed_model_name = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5")
+                embed_model_name = config.EMBED_MODEL_NAME
                 try:
                     from llama_index.embeddings.huggingface import HuggingFaceEmbedding
                     embed_model = HuggingFaceEmbedding(model_name=embed_model_name)
@@ -129,7 +130,7 @@ class PersistentRAGSystem:
                     name="sweetseek_papers",
                     metadata={"hnsw:space": "cosine"}  # 使用余弦相似度
                 )
-                logging.info(f"✅ Chroma集合已就绪: sweetseek_papers")
+                logging.info("✅ Chroma集合已就绪: sweetseek_papers")
             except Exception as e:
                 logging.error(f"创建Chroma集合失败: {e}")
                 raise
@@ -239,7 +240,7 @@ class PersistentRAGSystem:
                 
                 logging.info("✅ 索引构建完成并存储到Chroma")
                 
-            except Exception as e:
+            except Exception:
                 logging.exception("索引构建失败：")
                 return False
 
@@ -272,6 +273,60 @@ class PersistentRAGSystem:
         
         # 重建
         return self._build_new_index()
+
+    def add_documents(self, documents: List[object]) -> bool:
+        if not documents:
+            return True
+
+        try:
+            self._configure_models()
+            self._init_chroma()
+
+            if self.index is None:
+                if not self.load_or_create_index():
+                    return False
+
+            try:
+                from llama_index.core.node_parser import TokenTextSplitter
+
+                text_splitter = TokenTextSplitter(
+                    chunk_size=512,
+                    chunk_overlap=50,
+                    separator=" ",
+                )
+
+                if hasattr(self.index, "_transformations"):
+                    self.index._transformations = [text_splitter]
+            except Exception:
+                pass
+
+            inserted = 0
+            for doc in documents:
+                file_path = ""
+                try:
+                    file_path = getattr(doc, "metadata", {}).get("file_path", "") or ""
+                except Exception:
+                    file_path = ""
+
+                if file_path and str(file_path).lower().endswith(".pdf"):
+                    try:
+                        if not self.metadata_storage.has_metadata(str(file_path)):
+                            metadata = self.metadata_extractor.extract_metadata(str(file_path))
+                            self.metadata_storage.save_metadata(str(file_path), metadata)
+                    except Exception as e:
+                        logging.error(f"提取元数据失败 {file_path}: {e}")
+
+                try:
+                    self.index.insert(doc)
+                    inserted += 1
+                except Exception as e:
+                    logging.error(f"插入文档失败: {e}")
+
+            logging.info(f"✅ 增量写入完成: {inserted} 个文档")
+            return True
+        except Exception as e:
+            logging.exception(f"增量写入失败: {e}")
+            return False
 
     def get_query_engine(self):
         """获取查询引擎"""
@@ -306,12 +361,4 @@ class PersistentRAGSystem:
 
 
 # 创建全局实例（支持环境变量配置）
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-data_dir = os.getenv('DATA_DIR', './sweet_related_paper')
-persist_dir = os.getenv('PERSIST_DIR', './chroma_db')
-
-rag_system = PersistentRAGSystem(data_dir=data_dir, persist_dir=persist_dir)
+rag_system = PersistentRAGSystem(data_dir=config.DATA_DIR, persist_dir=config.PERSIST_DIR)

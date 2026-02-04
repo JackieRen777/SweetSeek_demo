@@ -4,10 +4,10 @@
 从PDF文件中提取元数据，包括期刊名、年份、标题、作者和DOI。
 """
 
-import re
 import logging
-from typing import Dict, List, Optional
+import re
 from pathlib import Path
+from typing import Dict, List, Optional
 
 try:
     from pypdf import PdfReader
@@ -79,7 +79,7 @@ class PDFMetadataExtractor:
     DOI_PATTERN = re.compile(r'10\.\d{4,}/[^\s]+')
     
     # 年份正则表达式 (1900-2099)
-    YEAR_PATTERN = re.compile(r'\b(19|20)\d{2}\b')
+    YEAR_PATTERN = re.compile(r'\b(?:19|20)\d{2}\b')
     
     def extract_metadata(self, pdf_path: str) -> Dict[str, any]:
         """
@@ -160,7 +160,7 @@ class PDFMetadataExtractor:
                         year = pdf_info.creation_date.year
                         if 1900 <= year <= 2099:
                             metadata['year'] = str(year)
-                    except:
+                    except Exception:
                         pass
                 
                 # 检查subject或keywords中的DOI
@@ -198,7 +198,6 @@ class PDFMetadataExtractor:
             # 提取年份
             year_matches = self.YEAR_PATTERN.findall(text)
             if year_matches:
-                # 取最后一个匹配的年份（通常是发表年份）
                 metadata['year'] = year_matches[-1]
             
             # 提取标题（通常在第一页前几行，字体较大）

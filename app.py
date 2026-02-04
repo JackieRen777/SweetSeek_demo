@@ -7,61 +7,24 @@ AI-powered research Q&A system
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
-from dotenv import load_dotenv
 import time
 from datetime import datetime
 from persistent_storage import rag_system
 from query_expander import SweetnessQueryExpander
 from evidence_ranker import EvidenceRanker
 import logging
-from logging.handlers import RotatingFileHandler
 from functools import wraps
 import traceback
 import sys
+from config import config
+from logger import setup_logger
+from services.dependencies import build_services
 
 # NOTE: 文件中的函数多数通过 Flask 的 @app.route 装饰器在运行时被调用。
 # 静态分析工具（如 vulture）会将这些运行时注册的路由误判为未使用，
 # 所以请在复核 vulture 输出时忽略此文件中的路由标记。
 
-# 加载环境变量
-load_dotenv()
-
-# ============================================================
-# 日志配置
-# ============================================================
-
-def setup_logging():
-    """配置应用日志"""
-    os.makedirs('logs', exist_ok=True)
-    
-    logger = logging.getLogger('sweetseek')
-    logger.setLevel(logging.INFO)
-    
-    # 文件处理器（自动轮转，最大 10MB，保留 5 个备份）
-    file_handler = RotatingFileHandler(
-        'logs/sweetseek.log',
-        maxBytes=10*1024*1024,
-        backupCount=5
-    )
-    file_handler.setLevel(logging.INFO)
-    
-    # 控制台处理器
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    
-    # 格式化
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
-    
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-    
-    return logger
-
-app_logger = setup_logging()
+app_logger = setup_logger('sweetseek')
 
 # ============================================================
 # 装饰器：错误处理和性能监控
@@ -133,9 +96,10 @@ CORS(app)
 system_ready = False
 conversations = []
 
-# 初始化查询扩展器和证据分级器
-query_expander = SweetnessQueryExpander()
-evidence_ranker = EvidenceRanker()
+services = build_services()
+query_expander = services.query_expander
+evidence_ranker = services.evidence_ranker
+llm_client = services.llm_client
 
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
@@ -303,6 +267,23 @@ def api_ask():
         retrieved_chunks = retriever.retrieve(expanded_query)  # 明确命名：chunks
         
         print(f"[检索] 检索到 {len(retrieved_chunks)} 个文本块（chunks）")
+        if not retrieved_chunks:
+            end_time = time.time()
+            conversation = {
+                'id': len(conversations) + 1,
+                'question': question,
+                'answer': '未检索到相关文献，请尝试更具体的关键词或降低相似度阈值。',
+                'references': [],
+                'timestamp': datetime.now().isoformat(),
+                'response_time': round(end_time - start_time, 2)
+            }
+            conversations.append(conversation)
+            return jsonify({
+                'success': True,
+                'answer': conversation['answer'],
+                'references': [],
+                'response_time': conversation['response_time']
+            })
         
         # ============================================================
         # 第二步：根据相关度阈值过滤文本块
@@ -430,7 +411,8 @@ def api_ask():
             ref['ref_id'] = f'ref_{idx}'
             references.append(ref)
         
-        print(f"[证据分级] 完成，最高质量: Level {references[0]['evidence_level']} ({references[0]['evidence_label']})")
+        if references:
+            print(f"[证据分级] 完成，最高质量: Level {references[0]['evidence_level']} ({references[0]['evidence_label']})")
         
         # ============================================================
         # 第六步：构建提示词（关键修复：只使用references中的文献的chunks）
@@ -519,66 +501,34 @@ def api_ask():
 
 请用中文回答，结构清晰，在重要观点后标注文献来源。"""
         
-        # 调用DeepSeek API（流式输出）
-        import persistent_storage
+        # 调用DeepSeek API
         answer = None
         reasoning = None
         max_retries = 3
         retry_delay = 2
         
-        if hasattr(persistent_storage, 'deepseek_client'):
+        if llm_client:
             for attempt in range(max_retries):
                 try:
-                    # 使用流式输出
-                    stream = persistent_storage.deepseek_client.chat.completions.create(
-                        model=persistent_storage.deepseek_model,
-                        messages=[
-                            {"role": "system", "content": f"你是甜味科学领域的专业知识系统。重要：你只能引用ref_1到ref_{len(references)}这{len(references)}篇文献，不要使用其他编号。"},
-                            {"role": "user", "content": prompt}
-                        ],
-                        temperature=0.6,
-                        max_tokens=2000,
-                        stream=True  # 启用流式输出
-                    )
+                    messages = [
+                        {"role": "system", "content": f"你是甜味科学领域的专业知识系统。重要：你只能引用ref_1到ref_{len(references)}这{len(references)}篇文献，不要使用其他编号。"},
+                        {"role": "user", "content": prompt},
+                    ]
+
+                    answer, reasoning = llm_client.chat(messages, temperature=0.6, max_tokens=2000)
                     
-                    # 收集流式响应
-                    answer_chunks = []
-                    reasoning_chunks = []
-                    
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content:
-                            answer_chunks.append(chunk.choices[0].delta.content)
-                        
-                        # 检查是否有思维链
-                        if hasattr(chunk.choices[0].delta, 'reasoning_content') and chunk.choices[0].delta.reasoning_content:
-                            reasoning_chunks.append(chunk.choices[0].delta.reasoning_content)
-                    
-                    answer = ''.join(answer_chunks)
-                    reasoning = ''.join(reasoning_chunks) if reasoning_chunks else None
-                    
-                    # ============================================================
-                    # 后处理：清理无效的ref引用
-                    # 将不在references列表中的ref编号替换为有效的编号
-                    # ============================================================
                     import re
                     valid_ref_ids = {ref['ref_id'] for ref in references}
-                    max_ref_num = len(references)
-                    
-                    def replace_invalid_ref(match):
-                        ref_num = int(match.group(1))
-                        if f'ref_{ref_num}' in valid_ref_ids:
-                            return match.group(0)  # 有效的ref，保持不变
-                        else:
-                            # 无效的ref，映射到有效范围内
-                            mapped_num = ((ref_num - 1) % max_ref_num) + 1
-                            return f'[ref_{mapped_num}]'
-                    
-                    # 替换回答中的无效ref
-                    answer = re.sub(r'\[ref_(\d+)\]', replace_invalid_ref, answer)
+
+                    def remove_invalid_ref(match):
+                        ref_num = match.group(1)
+                        return match.group(0) if f'ref_{ref_num}' in valid_ref_ids else ''
+
+                    answer = re.sub(r'\[ref_(\d+)\]', remove_invalid_ref, answer)
                     if reasoning:
-                        reasoning = re.sub(r'\[ref_(\d+)\]', replace_invalid_ref, reasoning)
-                    
-                    print(f"[后处理] 清理了回答中的无效ref引用，有效范围: ref_1 到 ref_{max_ref_num}")
+                        reasoning = re.sub(r'\[ref_(\d+)\]', remove_invalid_ref, reasoning)
+
+                    print(f"[后处理] 已移除不在references中的ref引用，有效ref数: {len(valid_ref_ids)}")
                     
                     # 如果有思维链，添加到答案前面
                     if reasoning and len(reasoning.strip()) > 0:
@@ -839,8 +789,23 @@ def api_ask_stream():
     
     data = request.json
     question = data.get('question', '').strip()
-    similarity_threshold = data.get('similarity_threshold', 0.40)  # 降低阈值
-    max_results = data.get('max_results', 100)  # 增加到100
+    similarity_threshold = data.get('similarity_threshold', 0.40)
+    try:
+        similarity_threshold = float(similarity_threshold)
+        if not (0 <= similarity_threshold <= 1):
+            raise ValueError
+    except (ValueError, TypeError):
+        similarity_threshold = 0.40
+
+    max_results = data.get('max_results', 100)
+    try:
+        max_results = int(max_results)
+        if max_results <= 0:
+            max_results = 100
+        if max_results > 200:
+            max_results = 200
+    except (ValueError, TypeError):
+        max_results = 100
     
     app_logger.info(f"收到流式问答请求: {question[:100]}")
     
@@ -867,6 +832,12 @@ def api_ask_stream():
             
             retriever = rag_system.index.as_retriever(similarity_top_k=max_results)
             retrieved_chunks = retriever.retrieve(expanded_query)
+            if not retrieved_chunks:
+                yield f"data: {json.dumps({'type': 'references', 'references': []}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'type': 'answer_start'}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'type': 'answer', 'content': '未检索到相关文献，请尝试更具体的关键词或降低相似度阈值。'}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
+                return
             
             # 过滤文本块
             filtered_chunks = [chunk for chunk in retrieved_chunks if float(chunk.score) >= similarity_threshold]
@@ -1063,44 +1034,34 @@ def api_ask_stream():
 
 请用中文回答，结构清晰，在重要观点后标注文献来源。"""
             
-            # 流式调用 DeepSeek API
-            import persistent_storage
-            
-            if hasattr(persistent_storage, 'deepseek_client'):
-                stream = persistent_storage.deepseek_client.chat.completions.create(
-                    model=persistent_storage.deepseek_model,
-                    messages=[
-                        {"role": "system", "content": f"你是甜味科学领域的专业知识系统。重要：你只能引用ref_1到ref_{len(references)}这{len(references)}篇文献，不要使用其他编号。"},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.6,
-                    max_tokens=2000,
-                    stream=True
-                )
-                
-                reasoning_started = False
-                answer_started = False
-                
-                for chunk in stream:
-                    # 处理思维链
-                    if hasattr(chunk.choices[0].delta, 'reasoning_content') and chunk.choices[0].delta.reasoning_content:
-                        if not reasoning_started:
-                            yield f"data: {json.dumps({'type': 'reasoning_start'}, ensure_ascii=False)}\n\n"
-                            reasoning_started = True
-                        yield f"data: {json.dumps({'type': 'reasoning', 'content': chunk.choices[0].delta.reasoning_content}, ensure_ascii=False)}\n\n"
-                    
-                    # 处理答案
-                    if chunk.choices[0].delta.content:
-                        if not answer_started:
-                            if reasoning_started:
-                                yield f"data: {json.dumps({'type': 'reasoning_end'}, ensure_ascii=False)}\n\n"
-                            
-                            # 在开始回答前发送references
-                            yield f"data: {json.dumps({'type': 'references', 'references': references}, ensure_ascii=False)}\n\n"
-                            
-                            yield f"data: {json.dumps({'type': 'answer_start'}, ensure_ascii=False)}\n\n"
-                            answer_started = True
-                        yield f"data: {json.dumps({'type': 'answer', 'content': chunk.choices[0].delta.content}, ensure_ascii=False)}\n\n"
+            if not llm_client:
+                yield f"data: {json.dumps({'type': 'error', 'error': 'DeepSeek API 未配置，无法生成回答。'}, ensure_ascii=False)}\n\n"
+                return
+
+            messages = [
+                {"role": "system", "content": f"你是甜味科学领域的专业知识系统。重要：你只能引用ref_1到ref_{len(references)}这{len(references)}篇文献，不要使用其他编号。"},
+                {"role": "user", "content": prompt},
+            ]
+
+            reasoning_started = False
+            answer_started = False
+
+            for delta in llm_client.stream_chat(messages, temperature=0.6, max_tokens=2000):
+                if delta.reasoning_content:
+                    if not reasoning_started:
+                        yield f"data: {json.dumps({'type': 'reasoning_start'}, ensure_ascii=False)}\n\n"
+                        reasoning_started = True
+                    yield f"data: {json.dumps({'type': 'reasoning', 'content': delta.reasoning_content}, ensure_ascii=False)}\n\n"
+
+                if delta.content:
+                    if not answer_started:
+                        if reasoning_started:
+                            yield f"data: {json.dumps({'type': 'reasoning_end'}, ensure_ascii=False)}\n\n"
+
+                        yield f"data: {json.dumps({'type': 'references', 'references': references}, ensure_ascii=False)}\n\n"
+                        yield f"data: {json.dumps({'type': 'answer_start'}, ensure_ascii=False)}\n\n"
+                        answer_started = True
+                    yield f"data: {json.dumps({'type': 'answer', 'content': delta.content}, ensure_ascii=False)}\n\n"
             
             # 发送完成信号
             yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
@@ -1131,10 +1092,9 @@ if __name__ == '__main__':
         app_logger.info("正在初始化RAG系统...")
         initialize_rag_system()
         
-        # 从环境变量获取配置
-        host = os.getenv('HOST', '0.0.0.0')
-        port = int(os.getenv('PORT', 5001))
-        debug = os.getenv('DEBUG', 'True').lower() == 'true'
+        host = config.HOST
+        port = config.PORT
+        debug = config.DEBUG
         
         print("\n" + "=" * 50)
         print("✅ 服务器启动成功")

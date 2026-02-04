@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """增量索引管理器 - 只处理新添加的文献"""
 
-import os
 import json
-from pathlib import Path
+import os
 from typing import List, Set
+
 from llama_index.core import SimpleDirectoryReader
-from persistent_storage import rag_system
-from pdf_metadata_extractor import PDFMetadataExtractor
+
 from metadata_storage import MetadataStorage
+from pdf_metadata_extractor import PDFMetadataExtractor
+from persistent_storage import rag_system
+
 
 class IncrementalIndexer:
     """增量索引管理器"""

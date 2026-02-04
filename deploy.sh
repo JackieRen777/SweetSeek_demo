@@ -67,9 +67,12 @@ REMOTE_CMDS="
     # 2. 检查并修复环境
     echo '>> [2/4] 检查并修复服务器环境...'
     
-    # 同步 API Key (确保服务器使用最新的 Key)
-    echo '  同步 API Key...'
-    sed -i 's/DEEPSEEK_API_KEY=.*/DEEPSEEK_API_KEY=sk-vhasvsfskdkwhzafgyftrvyjikxodvwfngzyazexwsybucdc/' .env
+    # 检查 API Key 是否存在（不要在脚本里写入密钥）
+    echo '  检查 API Key...'
+    if ! grep -q '^DEEPSEEK_API_KEY=' .env 2>/dev/null; then
+        echo '❌ 缺少 DEEPSEEK_API_KEY，请在服务器 .env 中配置后再部署'
+        exit 1
+    fi
     
     # 检查 .env 配置
     if ! grep -q 'HF_HUB_OFFLINE=1' .env 2>/dev/null; then
@@ -111,7 +114,7 @@ REMOTE_CMDS="
     # 检查端口是否被占用，如果被占用则等待释放
     for i in {1..10}; do
         if netstat -tunlp 2>/dev/null | grep 5001 > /dev/null; then
-            echo "端口 5001 仍被占用，等待释放... ($i/10)"
+            echo \"端口 5001 仍被占用，等待释放... (\$i/10)\"
             sleep 1
         else
             break

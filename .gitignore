@@ -108,3 +108,4 @@ nohup.out
 autostart.log
 .venv/
 .archive/
+.trae/
