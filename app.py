@@ -250,8 +250,24 @@ def api_ask():
     # 相关度阈值：只保留相似度分数高于此值的文档
     # 分数范围是0-1，0.40表示相关文献（降低阈值以获取更多文献）
     similarity_threshold = data.get('similarity_threshold', 0.40)
+    # 输入验证
+    try:
+        similarity_threshold = float(similarity_threshold)
+        if not (0 <= similarity_threshold <= 1):
+            raise ValueError
+    except (ValueError, TypeError):
+        similarity_threshold = 0.40
+        
     # 最大检索数量（从所有文档中检索）（增加到100以获取更多文献）
     max_results = data.get('max_results', 100)
+    try:
+        max_results = int(max_results)
+        if max_results <= 0:
+            max_results = 100
+        if max_results > 200: # 限制上限
+            max_results = 200
+    except (ValueError, TypeError):
+        max_results = 100
     
     app_logger.info(f"收到问答请求: {question[:100]}")
     

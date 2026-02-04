@@ -108,6 +108,16 @@ REMOTE_CMDS="
     
     # 使用 nohup 并在后台运行，确保退出 SSH 后进程不被杀掉
     # 显式使用 venv 中的 python 全路径，避免环境混淆
+    # 检查端口是否被占用，如果被占用则等待释放
+    for i in {1..10}; do
+        if netstat -tunlp 2>/dev/null | grep 5001 > /dev/null; then
+            echo "端口 5001 仍被占用，等待释放... ($i/10)"
+            sleep 1
+        else
+            break
+        fi
+    done
+    
     nohup ./venv/bin/python3 app.py > logs/app.log 2>&1 &
     disown
     
