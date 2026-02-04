@@ -611,10 +611,27 @@ body {
 @media (max-width: 1024px) {
     .main-container {
         grid-template-columns: 1fr;
+        /* 小屏幕下高度自动，允许滚动，因为内容垂直堆叠了 */
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    /* 
+    .references-container {
+        display: none;
+    } 
+    */
+    
+    /* 让聊天框和引用框在移动端都有合适的高度 */
+    .chat-container {
+        height: 70vh;
+        min-height: 500px;
     }
     
     .references-container {
-        display: none;
+        height: auto;
+        min-height: 300px;
+        max-height: 500px;
     }
 }
 
