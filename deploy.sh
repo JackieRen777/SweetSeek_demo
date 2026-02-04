@@ -89,7 +89,8 @@ REMOTE_CMDS="
     # 3. 重启服务
     echo '>> [3/4] 重启服务...'
     echo '停止旧进程...'
-    pkill -f 'python.*app.py' || echo '没有运行中的进程'
+    # 仅杀掉包含 app.py 的 python 进程，避免误杀 ssh
+    ps aux | grep 'python.*app.py' | grep -v grep | awk '{print \$2}' | xargs -r kill -9
     sleep 2
     
     echo '启动新进程...'
@@ -98,7 +99,8 @@ REMOTE_CMDS="
         source venv/bin/activate
     fi
     # 使用 nohup 并在后台运行，确保退出 SSH 后进程不被杀掉
-    nohup python3 app.py > logs/app.log 2>&1 & disown
+    nohup python3 app.py > logs/app.log 2>&1 &
+    disown
     
     echo '等待服务启动 (8秒)...'
     sleep 8
