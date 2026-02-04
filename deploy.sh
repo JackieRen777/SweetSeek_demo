@@ -97,7 +97,8 @@ REMOTE_CMDS="
     if [ -f 'venv/bin/activate' ]; then
         source venv/bin/activate
     fi
-    nohup python3 app.py > logs/app.log 2>&1 &
+    # 使用 nohup 并在后台运行，确保退出 SSH 后进程不被杀掉
+    nohup python3 app.py > logs/app.log 2>&1 & disown
     
     echo '等待服务启动 (8秒)...'
     sleep 8
