@@ -210,25 +210,25 @@ def api_ask():
     question = data.get('question', '').strip()
     # 相关度阈值：只保留相似度分数高于此值的文档
     # 分数范围是0-1，0.40表示相关文献（降低阈值以获取更多文献）
-    similarity_threshold = data.get('similarity_threshold', 0.40)
+    similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
     # 输入验证
     try:
         similarity_threshold = float(similarity_threshold)
         if not (0 <= similarity_threshold <= 1):
             raise ValueError
     except (ValueError, TypeError):
-        similarity_threshold = 0.40
+        similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
         
     # 最大检索数量（从所有文档中检索）（增加到100以获取更多文献）
-    max_results = data.get('max_results', 100)
+    max_results = data.get('max_results', config.RAG_MAX_RESULTS)
     try:
         max_results = int(max_results)
-        if max_results <= 0:
-            max_results = 100
-        if max_results > 200: # 限制上限
+        if max_results < 1:
+            raise ValueError
+        if max_results > 200:  # 设置上限
             max_results = 200
     except (ValueError, TypeError):
-        max_results = 100
+        max_results = config.RAG_MAX_RESULTS
     
     app_logger.info(f"收到问答请求: {question[:100]}")
     
@@ -293,8 +293,8 @@ def api_ask():
         
         # 如果没有文本块超过阈值，至少保留最相关的3个块
         if len(filtered_chunks) == 0 and len(retrieved_chunks) > 0:
-            filtered_chunks = retrieved_chunks[:3]
-            print(f"[调整] 没有文本块超过阈值 {similarity_threshold}，保留前 3 个最相关的块")
+            filtered_chunks = retrieved_chunks[:config.RAG_FORCE_MIN_DOCS]
+            print(f"[调整] 没有文本块超过阈值 {similarity_threshold}，保留前 {config.RAG_FORCE_MIN_DOCS} 个最相关的块")
         
         print(f"[过滤] 过滤后保留 {len(filtered_chunks)} 个文本块（阈值: {similarity_threshold}）")
         
@@ -427,7 +427,7 @@ def api_ask():
         
         # 只使用references中的文献的chunks
         numbered_context_chunks = []
-        max_context_length = 12000  # 增加到12000字符以包含更多文献
+        max_context_length = config.RAG_CONTEXT_WINDOW  # 使用配置
         total_length = 0
         matched_count = 0
         
@@ -788,23 +788,23 @@ def api_ask_stream():
     
     data = request.json
     question = data.get('question', '').strip()
-    similarity_threshold = data.get('similarity_threshold', 0.40)
+    similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
     try:
         similarity_threshold = float(similarity_threshold)
         if not (0 <= similarity_threshold <= 1):
             raise ValueError
     except (ValueError, TypeError):
-        similarity_threshold = 0.40
+        similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
 
-    max_results = data.get('max_results', 100)
+    max_results = data.get('max_results', config.RAG_MAX_RESULTS)
     try:
         max_results = int(max_results)
-        if max_results <= 0:
-            max_results = 100
+        if max_results < 1:
+            raise ValueError
         if max_results > 200:
             max_results = 200
     except (ValueError, TypeError):
-        max_results = 100
+        max_results = config.RAG_MAX_RESULTS
     
     app_logger.info(f"收到流式问答请求: {question[:100]}")
     
@@ -841,7 +841,7 @@ def api_ask_stream():
             # 过滤文本块
             filtered_chunks = [chunk for chunk in retrieved_chunks if float(chunk.score) >= similarity_threshold]
             if len(filtered_chunks) == 0 and len(retrieved_chunks) > 0:
-                filtered_chunks = retrieved_chunks[:3]
+                filtered_chunks = retrieved_chunks[:config.RAG_FORCE_MIN_DOCS]
             
             yield f"data: {json.dumps({'type': 'status', 'message': f'找到 {len(filtered_chunks)} 个相关文本块'}, ensure_ascii=False)}\n\n"
             
