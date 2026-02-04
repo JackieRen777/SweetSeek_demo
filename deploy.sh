@@ -94,16 +94,25 @@ REMOTE_CMDS="
     sleep 2
     
     echo '启动新进程...'
+    # 确保进入正确目录
+    cd $SERVER_PATH
+    
+    # 确保离线模式环境变量已导出
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    
     # 使用虚拟环境（如果存在）
     if [ -f 'venv/bin/activate' ]; then
         source venv/bin/activate
     fi
+    
     # 使用 nohup 并在后台运行，确保退出 SSH 后进程不被杀掉
-    nohup python3 app.py > logs/app.log 2>&1 &
+    # 显式使用 venv 中的 python 全路径，避免环境混淆
+    nohup ./venv/bin/python3 app.py > logs/app.log 2>&1 &
     disown
     
-    echo '等待服务启动 (8秒)...'
-    sleep 8
+    echo '等待服务启动 (15秒)...'
+    sleep 15
     
     # 4. 验证部署
     echo '>> [4/4] 验证部署...'
