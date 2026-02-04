@@ -37,8 +37,29 @@ from config import config
 
 logging.basicConfig(level=logging.INFO)
 
+def configure_llm() -> bool:
+    try:
+        from openai import OpenAI as OpenAIClient
+
+        api_key = config.DEEPSEEK_API_KEY
+        base_url = config.DEEPSEEK_BASE_URL
+        model = config.DEEPSEEK_MODEL
+        if not api_key:
+            return False
+
+        import sys
+
+        current_module = sys.modules[__name__]
+        current_module.deepseek_client = OpenAIClient(api_key=api_key, base_url=base_url)
+        current_module.deepseek_model = model
+        return True
+    except Exception as e:
+        logging.warning(f"配置 DeepSeek 客户端失败: {e}")
+        return False
 
 class PersistentRAGSystem:
+
+
     def __init__(self, data_dir: str = "./sweet_related_paper", persist_dir: str = "./chroma_db"):
         self.data_dir = data_dir
         self.persist_dir = persist_dir
@@ -62,31 +83,12 @@ class PersistentRAGSystem:
             return
 
         # 配置DeepSeek LLM
-        try:
-            from openai import OpenAI as OpenAIClient
-
-            from config import config
-
-            api_key = config.DEEPSEEK_API_KEY
-            base_url = config.DEEPSEEK_BASE_URL
-            model = config.DEEPSEEK_MODEL
-            
-            if api_key:
-                import sys
-                current_module = sys.modules[__name__]
-                current_module.deepseek_client = OpenAIClient(
-                    api_key=api_key,
-                    base_url=base_url
-                )
-                current_module.deepseek_model = model
-                logging.info(f"✅ 成功配置 DeepSeek 客户端: {model}")
-            else:
-                logging.warning("未找到 DEEPSEEK_API_KEY")
-        except Exception as e:
-            logging.warning(f"配置 DeepSeek 客户端失败: {e}")
+        if configure_llm():
+            logging.info(f"✅ 成功配置 DeepSeek 客户端: {config.DEEPSEEK_MODEL}")
+        else:
+            logging.warning("未找到 DEEPSEEK_API_KEY")
 
         # 配置嵌入模型
-        from config import config
         embed_model_type = config.EMBED_MODEL_TYPE
         
         try:

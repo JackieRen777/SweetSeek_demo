@@ -71,19 +71,16 @@ def monitor_performance(f):
 
 def validate_config():
     """验证必需的配置"""
-    required_vars = [
-        'DEEPSEEK_API_KEY',
-        'DEEPSEEK_BASE_URL',
-        'DEEPSEEK_MODEL'
-    ]
-    
     missing_vars = []
-    for var in required_vars:
-        if not os.getenv(var):
-            missing_vars.append(var)
-    
+    if not config.DEEPSEEK_API_KEY:
+        missing_vars.append('DEEPSEEK_API_KEY')
+    if not config.DEEPSEEK_BASE_URL:
+        missing_vars.append('DEEPSEEK_BASE_URL')
+    if not config.DEEPSEEK_MODEL:
+        missing_vars.append('DEEPSEEK_MODEL')
+
     if missing_vars:
-        raise ValueError(f"缺少必需的环境变量: {', '.join(missing_vars)}")
+        raise ValueError(f"缺少必需的配置: {', '.join(missing_vars)}")
     
     app_logger.info("✅ 配置验证通过")
 
@@ -742,6 +739,8 @@ def api_health():
     # 检查 DeepSeek API
     try:
         import persistent_storage
+        if hasattr(persistent_storage, "configure_llm"):
+            persistent_storage.configure_llm()
         health_status['components']['deepseek_api'] = {
             'status': 'configured' if hasattr(persistent_storage, 'deepseek_client') else 'not_configured'
         }

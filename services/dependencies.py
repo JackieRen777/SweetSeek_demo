@@ -23,6 +23,8 @@ def build_services() -> Services:
 
     llm_client = None
     import persistent_storage
+    if hasattr(persistent_storage, "configure_llm"):
+        persistent_storage.configure_llm()
     if hasattr(persistent_storage, "deepseek_client") and hasattr(persistent_storage, "deepseek_model"):
         llm_client = DeepSeekLLMClient(persistent_storage.deepseek_client, persistent_storage.deepseek_model)
     else:

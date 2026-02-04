@@ -6,6 +6,14 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+
+def _normalize_openai_base_url(url: str) -> str:
+    cleaned = (url or "").strip().rstrip("/")
+    if not cleaned:
+        return "https://api.deepseek.com/v1"
+    return cleaned if cleaned.endswith("/v1") else f"{cleaned}/v1"
+
+
 class Config:
     """Base configuration."""
     # Base Paths
@@ -22,7 +30,7 @@ class Config:
     
     # DeepSeek API
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
-    DEEPSEEK_BASE_URL = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
+    DEEPSEEK_BASE_URL = _normalize_openai_base_url(os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com/v1'))
     DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
     
     # RAG Settings
