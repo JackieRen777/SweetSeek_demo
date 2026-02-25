@@ -32,6 +32,8 @@ torch==2.2.0
 
 # 数据处理
 numpy==1.26.4
+pandas>=2.0.0
+openpyxl>=3.1.0
 
 # HTTP客户端
 requests==2.31.0
@@ -44,3 +46,7 @@ tiktoken==0.6.0
 nltk==3.8.1
 tenacity==8.2.3
 typing-extensions==4.9.0
+
+# 模糊匹配
+thefuzz>=0.22.0
+python-Levenshtein>=0.23.0

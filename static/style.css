@@ -73,41 +73,6 @@ body {
 }
 
 /* 中间Logo区域（改为紧跟标题右侧） */
-.nav-center-branding {
-    /* 移除绝对定位，使其成为普通flex项目 */
-    /* position: absolute; */
-    /* left: 50%; */
-    /* transform: translateX(-50%); */
-    
-    display: flex;
-    align-items: center;
-    gap: 1.5rem; /* Logo间距 */
-    height: 100%;
-    
-    /* 核心修改：给左侧标题留出间距，并靠左排列 */
-    margin-left: 3rem; 
-    padding-left: 3rem;
-    border-left: 1px solid var(--gray-200); /* 可选：加个分隔线增加层次感 */
-    height: 40px; /* 限制高度以适配分隔线 */
-}
-
-.brand-logo {
-    height: 48px; /* 根据导航栏高度适配，确保比例协调 */
-    width: auto;
-    object-fit: contain;
-    transition: transform 0.2s ease;
-}
-
-.brand-logo:hover {
-    transform: scale(1.05); /* 微交互效果 */
-}
-
-.brand-divider {
-    color: var(--gray-300);
-    font-size: 1.5rem;
-    font-weight: 300;
-    margin-top: -4px; /* 视觉对齐修正 */
-}
 
 .nav-logo h1 {
     color: var(--primary-color);

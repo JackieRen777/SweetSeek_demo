@@ -31,7 +31,7 @@ class Config:
     # DeepSeek API
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
     DEEPSEEK_BASE_URL = _normalize_openai_base_url(os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com/v1'))
-    DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
+    DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-reasoner')
     
     # RAG Settings
     DATA_DIR = os.getenv('DATA_DIR', str(BASE_DIR / "sweet_related_paper"))

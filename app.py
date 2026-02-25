@@ -97,6 +97,7 @@ services = build_services()
 query_expander = services.query_expander
 evidence_ranker = services.evidence_ranker
 llm_client = services.llm_client
+compound_service = services.compound_service
 
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
@@ -140,6 +141,112 @@ def about():
     return render_template('about.html')
 
 
+
+@app.route('/api/structure/render', methods=['GET'])
+@handle_api_errors
+def api_render_structure():
+    """根据SMILES生成分子结构图"""
+    smiles = request.args.get('smiles', '').strip()
+    width = request.args.get('width', 400, type=int)
+    height = request.args.get('height', 400, type=int)
+    
+    if not smiles:
+        return jsonify({'success': False, 'error': 'SMILES不能为空'}), 400
+        
+    try:
+        from rdkit import Chem
+        from rdkit.Chem import Draw
+        import io
+        from flask import send_file
+        
+        mol = Chem.MolFromSmiles(smiles)
+        if not mol:
+            # Try to handle common issues or just fail
+            return jsonify({'success': False, 'error': '无效的SMILES字符串'}), 400
+            
+        # Generate image
+        img = Draw.MolToImage(mol, size=(width, height))
+        
+        # Convert to bytes
+        img_io = io.BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
+        
+        return send_file(img_io, mimetype='image/png')
+    except ImportError:
+        return jsonify({'success': False, 'error': 'RDKit未安装'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/compounds/search', methods=['GET', 'POST'])
+@handle_api_errors
+@monitor_performance
+def api_search_compounds():
+    """搜索化合物"""
+    if request.method == 'POST':
+        data = request.json
+        query = data.get('query', '').strip()
+        limit = data.get('limit', 5)
+    else:
+        query = request.args.get('query', '').strip()
+        limit = request.args.get('limit', 5, type=int)
+    
+    if not query:
+        return jsonify({
+            'success': False,
+            'error': '搜索关键词不能为空'
+        }), 400
+        
+    try:
+        results = compound_service.search(query, limit=limit)
+        return jsonify({
+            'success': True,
+            'results': results,
+            'count': len(results)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'搜索化合物失败: {str(e)}'
+        }), 500
+
+@app.route('/api/compounds/stats', methods=['GET'])
+@handle_api_errors
+def api_compound_stats():
+    """获取化合物数据库统计信息"""
+    stats = compound_service.get_stats()
+    return jsonify({
+        'success': True,
+        'data': stats
+    })
+
+@app.route('/api/compounds/<int:compound_id>', methods=['GET'])
+@handle_api_errors
+def api_get_compound(compound_id):
+    """获取化合物详情"""
+    compound = compound_service.get_by_id(compound_id)
+    if compound:
+        return jsonify({
+            'success': True,
+            'data': compound
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'error': '未找到该化合物'
+        }), 404
+
+@app.route('/api/compounds', methods=['GET'])
+@handle_api_errors
+def api_list_compounds():
+    """获取化合物列表"""
+    limit = request.args.get('limit', 100, type=int)
+    compounds = compound_service.get_all(limit=limit)
+    return jsonify({
+        'success': True,
+        'data': compounds,
+        'count': len(compounds)
+    })
 
 # API路由
 
