@@ -34,7 +34,7 @@ const EquationModeler: React.FC = () => {
 
   const handleCitation = () => {
     const bibtex = `@article{SweetnessEquation2026,
-  title={The Sweetness Perception Equation: Transforming Computational Chemistry into Sensory Science},
+  title={The Sweetness Taste Equation: Transforming Computational Chemistry into Sensory Science},
   author={SweetSeek Research Team},
   journal={Journal of Computational Sensory Science},
   year={2026},

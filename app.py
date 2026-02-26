@@ -4,6 +4,10 @@ SweetSeek - Flask Backend
 AI-powered research Q&A system
 """
 
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os

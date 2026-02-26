@@ -35,10 +35,11 @@ class Config:
     
     # RAG Settings
     DATA_DIR = os.getenv('DATA_DIR', str(BASE_DIR / "sweet_related_paper"))
-    PERSIST_DIR = os.getenv('PERSIST_DIR', str(CHROMA_DB_DIR))
+    PERSIST_DIR = os.getenv('PERSIST_DIR', str(BASE_DIR / "faiss_db"))
 
     EMBED_MODEL_TYPE = os.getenv("EMBED_MODEL_TYPE", "huggingface").lower()
-    EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5")
+    # Path to local model snapshot
+    EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", str(BASE_DIR / "models/models--BAAI--bge-small-zh-v1.5/snapshots/7999e1d3359715c523056ef9478215996d62a620"))
     COLLECTION_NAME = "sweetseek_papers"
     
     # RAG Retrieval & Generation Settings (Tunable)

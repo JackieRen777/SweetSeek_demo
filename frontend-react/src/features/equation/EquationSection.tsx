@@ -12,10 +12,10 @@ const Equation: React.FC<EquationProps> = ({ onTryNow }) => {
       reversed
       title={
         <span>
-          Sweetness Perception <span className="text-indigo-500">Equation</span>
+          Sweetness Taste <span className="text-indigo-500">Equation</span>
         </span>
       }
-      description="The Sweetness Perception Equation transforms computational chemistry into sensory science: by inputting a compound's relative binding free energy (ΔΔG) calculated from molecular simulations, the equation outputs its predicted relative sweetness (Sw) , providing a powerful tool for rational sweetener design."
+      description="The Sweetness Taste Equation transforms computational chemistry into sensory science: by inputting a compound's relative binding free energy (ΔΔG) calculated from molecular simulations, the equation outputs its predicted relative sweetness (Sw) , providing a powerful tool for rational sweetener design."
       onTryNow={onTryNow}
       visualComponent={
         <div className="relative w-96 h-80 bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700 p-6 flex flex-col items-center justify-center group">

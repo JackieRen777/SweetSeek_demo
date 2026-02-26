@@ -11,7 +11,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
   const navItems = [
     { label: 'Home', index: 0, feature: null },
     { label: 'Professional Q&A', index: 1, feature: 'qa' },
-    { label: 'Sweetness Perception Equation', index: 2, feature: 'equation' },
+    { label: 'Sweetness Taste Equation', index: 2, feature: 'equation' },
     { label: 'Database', index: 3, feature: 'database' },
   ];
 

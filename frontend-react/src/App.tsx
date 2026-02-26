@@ -122,7 +122,7 @@ function App() {
             </ErrorBoundary>
           </div>
 
-          {/* Section 3: Perception Equation */}
+          {/* Section 3: Sweetness Taste Equation */}
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
             <ErrorBoundary name="EquationSection">
               <Equation onTryNow={() => handleOpenFeature('equation')} />
