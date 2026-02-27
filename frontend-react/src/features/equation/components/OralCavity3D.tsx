@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, Float } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Float } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface OralCavity3DProps {
@@ -122,16 +122,16 @@ const OralCavity3D: React.FC<OralCavity3DProps> = ({ receptorDensity, deltaG, co
         />
         
         {/* Lighting */}
-        <ambientLight intensity={0.4} />
-        <spotLight position={[10, 10, 5]} angle={0.3} penumbra={1} intensity={1} castShadow />
-        <pointLight position={[-10, 5, -5]} intensity={0.5} color="#ec4899" />
+        <ambientLight intensity={0.8} />
+        <spotLight position={[10, 10, 5]} angle={0.3} penumbra={1} intensity={2} castShadow />
+        <pointLight position={[-10, 5, -5]} intensity={1} color="#ec4899" />
+        <pointLight position={[0, -5, 0]} intensity={0.5} color="#3b82f6" />
 
         {/* Environment */}
         <TongueSurface />
         <Receptors count={receptorCount} deltaG={deltaG} />
         <Molecules count={moleculeCount} />
         
-        <Environment preset="city" />
         <fog attach="fog" args={['#0f172a', 5, 20]} />
       </Canvas>
     </div>
