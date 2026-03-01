@@ -45,17 +45,19 @@ REMOTE_CMDS="
     if ! command -v npm &> /dev/null; then
         echo '❌ 未找到 npm，尝试自动安装 Node.js (v20)...'
         
-        # 自动安装 Node.js
+        # 自动安装 Node.js (v20)
         if command -v curl &> /dev/null; then
-            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-            
-            # 检测包管理器
-            if command -v apt-get &> /dev/null; then
-                apt-get install -y nodejs
-            elif command -v yum &> /dev/null; then
+            echo '   下载 Node.js 安装脚本...'
+            # 针对 CentOS/RHEL/Fedora 的安装方式
+            if command -v yum &> /dev/null; then
+                curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
                 yum install -y nodejs
+            # 针对 Ubuntu/Debian 的安装方式
+            elif command -v apt-get &> /dev/null; then
+                curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+                apt-get install -y nodejs
             else
-                echo '❌ 无法确定包管理器，请手动安装 Node.js'
+                echo '❌ 无法确定包管理器 (非 apt/yum)，请手动安装 Node.js'
                 exit 1
             fi
         else
