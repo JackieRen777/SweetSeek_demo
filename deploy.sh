@@ -23,8 +23,15 @@ git add .
 git commit -m "Deploy: $(date '+%Y-%m-%d %H:%M:%S')"
 git push origin $(git branch --show-current)
 
-# 2. 远程执行
-echo -e "${GREEN}[2/4] 连接服务器执行部署...${NC}"
+# 2. 同步数据 (新增)
+echo -e "${GREEN}[2/5] 同步数据文件...${NC}"
+echo -e "${YELLOW}正在清理旧的构建缓存以释放空间...${NC}"
+ssh $SERVER_USER@$SERVER_IP "rm -rf $SERVER_PATH/frontend-react/node_modules $SERVER_PATH/frontend-react/.next $SERVER_PATH/frontend-react/build"
+
+echo -e "${YELLOW}正在上传 PDF 文档和数据 (使用 rsync)...${NC}"
+
+# 3. 远程执行
+echo -e "${GREEN}[3/5] 连接服务器执行部署...${NC}"
 
 REMOTE_CMDS="
     set -e  # 遇到错误立即退出
@@ -73,8 +80,13 @@ REMOTE_CMDS="
         echo '✅ Node.js 安装成功'
     fi
 
-    echo '   安装依赖...'
-    npm install --silent
+    echo '   安装依赖 (可能需要几分钟)...'
+    npm install --silent > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo '❌ npm install 失败，尝试清除缓存重试'
+        npm cache clean --force
+        npm install --silent
+    fi
     
     echo '   编译构建...'
     npm run build
