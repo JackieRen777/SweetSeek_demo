@@ -43,8 +43,32 @@ REMOTE_CMDS="
     
     # 检查 Node 环境
     if ! command -v npm &> /dev/null; then
-        echo '❌ 未找到 npm，请先在服务器安装 Node.js (v18+)'
-        exit 1
+        echo '❌ 未找到 npm，尝试自动安装 Node.js (v20)...'
+        
+        # 自动安装 Node.js
+        if command -v curl &> /dev/null; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+            
+            # 检测包管理器
+            if command -v apt-get &> /dev/null; then
+                apt-get install -y nodejs
+            elif command -v yum &> /dev/null; then
+                yum install -y nodejs
+            else
+                echo '❌ 无法确定包管理器，请手动安装 Node.js'
+                exit 1
+            fi
+        else
+            echo '❌ 未找到 curl，无法自动安装'
+            exit 1
+        fi
+        
+        # 再次检查
+        if ! command -v npm &> /dev/null; then
+            echo '❌ Node.js 安装失败，请手动处理'
+            exit 1
+        fi
+        echo '✅ Node.js 安装成功'
     fi
 
     echo '   安装依赖...'
