@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sliders, Info } from 'lucide-react';
+import { Sliders, Share2, Info } from 'lucide-react';
 import OralCavity3D from './OralCavity3D';
 import ScientificChart from './ScientificChart';
 
