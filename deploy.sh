@@ -94,9 +94,13 @@ REMOTE_CMDS="
     fi
     source venv/bin/activate
     
+    echo '   升级 pip...'
+    pip install --upgrade pip --quiet
+    
     echo '   安装 Python 依赖...'
-    pip install -r requirements.txt --quiet
-    pip install gunicorn gevent --quiet
+    # 使用阿里云镜像源加速，如果失败则回退到官方源
+    pip install -r requirements.txt --quiet -i https://mirrors.aliyun.com/pypi/simple/ || pip install -r requirements.txt --quiet
+    pip install gunicorn gevent --quiet -i https://mirrors.aliyun.com/pypi/simple/
 
     echo '   重启 Gunicorn 服务...'
     # 查找并杀掉旧进程
