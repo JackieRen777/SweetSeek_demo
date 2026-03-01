@@ -23,81 +23,49 @@ git add .
 git commit -m "Deploy: $(date '+%Y-%m-%d %H:%M:%S')"
 git push origin $(git branch --show-current)
 
-# 2. 同步数据 (新增)
-echo -e "${GREEN}[2/5] 同步数据文件...${NC}"
-echo -e "${YELLOW}正在清理旧的构建缓存以释放空间...${NC}"
-ssh $SERVER_USER@$SERVER_IP "rm -rf $SERVER_PATH/frontend-react/node_modules $SERVER_PATH/frontend-react/.next $SERVER_PATH/frontend-react/build"
+# 2. 本地构建前端 (解决服务器内存不足问题)
+echo -e "${GREEN}[2/5] 本地构建前端...${NC}"
+cd frontend-react
+echo -e "${YELLOW}安装依赖...${NC}"
+npm install --silent
+echo -e "${YELLOW}开始构建...${NC}"
+npm run build
+if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ 本地构建失败${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ 本地构建成功${NC}"
+cd ..
 
-echo -e "${YELLOW}正在上传 PDF 文档和数据 (使用 rsync)...${NC}"
+# 3. 同步文件到服务器
+echo -e "${GREEN}[3/5] 同步文件到服务器...${NC}"
+echo -e "${YELLOW}正在清理服务器旧文件...${NC}"
+# 删除服务器上的旧构建文件，防止冲突
+ssh $SERVER_USER@$SERVER_IP "rm -rf $SERVER_PATH/frontend-react/dist"
 
-# 3. 远程执行
-echo -e "${GREEN}[3/5] 连接服务器执行部署...${NC}"
+echo -e "${YELLOW}正在上传构建产物 (dist)...${NC}"
+# 上传本地构建好的 dist 文件夹
+rsync -avz --progress frontend-react/dist/ $SERVER_USER@$SERVER_IP:$SERVER_PATH/frontend-react/dist/
+
+echo -e "${YELLOW}正在上传 PDF 文档和数据...${NC}"
+rsync -avz --progress --exclude='.*' sweet_related_paper/ $SERVER_USER@$SERVER_IP:$SERVER_PATH/sweet_related_paper/
+
+# 4. 远程执行 (只负责后端和Nginx)
+echo -e "${GREEN}[4/5] 连接服务器重启服务...${NC}"
 
 REMOTE_CMDS="
-    set -e  # 遇到错误立即退出
-
+    set -e
+    
     echo '>> 进入项目目录...'
     cd $SERVER_PATH
     
-    echo '>> 拉取最新代码...'
+    echo '>> 拉取最新代码 (仅更新后端代码)...'
     git pull origin \$(git branch --show-current)
 
     # ---------------------------
-    # 前端部署 (React)
+    # 前端部署 (跳过构建，直接使用上传的dist)
     # ---------------------------
-    echo '>> [前端] 开始构建 React 应用...'
-    cd frontend-react
-    
-    # 检查 Node 环境
-    if ! command -v npm &> /dev/null; then
-        echo '❌ 未找到 npm，尝试自动安装 Node.js (v20)...'
-        
-        # 自动安装 Node.js (v20)
-        if command -v curl &> /dev/null; then
-            echo '   下载 Node.js 安装脚本...'
-            # 针对 CentOS/RHEL/Fedora 的安装方式
-            if command -v yum &> /dev/null; then
-                # 先安装 git（如果没有）
-                yum install -y git
-                # 尝试使用 dnf (CentOS 8+) 或 yum
-                curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
-                yum install -y nodejs
-            # 针对 Ubuntu/Debian 的安装方式
-            elif command -v apt-get &> /dev/null; then
-                apt-get update
-                apt-get install -y git
-                curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-                apt-get install -y nodejs
-            else
-                echo '❌ 无法确定包管理器 (非 apt/yum)，请手动安装 Node.js'
-                exit 1
-            fi
-        else
-            echo '❌ 未找到 curl，无法自动安装'
-            exit 1
-        fi
-        
-        # 再次检查
-        if ! command -v npm &> /dev/null; then
-            echo '❌ Node.js 安装失败，请手动处理'
-            exit 1
-        fi
-        echo '✅ Node.js 安装成功'
-    fi
-
-    echo '   安装依赖 (可能需要几分钟)...'
-    npm install --silent > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo '❌ npm install 失败，尝试清除缓存重试'
-        npm cache clean --force
-        npm install --silent
-    fi
-    
-    echo '   编译构建...'
-    npm run build
-    
-    echo '✅ 前端构建完成'
-    cd ..
+    echo '>> [前端] 已使用本地构建产物，跳过服务器构建'
 
     # ---------------------------
     # 后端部署 (Flask + Gunicorn)
