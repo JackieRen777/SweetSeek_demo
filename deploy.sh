@@ -57,10 +57,15 @@ REMOTE_CMDS="
             echo '   下载 Node.js 安装脚本...'
             # 针对 CentOS/RHEL/Fedora 的安装方式
             if command -v yum &> /dev/null; then
+                # 先安装 git（如果没有）
+                yum install -y git
+                # 尝试使用 dnf (CentOS 8+) 或 yum
                 curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
                 yum install -y nodejs
             # 针对 Ubuntu/Debian 的安装方式
             elif command -v apt-get &> /dev/null; then
+                apt-get update
+                apt-get install -y git
                 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
                 apt-get install -y nodejs
             else
