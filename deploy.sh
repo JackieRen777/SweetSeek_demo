@@ -64,6 +64,9 @@ rsync -avz --progress frontend-react/dist/ $SERVER_USER@$SERVER_IP:$SERVER_PATH/
 echo -e "${YELLOW}正在上传 PDF 文档和数据...${NC}"
 rsync -avz --progress --exclude='.*' sweet_related_paper/ $SERVER_USER@$SERVER_IP:$SERVER_PATH/sweet_related_paper/
 
+echo -e "${YELLOW}正在更新依赖配置...${NC}"
+rsync -avz requirements.txt $SERVER_USER@$SERVER_IP:$SERVER_PATH/requirements.txt
+
 # 4. 远程执行 (只负责后端和Nginx)
 echo -e "${GREEN}[4/5] 连接服务器重启服务...${NC}"
 
