@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Share2, Download, Beaker, FileText, Activity } from 'lucide-react';
+import { ChevronDown, ChevronUp, Beaker, FileText, Activity } from 'lucide-react';
 
 import CompoundList from './components/CompoundList';
 import CompoundStructure from './components/CompoundStructure';

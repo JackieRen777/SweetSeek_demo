@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sliders, Download, BookOpen, Share2, Info } from 'lucide-react';
+import { Sliders, Info } from 'lucide-react';
 import OralCavity3D from './OralCavity3D';
 import ScientificChart from './ScientificChart';
 
@@ -7,8 +7,8 @@ const EquationModeler: React.FC = () => {
   // State for parameters
   const [deltaG, setDeltaG] = useState<number>(-8.0); // Default value within experimental range
   const [concentration, setConcentration] = useState<number>(5); // mM
-  const [receptorDensity, setReceptorDensity] = useState<number>(1.0); // 1.0x baseline
-  const [salivaFlow, setSalivaFlow] = useState<number>(1.0); // 1.0x baseline
+  const receptorDensity = 1.0; // 1.0x baseline
+  const salivaFlow = 1.0; // 1.0x baseline
 
   // Calculations based on Paper Equation (1): ΔΔG = 10.13 * log10(Sw) - 20.72
   // Inverse for prediction: log10(Sw) = (ΔΔG + 20.72) / 10.13
@@ -21,28 +21,15 @@ const EquationModeler: React.FC = () => {
   const perceivedSw = rawSw * receptorDensity * (1 / salivaFlow);
 
   // Handlers
-  const handleExport = () => {
-    const csvContent = `data:text/csv;charset=utf-8,DeltaG,Concentration,ReceptorDensity,SalivaFlow,LogSw,RawSw,PerceivedSw\n${deltaG},${concentration},${receptorDensity},${salivaFlow},${logSw.toFixed(4)},${rawSw.toFixed(2)},${perceivedSw.toFixed(2)}`;
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "sweetness_prediction.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // const handleExport = () => {
+  //   // TODO: Export model configuration
+  //   console.log('Exporting model config:', { temperature, ph, viscosity, receptorDensity, salivaFlow });
+  // };
 
-  const handleCitation = () => {
-    const bibtex = `@article{SweetnessEquation2026,
-  title={The Sweet Taste Equation: Transforming Computational Chemistry into Sensory Science},
-  author={SweetSeek Research Team},
-  journal={Journal of Computational Sensory Science},
-  year={2026},
-  note={Interactive Model v1.0}
-}`;
-    navigator.clipboard.writeText(bibtex);
-    alert("BibTeX citation copied to clipboard!");
-  };
+  // const handleCitation = () => {
+  //   // TODO: Show citation modal
+  //   console.log('Showing citation info');
+  // };
 
   return (
     <div className="w-full h-full flex flex-col bg-slate-50 overflow-hidden relative">
