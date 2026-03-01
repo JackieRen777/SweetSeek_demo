@@ -13,9 +13,8 @@ from __future__ import annotations
 
 import logging
 import os
-import shutil
-from typing import List, Optional
 from pathlib import Path
+from typing import List, Optional
 
 # 尝试导入 faiss
 try:
@@ -47,7 +46,6 @@ from config import config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("sweetseek.rag")
 
-import re
 
 def validate_content(text: str, filename: str = "unknown") -> bool:
     """
@@ -61,7 +59,7 @@ def validate_content(text: str, filename: str = "unknown") -> bool:
     # 1. 检查控制字符密度 (Control Character Density)
     # 正常文本不应包含大量非打印字符 (除了换行 \n, 制表符 \t, 回车 \r)
     # 使用 set 提高查找效率
-    printable_chars = set(chr(i) for i in range(32, 127)) | {'\n', '\r', '\t', '\f'} 
+    # printable_chars = set(chr(i) for i in range(32, 127)) | {'\n', '\r', '\t', '\f'} 
     # 扩展到 Unicode 可打印范围 (简单起见，只要不是 C0/C1 控制字符且不是删除符)
     # 更严谨的做法是检查 category，但这里用简单启发式
     
@@ -182,7 +180,7 @@ class PersistentRAGSystem:
                 embed_model = HuggingFaceEmbedding(model_name=embed_model_name)
                 
             Settings.embed_model = embed_model
-            logger.info(f"✅ 成功配置嵌入模型")
+            logger.info("✅ 成功配置嵌入模型")
             
         except Exception as e:
             logger.error(f"配置嵌入模型失败: {e}")
@@ -289,7 +287,8 @@ class PersistentRAGSystem:
                 
                 # 强制垃圾回收
                 del documents
-                if 'reader' in locals(): del reader
+                if 'reader' in locals(): 
+                    del reader
                 gc.collect()
 
             logger.info("✅ 索引构建并保存完成")

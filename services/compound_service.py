@@ -1,8 +1,10 @@
-import pandas as pd
-from thefuzz import fuzz, process
-from typing import List, Dict, Optional, Any
 import logging
 import os
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+from thefuzz import fuzz, process
+
 
 class CompoundService:
     def __init__(self, data_path: str = "data/compounds_sweet.xlsx"):
@@ -70,7 +72,7 @@ class CompoundService:
                 
                 # 数据清洗：去重 (优先保留CID存在的)
                 if 'cid' in self._df.columns:
-                    initial_len = len(self._df)
+                    # initial_len = len(self._df)
                     # Don't drop duplicates if they might be isomers with same CID but different names
                     # Or keep them if names are different
                     # For now, let's keep all rows to ensure Glucose is loaded even if it shares CID with something else (unlikely for pure Glucose)

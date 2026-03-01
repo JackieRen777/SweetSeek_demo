@@ -6,8 +6,8 @@ from typing import Optional
 from evidence_ranker import EvidenceRanker
 from logger import setup_logger
 from query_expander import SweetnessQueryExpander
-from services.llm_client import DeepSeekLLMClient
 from services.compound_service import CompoundService
+from services.llm_client import DeepSeekLLMClient
 
 
 @dataclass

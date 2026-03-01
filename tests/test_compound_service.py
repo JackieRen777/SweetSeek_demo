@@ -1,12 +1,14 @@
-import unittest
-import pandas as pd
 import os
 import sys
+import unittest
+
+import pandas as pd
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from services.compound_service import CompoundService
+
 
 class TestCompoundService(unittest.TestCase):
     def setUp(self):
