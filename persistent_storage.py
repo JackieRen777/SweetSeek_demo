@@ -224,60 +224,74 @@ class PersistentRAGSystem:
             return self._build_new_index()
 
     def _build_new_index(self) -> bool:
-        """构建新索引"""
+        """构建新索引 (Batch Processing & Memory Optimized)"""
         try:
             if not os.path.exists(self.data_dir):
                 logger.error(f"数据目录不存在: {self.data_dir}")
                 return False
 
-            # 读取文档
-            logger.info(f"📚 正在读取文档: {self.data_dir}")
+            # 获取所有文件
+            import glob
+            all_files = []
+            for ext in ['*.pdf', '*.PDF', '*.txt', '*.md']:
+                all_files.extend(glob.glob(os.path.join(self.data_dir, "**", ext), recursive=True))
             
-            file_extractor = {}
-            if fitz:
-                logger.info("启用 PyMuPDF (fitz) 进行 PDF 文本提取")
-                file_extractor[".pdf"] = PyMuPDFReader()
-            else:
-                logger.warning("未检测到 PyMuPDF，使用默认 pypdf 进行提取（可能存在乱码风险）")
-            
-            reader = SimpleDirectoryReader(
-                self.data_dir, 
-                recursive=True,
-                file_extractor=file_extractor
-            )
-            documents = reader.load_data()
-            logger.info(f"📖 读取到 {len(documents)} 个文档片段")
-
-            if not documents:
+            logger.info(f"📚 扫描到 {len(all_files)} 个文件")
+            if not all_files:
                 logger.warning("未找到文档，跳过索引构建")
                 return False
 
-            # 提取元数据
-            self._extract_metadata(documents)
-
-            # 创建 FAISS 索引
-            # 维度取决于模型，bge-small-zh-v1.5 是 512 维
+            # 初始化空的 Vector Store
             d = 512 
             faiss_index = faiss.IndexFlatIP(d)
             vector_store = FaissVectorStore(faiss_index=faiss_index)
             storage_context = StorageContext.from_defaults(vector_store=vector_store)
-
+            
             from llama_index.core.node_parser import TokenTextSplitter
             text_splitter = TokenTextSplitter(chunk_size=512, chunk_overlap=50)
 
-            logger.info("开始构建向量索引...")
+            # 初始化空索引
             self.index = VectorStoreIndex.from_documents(
-                documents,
+                [], 
                 storage_context=storage_context,
-                transformations=[text_splitter],
-                show_progress=True
+                transformations=[text_splitter]
             )
-            
-            # 持久化
-            logger.info(f"正在保存索引到: {self.persist_dir}")
-            Path(self.persist_dir).mkdir(parents=True, exist_ok=True)
-            self.index.storage_context.persist(persist_dir=self.persist_dir)
-            
+
+            # 分批处理 (Batch Processing)
+            BATCH_SIZE = 5 # 每次处理 5 个文件，避免 OOM
+            import gc
+
+            file_extractor = {}
+            if fitz:
+                file_extractor[".pdf"] = PyMuPDFReader()
+
+            for i in range(0, len(all_files), BATCH_SIZE):
+                batch_files = all_files[i : i + BATCH_SIZE]
+                logger.info(f"🚀 处理批次 {i//BATCH_SIZE + 1}/{(len(all_files)-1)//BATCH_SIZE + 1} (文件 {i+1}-{min(i+BATCH_SIZE, len(all_files))})")
+                
+                try:
+                    reader = SimpleDirectoryReader(
+                        input_files=batch_files,
+                        file_extractor=file_extractor
+                    )
+                    documents = reader.load_data()
+                    
+                    if documents:
+                        self.index.insert_documents(documents)
+                        logger.info(f"   ✅ 已插入 {len(documents)} 个文档片段")
+                    
+                    # 每一批都持久化一次，防止中途崩溃前功尽弃
+                    self.index.storage_context.persist(persist_dir=self.persist_dir)
+                    
+                except Exception as e:
+                    logger.error(f"⚠️ 批次处理失败: {e}")
+                    continue
+                
+                # 强制垃圾回收
+                del documents
+                if 'reader' in locals(): del reader
+                gc.collect()
+
             logger.info("✅ 索引构建并保存完成")
             return True
             

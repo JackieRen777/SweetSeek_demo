@@ -16,9 +16,11 @@
     "axios": "^1.13.5",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
+    "katex": "^0.16.33",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-katex": "^3.1.0",
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.5.0",
     "three": "^0.183.1"

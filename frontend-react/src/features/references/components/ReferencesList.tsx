@@ -41,11 +41,8 @@ const ReferencesList: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
               <BookOpen className="text-blue-600" />
-              References Database
+              References from FCN lab
             </h1>
-            <p className="text-slate-500 mt-1">
-              Comprehensive list of academic papers and data sources
-            </p>
           </div>
         </div>
       </div>

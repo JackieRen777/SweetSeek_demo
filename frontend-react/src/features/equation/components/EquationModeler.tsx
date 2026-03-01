@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Sliders, Share2, Info } from 'lucide-react';
+import { Sliders, Share2 } from 'lucide-react';
 import OralCavity3D from './OralCavity3D';
 import ScientificChart from './ScientificChart';
+import 'katex/dist/katex.min.css';
+import { InlineMath } from 'react-katex';
 
 const EquationModeler: React.FC = () => {
   // State for parameters
@@ -47,10 +49,10 @@ const EquationModeler: React.FC = () => {
             
             {/* Equation Display */}
             <div className="bg-slate-900 rounded-xl p-4 text-center shadow-lg relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                 <h3 className="text-xs font-mono text-slate-400 mb-2 uppercase tracking-widest">Governing Equation (Eq 1)</h3>
-                <div className="font-serif text-white text-lg md:text-xl italic">
-                    <span className="text-indigo-400 font-bold">ΔΔG</span> = 10.13 × log₁₀(Sw) - 20.72
+                <div className="flex items-center justify-center h-16 font-serif text-white text-base md:text-lg italic whitespace-nowrap overflow-hidden">
+                    <InlineMath math="\color{#818cf8}{\Delta\Delta G} = 10.13 \times \log_{10}(Sw) - 20.72" />
                 </div>
             </div>
 
@@ -163,10 +165,9 @@ const EquationModeler: React.FC = () => {
                     currentLogSw={logSw}
                 />
 
-                <div className="bg-amber-50 rounded-xl p-4 border border-amber-100 flex gap-3 items-start">
-                    <Info className="text-amber-500 shrink-0 mt-0.5" size={16} />
-                    <p className="text-xs text-amber-700 leading-relaxed">
-                        <strong>Insight:</strong> The logarithmic relationship implies that small changes in binding energy (ΔΔG) result in exponential changes in perceived sweetness. A decrease of 1 kcal/mol increases sweetness by ~32,000x.
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex gap-3 items-start">
+                    <p className="text-xs leading-relaxed text-blue-400">
+                        <strong className="text-blue-600 font-medium">Insight:</strong> The logarithmic relationship implies that small changes in binding energy (ΔΔG) result in exponential changes in perceived sweetness. A decrease of 1 kcal/mol increases sweetness by ~32,000x.
                     </p>
                 </div>
             </div>
