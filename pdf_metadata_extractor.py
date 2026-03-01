@@ -10,9 +10,13 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 try:
-    from pypdf import PdfReader
+    import fitz  # PyMuPDF
 except ImportError:
-    from PyPDF2 import PdfReader
+    fitz = None
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        from PyPDF2 import PdfReader
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -138,36 +142,69 @@ class PDFMetadataExtractor:
         metadata = {}
         
         try:
-            reader = PdfReader(pdf_path)
-            pdf_info = reader.metadata
-            
-            if pdf_info:
-                # 提取标题（但要验证是否是有效标题）
-                if pdf_info.title:
-                    title = pdf_info.title.strip()
-                    # 如果标题看起来像文件名（包含.pdf或太短），忽略它
-                    if '.pdf' not in title.lower() and len(title) > 15:
-                        metadata['title'] = title
+            if fitz:
+                doc = fitz.open(pdf_path)
+                pdf_info = doc.metadata
                 
-                # 提取作者
-                if pdf_info.author:
-                    authors_str = pdf_info.author.strip()
-                    metadata['authors'] = self._parse_authors(authors_str)
+                if pdf_info:
+                    # 提取标题
+                    if pdf_info.get('title'):
+                        title = pdf_info['title'].strip()
+                        if '.pdf' not in title.lower() and len(title) > 15:
+                            metadata['title'] = title
+                    
+                    # 提取作者
+                    if pdf_info.get('author'):
+                        metadata['authors'] = self._parse_authors(pdf_info['author'].strip())
+                    
+                    # 提取年份 (creationDate format: D:YYYYMMDD...)
+                    if pdf_info.get('creationDate'):
+                        cdate = pdf_info['creationDate']
+                        # PyMuPDF returns string like "D:20201027..."
+                        match = re.search(r'D:(\d{4})', cdate)
+                        if match:
+                            year = int(match.group(1))
+                            if 1900 <= year <= 2099:
+                                metadata['year'] = str(year)
+                    
+                    # 提取DOI from subject or keywords if available
+                    if pdf_info.get('subject'):
+                        doi_match = self.DOI_PATTERN.search(pdf_info['subject'])
+                        if doi_match:
+                            metadata['doi'] = doi_match.group(0)
+                    
+                    if pdf_info.get('keywords'):
+                        doi_match = self.DOI_PATTERN.search(pdf_info['keywords'])
+                        if doi_match:
+                            metadata['doi'] = doi_match.group(0)
+                            
+                doc.close()
+            else:
+                # Fallback to pypdf
+                reader = PdfReader(pdf_path)
+                pdf_info = reader.metadata
                 
-                # 提取创建日期中的年份
-                if pdf_info.creation_date:
-                    try:
-                        year = pdf_info.creation_date.year
-                        if 1900 <= year <= 2099:
-                            metadata['year'] = str(year)
-                    except Exception:
-                        pass
-                
-                # 检查subject或keywords中的DOI
-                if pdf_info.subject:
-                    doi_match = self.DOI_PATTERN.search(pdf_info.subject)
-                    if doi_match:
-                        metadata['doi'] = doi_match.group(0)
+                if pdf_info:
+                    if pdf_info.title:
+                        title = pdf_info.title.strip()
+                        if '.pdf' not in title.lower() and len(title) > 15:
+                            metadata['title'] = title
+                    
+                    if pdf_info.author:
+                        metadata['authors'] = self._parse_authors(pdf_info.author.strip())
+                    
+                    if pdf_info.creation_date:
+                        try:
+                            year = pdf_info.creation_date.year
+                            if 1900 <= year <= 2099:
+                                metadata['year'] = str(year)
+                        except Exception:
+                            pass
+                    
+                    if pdf_info.subject:
+                        doi_match = self.DOI_PATTERN.search(pdf_info.subject)
+                        if doi_match:
+                            metadata['doi'] = doi_match.group(0)
                 
         except Exception as e:
             logger.warning(f"读取PDF元数据失败: {str(e)}")
@@ -179,13 +216,16 @@ class PDFMetadataExtractor:
         metadata = {}
         
         try:
-            reader = PdfReader(pdf_path)
-            if len(reader.pages) == 0:
-                return metadata
-            
-            # 读取第一页文本
-            first_page = reader.pages[0]
-            text = first_page.extract_text()
+            text = ""
+            if fitz:
+                doc = fitz.open(pdf_path)
+                if len(doc) > 0:
+                    text = doc[0].get_text()
+                doc.close()
+            else:
+                reader = PdfReader(pdf_path)
+                if len(reader.pages) > 0:
+                    text = reader.pages[0].extract_text()
             
             if not text:
                 return metadata

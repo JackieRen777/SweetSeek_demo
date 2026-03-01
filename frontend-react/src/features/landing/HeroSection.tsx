@@ -23,7 +23,7 @@ const Hero: React.FC<HeroProps> = ({ onNext }) => {
             <h1 className="text-5xl md:text-6xl font-extrabold text-slate-800 leading-tight">
               Welcome to <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">
-                Sweetseek
+                SweetSeek
               </span>
             </h1>
             <p className="mt-8 text-xl text-slate-600 leading-8 text-justify hyphens-auto w-full max-w-[520px] tracking-normal">

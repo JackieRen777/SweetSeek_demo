@@ -44,9 +44,9 @@ class Config:
     
     # RAG Retrieval & Generation Settings (Tunable)
     # 相似度阈值：低于此分数的文档块将被过滤 (0-1)
-    RAG_SIMILARITY_THRESHOLD = float(os.getenv('RAG_SIMILARITY_THRESHOLD', 0.35))
+    RAG_SIMILARITY_THRESHOLD = float(os.getenv('RAG_SIMILARITY_THRESHOLD', 0.25))
     # 强制最小文档数：即使分数不足，也至少保留前N个文档
-    RAG_FORCE_MIN_DOCS = int(os.getenv('RAG_FORCE_MIN_DOCS', 3))
+    RAG_FORCE_MIN_DOCS = int(os.getenv('RAG_FORCE_MIN_DOCS', 5))
     # 最大召回数量：从向量库初筛多少个片段
     RAG_MAX_RESULTS = int(os.getenv('RAG_MAX_RESULTS', 100))
     # 上下文窗口限制：喂给 LLM 的最大字符数

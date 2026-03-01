@@ -137,15 +137,7 @@ const DatabaseInterface: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                  <Share2 size={20} />
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                  <Download size={18} />
-                  Export Data
-                </button>
-              </div>
+              {/* Export/Share buttons removed */}
             </div>
 
             {/* Core Visuals Grid */}

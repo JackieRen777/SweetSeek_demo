@@ -11,7 +11,7 @@ const Database: React.FC<DatabaseProps> = ({ onTryNow }) => {
     <FeatureSection
       title={
         <span>
-          Compound <span className="text-blue-600">Database</span>
+          Sweet <span className="text-blue-600">Database</span>
         </span>
       }
       description="Access a comprehensive library of 500+ sweet compounds. Search by chemical structure, sensory profile, or biological activity with advanced filtering capabilities."

@@ -7,6 +7,7 @@ import Hero from './features/landing/HeroSection';
 import QA from './features/qa/QASection';
 import Equation from './features/equation/EquationSection';
 import Database from './features/database/DatabaseSection';
+import References from './features/references/ReferencesSection';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Slider from './components/layout/Slider';
 import { useThresholdScroll } from './utils/thresholdScroll';
@@ -15,10 +16,11 @@ import { useThresholdScroll } from './utils/thresholdScroll';
 const ChatInterface = lazy(() => import('./features/qa/components/ChatInterface'));
 const EquationModeler = lazy(() => import('./features/equation/components/EquationModeler'));
 const DatabaseInterface = lazy(() => import('./features/database/DatabaseInterface'));
+const ReferencesList = lazy(() => import('./features/references/components/ReferencesList'));
 
-const SCREEN_COUNT = 4;
+const SCREEN_COUNT = 5;
 
-type FeatureType = 'qa' | 'equation' | 'database' | null;
+type FeatureType = 'qa' | 'equation' | 'database' | 'references' | null;
 
 function App() {
   const [activeFeature, setActiveFeature] = useState<FeatureType>(null);
@@ -57,6 +59,7 @@ function App() {
       if (index === 1) setActiveFeature('qa');
       else if (index === 2) setActiveFeature('equation');
       else if (index === 3) setActiveFeature('database');
+      else if (index === 4) setActiveFeature('references');
       
       // Also scroll to that section in the background
       navigateTo(index);
@@ -81,9 +84,9 @@ function App() {
             onNavigate={navigateTo} 
         />
 
-        {/* Scroll Indicator Arrow (Visible only on first screen) */}
+        {/* Scroll Indicator Arrow (Visible on first 4 screens) */}
         <AnimatePresence>
-            {activeScreen === 0 && (
+            {activeScreen < 4 && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -103,7 +106,7 @@ function App() {
 
         {/* Main Vertical Scroll Container */}
         <motion.div
-          className="flex flex-col w-full h-[400vh]"
+          className="flex flex-col w-full h-[500vh]"
           initial={{ y: 0 }}
           animate={controls}
           style={{ touchAction: "none" }} // Disable default browser scrolling
@@ -122,17 +125,24 @@ function App() {
             </ErrorBoundary>
           </div>
 
-          {/* Section 3: Sweetness Taste Equation */}
+          {/* Section 3: Sweet Taste Equation */}
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
             <ErrorBoundary name="EquationSection">
               <Equation onTryNow={() => handleOpenFeature('equation')} />
             </ErrorBoundary>
           </div>
 
-          {/* Section 4: Database */}
+          {/* Section 4: Sweet Database */}
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
             <ErrorBoundary name="DatabaseSection">
               <Database onTryNow={() => handleOpenFeature('database')} />
+            </ErrorBoundary>
+          </div>
+
+          {/* Section 5: References */}
+          <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
+            <ErrorBoundary name="ReferencesSection">
+              <References onOpenList={() => handleOpenFeature('references')} />
             </ErrorBoundary>
           </div>
         </motion.div>
@@ -154,6 +164,7 @@ function App() {
                       {activeFeature === 'qa' && <ChatInterface />}
                       {activeFeature === 'equation' && <EquationModeler />}
                       {activeFeature === 'database' && <DatabaseInterface />}
+                      {activeFeature === 'references' && <ReferencesList />}
                     </Suspense>
                   </div>
                 </div>

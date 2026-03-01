@@ -4,15 +4,16 @@ import { motion } from 'framer-motion';
 interface NavbarProps {
   activeScreen: number;
   onNavigate: (index: number) => void;
-  activeFeature: 'qa' | 'equation' | 'database' | null;
+  activeFeature: 'qa' | 'equation' | 'database' | 'references' | null;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature }) => {
   const navItems = [
     { label: 'Home', index: 0, feature: null },
     { label: 'Professional Q&A', index: 1, feature: 'qa' },
-    { label: 'Sweetness Taste Equation', index: 2, feature: 'equation' },
-    { label: 'Database', index: 3, feature: 'database' },
+    { label: 'Sweet Taste Equation', index: 2, feature: 'equation' },
+    { label: 'Sweet Database', index: 3, feature: 'database' },
+    { label: 'References', index: 4, feature: 'references' },
   ];
 
   const isActive = (item: typeof navItems[0]) => {
@@ -37,7 +38,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
                 className="flex flex-col cursor-pointer group"
                 onClick={() => onNavigate(0)}
             >
-                <span className="text-xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--color-primary)] transition-colors">SweetSeek</span>
+                <span className="text-[26px] md:text-[30px] lg:text-[36px] font-bold tracking-tight text-slate-800 leading-none">SweetSeek</span>
             </div>
 
             {/* Separator */}
@@ -46,11 +47,18 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
             {/* FCN Logo Placeholder */}
             <div className="hidden md:flex items-center gap-2">
                  {/* Replace src with actual logo path */}
-                 <img 
-                    src="/logo_fcn.png" 
-                    alt="FCN Logo" 
-                    className="h-8 w-auto md:h-10 lg:h-12 object-contain"
-                 />
+                 <a 
+                    href="https://www.x-mol.com/groups/hujun_xie" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                 >
+                     <img 
+                        src="/logo_fcn.png" 
+                        alt="FCN Logo" 
+                        className="h-10 w-auto md:h-12 lg:h-14 object-contain"
+                     />
+                 </a>
             </div>
         </div>
 
@@ -63,7 +71,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
                         key={item.label}
                         onClick={() => handleNavigation(item)}
                         className={`
-                            relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap
+                            relative px-5 py-2.5 rounded-full text-base font-medium transition-all duration-300 whitespace-nowrap
                             ${active 
                                 ? 'text-[var(--color-primary)] bg-blue-50/50' 
                                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-50/50'

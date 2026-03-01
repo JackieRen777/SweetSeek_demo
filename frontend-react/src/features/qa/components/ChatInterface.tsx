@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, BookOpen, ChevronUp, ChevronDown, ExternalLink, AlertCircle } from 'lucide-react';
+import { Send, Sparkles, BookOpen, ChevronUp, ChevronDown, ExternalLink, AlertCircle, Square } from 'lucide-react';
 
 // Types
 interface Reference {
@@ -33,13 +33,40 @@ const ChatInterface: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isAtBottomRef = useRef(true);
 
-  // Auto-scroll to bottom
+  // Handle scroll to detect if user is at bottom
+  const handleScroll = () => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+    
+    const threshold = 50;
+    const isBottom = container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+    isAtBottomRef.current = isBottom;
+  };
+
+  // Smart Auto-scroll
   useEffect(() => {
+    if (isAtBottomRef.current) {
+       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping]); 
+
+  const scrollToBottom = () => {
+    isAtBottomRef.current = true;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]); // Scroll when typing updates content
+  };
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsTyping(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -49,6 +76,7 @@ const ChatInterface: React.FC = () => {
     setInput('');
     setIsTyping(true);
     setError(null);
+    scrollToBottom(); // Force scroll on send
     
     // Add empty assistant message to start streaming into
     setMessages(prev => [...prev, { 
@@ -71,7 +99,20 @@ const ChatInterface: React.FC = () => {
         });
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.statusText}`);
+            let errorMessage = response.statusText;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMessage = errorData.error;
+                }
+            } catch (e) {
+                // Ignore JSON parse error, use statusText
+            }
+            
+            if (errorMessage.includes("系统未初始化") || errorMessage.includes("System not initialized")) {
+                throw new Error("System is initializing, please try again in a moment...");
+            }
+            throw new Error(errorMessage);
         }
 
         const reader = response.body?.getReader();
@@ -220,7 +261,11 @@ const ChatInterface: React.FC = () => {
       <div className="flex-1 flex flex-col h-full glass-panel rounded-3xl overflow-hidden shadow-xl">
         
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth">
+        <div 
+          ref={chatContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth"
+        >
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex flex-col gap-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               
@@ -229,7 +274,7 @@ const ChatInterface: React.FC = () => {
                 className={`
                   max-w-[90%] md:max-w-[85%] p-5 rounded-2xl shadow-sm text-sm md:text-base leading-relaxed
                   ${msg.role === 'user' 
-                    ? 'bg-slate-800 text-white rounded-tr-sm shadow-md' 
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-sm shadow-md' 
                     : 'bg-white/90 text-slate-700 rounded-tl-sm border border-slate-100 shadow-sm'}
                 `}
               >
@@ -280,16 +325,20 @@ const ChatInterface: React.FC = () => {
               className="w-full pl-6 pr-28 py-4 rounded-xl bg-white/80 border border-slate-200/60 focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 focus:outline-none transition-all text-slate-700 placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button 
-              onClick={handleSend}
-              disabled={isTyping || !input.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:bg-blue-600 rounded-lg text-white font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
+              onClick={isTyping ? handleStop : handleSend}
+              disabled={!isTyping && !input.trim()}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-medium shadow-md hover:shadow-lg transition-all active:scale-95 ${
+                  isTyping 
+                  ? 'bg-[var(--color-primary)] hover:bg-blue-600 opacity-90' 
+                  : 'bg-[var(--color-primary)] hover:bg-blue-600 disabled:opacity-50 disabled:shadow-none'
+              }`}
             >
-              <span>Send</span>
-              <Send size={16} />
+              {!isTyping && <span>Send</span>}
+              {isTyping ? <Square size={16} fill="currentColor" /> : <Send size={16} />}
             </button>
           </div>
           <div className="text-center mt-2 flex justify-center items-center gap-2">
-            <span className="text-[10px] text-slate-400">Powered by DeepSeek-R1. AI-generated content may contain errors.</span>
+            <span className="text-[10px] text-slate-400">Powered by DeepSeek-R1, Designed by FCN lab</span>
             {error && (
                 <span className="text-[10px] text-red-500 flex items-center gap-1">
                     <AlertCircle size={10} />

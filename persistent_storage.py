@@ -24,6 +24,12 @@ except ImportError:
     logging.warning("未检测到 faiss，请运行 pip install faiss-cpu")
     faiss = None
 
+# 尝试导入 fitz (PyMuPDF)
+try:
+    import fitz
+except ImportError:
+    fitz = None
+
 from llama_index.core import (
     Settings,
     SimpleDirectoryReader,
@@ -31,6 +37,8 @@ from llama_index.core import (
     VectorStoreIndex,
     load_index_from_storage,
 )
+from llama_index.core.readers.base import BaseReader
+from llama_index.core.schema import Document
 from llama_index.vector_stores.faiss import FaissVectorStore
 
 from config import config
@@ -38,6 +46,78 @@ from config import config
 # 设置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("sweetseek.rag")
+
+import re
+
+def validate_content(text: str, filename: str = "unknown") -> bool:
+    """
+    校验提取的文本内容质量
+    如果返回 False，说明文件可能损坏、加密或包含大量乱码
+    """
+    if not text or len(text.strip()) < 10:
+        logger.warning(f"❌ 校验失败 [{filename}]: 文本内容为空或过短")
+        return False
+        
+    # 1. 检查控制字符密度 (Control Character Density)
+    # 正常文本不应包含大量非打印字符 (除了换行 \n, 制表符 \t, 回车 \r)
+    # 使用 set 提高查找效率
+    printable_chars = set(chr(i) for i in range(32, 127)) | {'\n', '\r', '\t', '\f'} 
+    # 扩展到 Unicode 可打印范围 (简单起见，只要不是 C0/C1 控制字符且不是删除符)
+    # 更严谨的做法是检查 category，但这里用简单启发式
+    
+    total_chars = len(text)
+    control_chars = 0
+    replacement_chars = text.count('\ufffd') # � 替换符
+    
+    for char in text:
+        if char == '\ufffd':
+            continue # 已经在外面统计了
+        # 0-31 (except 9,10,13) and 127 are ASCII control chars
+        code = ord(char)
+        if (0 <= code <= 31 and code not in [9, 10, 13]) or code == 127:
+            control_chars += 1
+            
+    # 计算比例
+    control_ratio = control_chars / total_chars
+    replacement_ratio = replacement_chars / total_chars
+    
+    # 阈值设定 (经验值)
+    # 如果控制字符超过 5% 或者 替换符超过 5%，通常是乱码
+    if control_ratio > 0.05:
+        logger.warning(f"❌ 校验失败 [{filename}]: 控制字符过多 ({control_ratio:.2%}), 可能为二进制文件")
+        return False
+        
+    if replacement_ratio > 0.05:
+        logger.warning(f"❌ 校验失败 [{filename}]: 乱码替换符过多 ({replacement_ratio:.2%}), 编码识别错误")
+        return False
+        
+    return True
+
+class PyMuPDFReader(BaseReader):
+    """使用 PyMuPDF 读取 PDF 文件"""
+    def load_data(self, file: Path, extra_info=None) -> List[Document]:
+        if not fitz:
+            raise ImportError("PyMuPDF is not installed.")
+        try:
+            doc = fitz.open(file)
+            text = ""
+            for page in doc:
+                # 使用 "text" 模式并开启 sort=True，可以按阅读顺序提取并减少乱码
+                page_text = page.get_text("text", sort=True)
+                text += page_text + "\n"
+            doc.close()
+            
+            # 执行质量校验
+            if not validate_content(text, filename=file.name):
+                logger.error(f"🚫 拒绝索引文件: {file.name} (内容校验未通过)")
+                # 返回空列表表示不索引此文件，或者抛出异常让上层处理
+                # 这里选择抛出异常，以便在日志中更明显地看到
+                raise ValueError(f"File {file.name} corrupted or encrypted")
+                
+            return [Document(text=text, extra_info=extra_info or {})]
+        except Exception as e:
+            logger.error(f"PyMuPDF 读取失败 {file}: {e}")
+            return []
 
 def configure_llm() -> bool:
     """配置 DeepSeek LLM"""
@@ -152,7 +232,19 @@ class PersistentRAGSystem:
 
             # 读取文档
             logger.info(f"📚 正在读取文档: {self.data_dir}")
-            reader = SimpleDirectoryReader(self.data_dir, recursive=True)
+            
+            file_extractor = {}
+            if fitz:
+                logger.info("启用 PyMuPDF (fitz) 进行 PDF 文本提取")
+                file_extractor[".pdf"] = PyMuPDFReader()
+            else:
+                logger.warning("未检测到 PyMuPDF，使用默认 pypdf 进行提取（可能存在乱码风险）")
+            
+            reader = SimpleDirectoryReader(
+                self.data_dir, 
+                recursive=True,
+                file_extractor=file_extractor
+            )
             documents = reader.load_data()
             logger.info(f"📖 读取到 {len(documents)} 个文档片段")
 

@@ -34,7 +34,7 @@ const EquationModeler: React.FC = () => {
 
   const handleCitation = () => {
     const bibtex = `@article{SweetnessEquation2026,
-  title={The Sweetness Taste Equation: Transforming Computational Chemistry into Sensory Science},
+  title={The Sweet Taste Equation: Transforming Computational Chemistry into Sensory Science},
   author={SweetSeek Research Team},
   journal={Journal of Computational Sensory Science},
   year={2026},
@@ -56,22 +56,6 @@ const EquationModeler: React.FC = () => {
             {/* Header Info */}
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-slate-800">Equation Modeler</h2>
-                <div className="flex items-center gap-2">
-                     <button 
-                        onClick={handleCitation}
-                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Copy Citation"
-                    >
-                        <BookOpen size={18} />
-                    </button>
-                    <button 
-                        onClick={handleExport}
-                        className="p-2 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Export Data"
-                    >
-                        <Download size={18} />
-                    </button>
-                </div>
             </div>
             
             {/* Equation Display */}
@@ -115,7 +99,7 @@ const EquationModeler: React.FC = () => {
                         className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                     />
                     <p className="text-xs text-slate-400 leading-relaxed">
-                        Range based on experimental data: -17.47 (4-Cl) to +8.68 (4-1p-6p-4Cl). Higher ΔΔG correlates with higher sweetness in this model.
+                        
                     </p>
                 </div>
 
@@ -138,44 +122,6 @@ const EquationModeler: React.FC = () => {
 
                 <div className="w-full h-px bg-slate-100 my-2"></div>
 
-                {/* Physiological Factors */}
-                <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide">Physiological Factors</h4>
-                    
-                    {/* Receptor Density */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-xs text-slate-600">
-                            <span>Receptor Density</span>
-                            <span>{receptorDensity.toFixed(1)}x</span>
-                        </div>
-                        <input 
-                            type="range" 
-                            min="0.5" 
-                            max="2.0" 
-                            step="0.1" 
-                            value={receptorDensity}
-                            onChange={(e) => setReceptorDensity(parseFloat(e.target.value))}
-                            className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                        />
-                    </div>
-
-                    {/* Saliva Flow */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-xs text-slate-600">
-                            <span>Saliva Flow Rate</span>
-                            <span>{salivaFlow.toFixed(1)}x</span>
-                        </div>
-                        <input 
-                            type="range" 
-                            min="0.5" 
-                            max="2.0" 
-                            step="0.1" 
-                            value={salivaFlow}
-                            onChange={(e) => setSalivaFlow(parseFloat(e.target.value))}
-                            className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                        />
-                    </div>
-                </div>
             </div>
 
             {/* Result Box */}

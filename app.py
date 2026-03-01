@@ -850,8 +850,9 @@ def api_health():
     # 检查 DeepSeek API
     try:
         import persistent_storage
-        if hasattr(persistent_storage, "configure_llm"):
+        if not hasattr(persistent_storage, 'deepseek_client') and hasattr(persistent_storage, "configure_llm"):
             persistent_storage.configure_llm()
+            
         health_status['components']['deepseek_api'] = {
             'status': 'configured' if hasattr(persistent_storage, 'deepseek_client') else 'not_configured'
         }
@@ -1155,6 +1156,10 @@ def api_ask_stream():
 
             reasoning_started = False
             answer_started = False
+            
+            # 缓冲机制：积攒少量字符再一次性发送，减少SSE包数量，提高前端渲染效率
+            content_buffer = ""
+            BUFFER_SIZE = 5
 
             for delta in llm_client.stream_chat(messages, temperature=0.6, max_tokens=2000):
                 if delta.reasoning_content:
@@ -1171,7 +1176,16 @@ def api_ask_stream():
                         yield f"data: {json.dumps({'type': 'references', 'references': references}, ensure_ascii=False)}\n\n"
                         yield f"data: {json.dumps({'type': 'answer_start'}, ensure_ascii=False)}\n\n"
                         answer_started = True
-                    yield f"data: {json.dumps({'type': 'answer', 'content': delta.content}, ensure_ascii=False)}\n\n"
+                    
+                    # 累积 buffer
+                    content_buffer += delta.content
+                    if len(content_buffer) >= BUFFER_SIZE:
+                        yield f"data: {json.dumps({'type': 'answer', 'content': content_buffer}, ensure_ascii=False)}\n\n"
+                        content_buffer = ""
+            
+            # 发送剩余的 buffer
+            if content_buffer:
+                yield f"data: {json.dumps({'type': 'answer', 'content': content_buffer}, ensure_ascii=False)}\n\n"
             
             # 发送完成信号
             yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
