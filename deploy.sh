@@ -39,6 +39,20 @@ cd ..
 
 # 3. 同步文件到服务器
 echo -e "${GREEN}[3/5] 同步文件到服务器...${NC}"
+
+# 检查并安装 rsync
+echo -e "${YELLOW}检查服务器 rsync 环境...${NC}"
+ssh $SERVER_USER@$SERVER_IP "
+    if ! command -v rsync &> /dev/null; then
+        echo '安装 rsync...'
+        if command -v yum &> /dev/null; then
+            yum install -y rsync
+        elif command -v apt-get &> /dev/null; then
+            apt-get install -y rsync
+        fi
+    fi
+"
+
 echo -e "${YELLOW}正在清理服务器旧文件...${NC}"
 # 删除服务器上的旧构建文件，防止冲突
 ssh $SERVER_USER@$SERVER_IP "rm -rf $SERVER_PATH/frontend-react/dist"
