@@ -166,19 +166,22 @@ class PersistentRAGSystem:
 
         # 配置嵌入模型
         try:
+            # 1. 优先尝试加载本地下载的模型 (ModelScope)
+            local_model_path = "./models/AI-ModelScope/bge-small-en-v1___5"
             embed_model_name = config.EMBED_MODEL_NAME
-            logger.info(f"正在加载嵌入模型: {embed_model_name}")
+            
+            if os.path.exists(local_model_path):
+                logger.info(f"Using local embedding model from: {local_model_path}")
+                embed_model_name = local_model_path
+            else:
+                logger.info(f"Local model not found at {local_model_path}, using HuggingFace model name: {embed_model_name}")
+
+            # 2. 配置 Embedding 模型
+            Settings.embed_model = "local" # 显式告诉 llama-index 使用本地/HuggingFace 模式
             
             from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-            
-            # 检查是否为本地路径
-            if os.path.exists(embed_model_name):
-                logger.info(f"从本地路径加载模型: {embed_model_name}")
-                embed_model = HuggingFaceEmbedding(model_name=embed_model_name, trust_remote_code=True)
-            else:
-                logger.info(f"从HuggingFace加载模型: {embed_model_name}")
-                embed_model = HuggingFaceEmbedding(model_name=embed_model_name)
-                
+            # trust_remote_code=True is sometimes needed for custom models
+            embed_model = HuggingFaceEmbedding(model_name=embed_model_name, trust_remote_code=True)
             Settings.embed_model = embed_model
             logger.info("✅ 成功配置嵌入模型")
             
