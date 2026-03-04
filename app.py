@@ -88,9 +88,7 @@ def validate_config():
     
     app_logger.info("✅ 配置验证通过")
 
-app = Flask(__name__, 
-            template_folder='frontend',
-            static_folder='static')
+app = Flask(__name__)
 CORS(app)
 
 # 全局变量
@@ -130,21 +128,11 @@ def initialize_rag_system():
 @app.route('/')
 def index():
     """主页"""
-    return render_template('index.html')
-
-@app.route('/search.html')
-def search():
-    """文献搜索页面"""
-    return render_template('search.html')
-
-
-
-@app.route('/about.html')
-def about():
-    """关于页面"""
-    return render_template('about.html')
-
-
+    return jsonify({
+        'message': 'SweetSeek Backend API is running',
+        'version': '1.0.0',
+        'docs': '/api/health'
+    })
 
 @app.route('/api/structure/render', methods=['GET'])
 @handle_api_errors
@@ -1215,7 +1203,16 @@ def api_ask_stream():
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     """提供静态文件"""
-    return send_from_directory('static', filename)
+    # 兼容旧路径，或直接返回404
+    return jsonify({'error': 'Static files not served by backend'}), 404
+
+# 自动初始化（针对 Gunicorn 等 WSGI 容器）
+if __name__ != '__main__':
+    try:
+        app_logger.info("检测到非主程序运行模式，尝试初始化 RAG 系统...")
+        initialize_rag_system()
+    except Exception as e:
+        app_logger.error(f"自动初始化失败: {e}")
 
 if __name__ == '__main__':
     print("SweetSeek 启动中...")
