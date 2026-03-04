@@ -51,3 +51,6 @@ typing-extensions==4.9.0
 # 模糊匹配
 thefuzz>=0.22.0
 python-Levenshtein>=0.23.0
+
+# 化学计算库
+rdkit>=2023.9.5
