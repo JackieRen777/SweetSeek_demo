@@ -46,7 +46,6 @@ const HeroModel = () => {
         // We calculate bounding box to normalize Y coordinate for gradient
         mesh.geometry.computeBoundingBox();
         const bbox = mesh.geometry.boundingBox!;
-        const height = bbox.max.y - bbox.min.y;
         
         // Use MeshPhysicalMaterial with custom onBeforeCompile to inject gradient shader
         mesh.material = new THREE.MeshPhysicalMaterial({

@@ -7,7 +7,6 @@ import Hero from './features/landing/HeroSection';
 import QA from './features/qa/QASection';
 import SweetTasteEquationSection from './features/equation/SweetTasteEquationSection';
 import Database from './features/database/DatabaseSection';
-import References from './features/references/ReferencesSection';
 // import ErrorBoundary from './components/ui/ErrorBoundary';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Slider from './components/layout/Slider';
