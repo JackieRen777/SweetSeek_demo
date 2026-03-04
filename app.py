@@ -398,6 +398,10 @@ def api_ask():
         # ============================================================
         filtered_chunks = []  # 明确命名：chunks
         for chunk in retrieved_chunks:
+            # 安全检查：确保 chunk.text 不为 None
+            if not getattr(chunk, 'text', None):
+                continue
+                
             chunk_score = float(chunk.score) if hasattr(chunk, 'score') else 0.0
             if chunk_score >= similarity_threshold:
                 filtered_chunks.append(chunk)
@@ -951,9 +955,19 @@ def api_ask_stream():
                 return
             
             # 过滤文本块
-            filtered_chunks = [chunk for chunk in retrieved_chunks if float(chunk.score) >= similarity_threshold]
+            filtered_chunks = []
+            for chunk in retrieved_chunks:
+                # 安全检查
+                if not getattr(chunk, 'text', None):
+                    continue
+                if float(chunk.score) >= similarity_threshold:
+                    filtered_chunks.append(chunk)
+            
             if len(filtered_chunks) == 0 and len(retrieved_chunks) > 0:
-                filtered_chunks = retrieved_chunks[:config.RAG_FORCE_MIN_DOCS]
+                # 尝试保留最相关的，但也需检查文本
+                valid_chunks = [c for c in retrieved_chunks if getattr(c, 'text', None)]
+                if valid_chunks:
+                    filtered_chunks = valid_chunks[:config.RAG_FORCE_MIN_DOCS]
             
             yield f"data: {json.dumps({'type': 'status', 'message': f'找到 {len(filtered_chunks)} 个相关文本块'}, ensure_ascii=False)}\n\n"
             
