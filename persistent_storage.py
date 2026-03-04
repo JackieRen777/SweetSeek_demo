@@ -74,11 +74,12 @@ def validate_content(text: str, filename: str = "unknown") -> bool:
     control_ratio = control_chars / total_chars
     replacement_ratio = replacement_chars / total_chars
     
-    if control_ratio > 0.05:
+    # 放宽校验逻辑 (从 0.05 -> 0.20)
+    if control_ratio > 0.20:
         logger.warning(f"❌ 校验失败 [{filename}]: 控制字符过多 ({control_ratio:.2%}), 可能为二进制文件")
         return False
         
-    if replacement_ratio > 0.05:
+    if replacement_ratio > 0.10:
         logger.warning(f"❌ 校验失败 [{filename}]: 乱码替换符过多 ({replacement_ratio:.2%}), 编码识别错误")
         return False
         

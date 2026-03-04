@@ -1,15 +1,16 @@
 # 核心依赖 - LlamaIndex RAG 框架
-llama-index-core>=0.10.15
-llama-index-embeddings-huggingface>=0.1.3
-llama-index-vector-stores-chroma>=0.1.4
-llama-index-readers-file>=0.1.3
-llama-index-llms-openai>=0.1.5
+llama-index-core>=0.14.15
+llama-index-embeddings-huggingface>=0.6.1
+llama-index-vector-stores-chroma>=0.5.5
+llama-index-readers-file>=0.5.6
+llama-index-llms-openai>=0.6.25
 
 # 向量数据库
-chromadb>=0.4.22
+chromadb>=0.5.17
+pysqlite3-binary
 
 # LLM依赖
-openai==1.12.0
+openai>=1.12.0
 
 # Web框架
 Flask==3.0.2
@@ -20,33 +21,33 @@ Werkzeug==3.0.1
 python-dotenv==1.0.1
 
 # 文件处理
-pypdf==4.0.1
+pypdf>=6.7.5
 python-docx==1.1.0
 
 # 文件监控
 watchdog==4.0.0
 
 # 机器学习和NLP
-sentence-transformers==2.3.1
-transformers==4.37.2
-torch==2.2.0
+sentence-transformers>=5.2.3
+transformers>=5.2.0
+torch>=2.10.0
 
 # 数据处理
-numpy==1.26.4
-pandas>=2.0.0
+numpy>=1.26.4
+pandas>=2.3.3
 openpyxl>=3.1.0
 
 # HTTP客户端
 requests==2.31.0
-httpx==0.26.0
+httpx>=0.26.0
 
 # 重要的依赖
-pydantic==2.6.1
-aiohttp==3.9.3
-tiktoken==0.6.0
-nltk==3.8.1
-tenacity==8.2.3
-typing-extensions==4.9.0
+pydantic>=2.12.5
+aiohttp>=3.9.3
+tiktoken>=0.12.0
+nltk>=3.9.3
+tenacity>=8.2.3
+typing-extensions>=4.15.0
 
 # 模糊匹配
 thefuzz>=0.22.0
