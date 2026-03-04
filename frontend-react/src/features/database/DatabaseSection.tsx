@@ -29,7 +29,7 @@ const Database: React.FC<DatabaseProps> = ({ onTryNow }) => {
                         <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                             <DbIcon size={20} />
                         </div>
-                        <span className="font-bold text-slate-700">SweetDB</span>
+                        <span className="font-bold text-slate-700">Sweet Database</span>
                     </div>
                     <Search size={18} className="text-slate-400" />
                 </div>

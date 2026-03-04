@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@react-three/postprocessing": "^3.0.4",
     "@types/three": "^0.183.1",
     "axios": "^1.13.5",
     "clsx": "^2.1.1",
@@ -23,7 +24,8 @@
     "react-katex": "^3.1.0",
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.5.0",
-    "three": "^0.183.1"
+    "three": "^0.183.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

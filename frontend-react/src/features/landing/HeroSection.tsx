@@ -27,8 +27,8 @@ const Hero: React.FC<HeroProps> = ({ onNext }) => {
               </span>
             </h1>
             <p className="mt-8 text-xl text-slate-600 leading-8 text-justify hyphens-auto w-full max-w-[520px] tracking-normal">
-              Explore the molecular science of sweetness through our advanced AI-powered knowledge system.
-            </p>
+            Designed by FCN Lab, SweetSeek is a next-generation research interface for sweet science. Powered by comprehensive databases and intelligent algorithms, it drives breakthroughs in sensory science, aiming to facilitate food engineering.
+          </p>
           </div>
 
           <motion.button
@@ -49,9 +49,11 @@ const Hero: React.FC<HeroProps> = ({ onNext }) => {
         </motion.div>
       </div>
 
-      {/* Right Column: 3D Molecule */}
-      <div className="w-full md:w-[45%] h-[50vh] md:h-full absolute md:relative top-0 md:top-auto right-0 -z-0 md:z-0 opacity-40 md:opacity-100 pointer-events-none md:pointer-events-auto">
-        <MoleculeViewer />
+      {/* Right Column: 3D Molecule - Absolute Positioning to Break Constraints */}
+      <div className="absolute top-0 right-0 w-full md:w-[60%] h-full z-0 flex items-center justify-center overflow-visible pointer-events-none md:pointer-events-auto">
+        <div className="w-full h-full relative translate-x-[10%]">
+          <MoleculeViewer />
+        </div>
       </div>
     </div>
   );

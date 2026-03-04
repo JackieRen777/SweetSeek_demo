@@ -55,7 +55,7 @@ const Receptors = ({ count, deltaG }: { count: number; deltaG: number }) => {
         meshRef.current.setMatrixAt(i, dummy.matrix);
     }
     meshRef.current.instanceMatrix.needsUpdate = true;
-  }, [count]);
+  }, [count, dummy]);
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, 100]} castShadow receiveShadow>
@@ -83,6 +83,9 @@ const Molecules = ({ count }: { count: number }) => {
 
   const molecules = useMemo(() => {
     return Array.from({ length: Math.min(50, Math.max(5, count)) }).map((_, i) => {
+      // Use a simple seeded random for consistent positions across renders if needed,
+      // but here Math.random inside useMemo runs once per count change.
+      // We'll avoid calling impure functions in render by doing it here in useMemo.
       const x = (Math.random() - 0.5) * 10;
       const y = 1 + Math.random() * 3;
       const z = (Math.random() - 0.5) * 10;

@@ -5,20 +5,21 @@ import Background from './components/layout/Background';
 import Navbar from './components/layout/Navbar';
 import Hero from './features/landing/HeroSection';
 import QA from './features/qa/QASection';
-import Equation from './features/equation/EquationSection';
+import SweetTasteEquationSection from './features/equation/SweetTasteEquationSection';
 import Database from './features/database/DatabaseSection';
 import References from './features/references/ReferencesSection';
+// import ErrorBoundary from './components/ui/ErrorBoundary';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Slider from './components/layout/Slider';
 import { useThresholdScroll } from './utils/thresholdScroll';
 
 // Lazy load feature components
 const ChatInterface = lazy(() => import('./features/qa/components/ChatInterface'));
-const EquationModeler = lazy(() => import('./features/equation/components/EquationModeler'));
+const SweetTasteEquation = lazy(() => import('./features/equation/components/SweetTasteEquation'));
 const DatabaseInterface = lazy(() => import('./features/database/DatabaseInterface'));
 const ReferencesList = lazy(() => import('./features/references/components/ReferencesList'));
 
-const SCREEN_COUNT = 5;
+const SCREEN_COUNT = 4; // Reduced from 5 to 4
 
 type FeatureType = 'qa' | 'equation' | 'database' | 'references' | null;
 
@@ -59,7 +60,11 @@ function App() {
       if (index === 1) setActiveFeature('qa');
       else if (index === 2) setActiveFeature('equation');
       else if (index === 3) setActiveFeature('database');
-      else if (index === 4) setActiveFeature('references');
+      else if (index === 4) {
+        // References is no longer a scroll section, open directly
+        setActiveFeature('references');
+        return; 
+      }
       
       // Also scroll to that section in the background
       navigateTo(index);
@@ -127,8 +132,8 @@ function App() {
 
           {/* Section 3: Sweet Taste Equation */}
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
-            <ErrorBoundary name="EquationSection">
-              <Equation onTryNow={() => handleOpenFeature('equation')} />
+            <ErrorBoundary name="SweetTasteEquationSection">
+              <SweetTasteEquationSection onTryNow={() => handleOpenFeature('equation')} />
             </ErrorBoundary>
           </div>
 
@@ -139,12 +144,14 @@ function App() {
             </ErrorBoundary>
           </div>
 
-          {/* Section 5: References */}
+          {/* Section 5: References (REMOVED from slider) */}
+          {/* 
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
             <ErrorBoundary name="ReferencesSection">
               <References onOpenList={() => handleOpenFeature('references')} />
             </ErrorBoundary>
-          </div>
+          </div> 
+          */}
         </motion.div>
 
         {/* Feature Modal Overlay */}
@@ -162,7 +169,7 @@ function App() {
                   <div className="w-full h-full bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden relative">
                     <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
                       {activeFeature === 'qa' && <ChatInterface />}
-                      {activeFeature === 'equation' && <EquationModeler />}
+                      {activeFeature === 'equation' && <SweetTasteEquation />}
                       {activeFeature === 'database' && <DatabaseInterface />}
                       {activeFeature === 'references' && <ReferencesList />}
                     </Suspense>

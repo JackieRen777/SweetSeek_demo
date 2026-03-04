@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, ContactShadows, Html } from '@react-three/drei';
+import React, { useMemo, Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF, Center, Sparkles } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import ErrorBoundary from '../../../components/ui/ErrorBoundary';
@@ -8,12 +9,14 @@ import ErrorBoundary from '../../../components/ui/ErrorBoundary';
 // Loading Spinner inside Canvas
 const CanvasLoader = () => {
   return (
-    <Html center>
-      <div className="flex flex-col items-center gap-2 bg-white/80 p-4 rounded-xl backdrop-blur-sm shadow-lg">
-        <Loader2 className="animate-spin text-blue-500" size={32} />
-        <span className="text-xs font-medium text-slate-600">Loading Model...</span>
-      </div>
-    </Html>
+    <group>
+      <Html center>
+        <div className="flex flex-col items-center gap-2 bg-white/80 p-4 rounded-xl backdrop-blur-sm shadow-lg">
+          <Loader2 className="animate-spin text-blue-500" size={32} />
+          <span className="text-xs font-medium text-slate-600">Loading Model...</span>
+        </div>
+      </Html>
+    </group>
   );
 };
 
@@ -28,52 +31,189 @@ const CanvasErrorFallback = () => {
   );
 };
 
-// Fallback molecule (DNA helix style) if PDB fails or loading
-const FallbackMolecule = () => {
-  const groupRef = useRef<THREE.Group>(null);
-  
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += 0.005;
-      groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.2;
-    }
-  });
+const HeroModel = () => {
+  const { scene } = useGLTF('/Sucralose _model.glb');
 
-  const spheres = Array.from({ length: 20 }).map((_, i) => {
-    const t = i / 10 * Math.PI * 2;
-    const x = Math.cos(t) * 3;
-    const y = (i - 10) * 0.5;
-    const z = Math.sin(t) * 3;
-    return (
-      <mesh key={i} position={[x, y, z]}>
-        <sphereGeometry args={[0.4, 32, 32]} />
-        <meshStandardMaterial color={i % 2 === 0 ? "#3B82F6" : "#EC4899"} metalness={0.3} roughness={0.2} />
-      </mesh>
-    );
-  });
+  // Process the model to apply the requested visual style
+  const modelScene = useMemo(() => {
+    const cloned = scene.clone();
 
-  return <group ref={groupRef}>{spheres}</group>;
+    cloned.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        
+        // Apply a gradient effect based on vertex position
+        // We calculate bounding box to normalize Y coordinate for gradient
+        mesh.geometry.computeBoundingBox();
+        const bbox = mesh.geometry.boundingBox!;
+        const height = bbox.max.y - bbox.min.y;
+        
+        // Use MeshPhysicalMaterial with custom onBeforeCompile to inject gradient shader
+        mesh.material = new THREE.MeshPhysicalMaterial({
+          color: '#ffffff', 
+          roughness: 0.2,
+          metalness: 0.1,
+          emissive: '#ffffff',
+          emissiveIntensity: 0.2, // Reduced slightly as we increased lighting
+          side: THREE.DoubleSide
+        });
+
+          // Inject shader to mix colors based on world position Y
+        // @ts-ignore
+        mesh.material.onBeforeCompile = (shader) => {
+          // Use more vivid/saturated colors
+          shader.uniforms.uColor1 = { value: new THREE.Color("#60A5FA") }; // Vivid Blue (Top)
+          shader.uniforms.uColor2 = { value: new THREE.Color("#C084FC") }; // Vivid Purple (Middle)
+          shader.uniforms.uColor3 = { value: new THREE.Color("#F472B6") }; // Vivid Pink (Bottom)
+          shader.uniforms.uMinY = { value: bbox.min.y };
+          shader.uniforms.uMaxY = { value: bbox.max.y };
+
+          shader.vertexShader = `
+            varying float vY;
+            ${shader.vertexShader}
+          `.replace(
+            '#include <begin_vertex>',
+            `
+            #include <begin_vertex>
+            vY = position.y; 
+            `
+          );
+
+          shader.fragmentShader = `
+            uniform vec3 uColor1;
+            uniform vec3 uColor2;
+            uniform vec3 uColor3;
+            uniform float uMinY;
+            uniform float uMaxY;
+            varying float vY;
+            ${shader.fragmentShader}
+          `.replace(
+            '#include <color_fragment>',
+            `
+            #include <color_fragment>
+            float t = (vY - uMinY) / (uMaxY - uMinY);
+            t = smoothstep(0.0, 1.0, t);
+            
+            vec3 gradientColor;
+            if (t < 0.5) {
+                gradientColor = mix(uColor3, uColor2, t * 2.0);
+            } else {
+                gradientColor = mix(uColor2, uColor1, (t - 0.5) * 2.0);
+            }
+            
+            // Force pure color
+            diffuseColor.rgb = gradientColor;
+            
+            // Apply slight emissive effect for self-illumination
+             // This ensures it glows even in shadows
+             diffuseColor.rgb += gradientColor * 0.2;
+             `
+           );
+        };
+        
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+    });
+
+    return cloned;
+  }, [scene]);
+
+  return <primitive object={modelScene} scale={0.08} />;
 };
+
+// Needed for Html component import
+import { Html } from '@react-three/drei';
 
 const MoleculeViewer: React.FC = () => {
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative" style={{ overflow: 'visible' }}>
       <ErrorBoundary fallback={<CanvasErrorFallback />}>
-        <Canvas camera={{ position: [0, 0, 15], fov: 45 }} dpr={[1, 2]}>
-          <ambientLight intensity={0.5} />
-          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
-          <pointLight position={[-10, -10, -10]} intensity={0.5} />
+        <Canvas 
+           camera={{ position: [0, 0, 15], fov: 35 }} 
+           dpr={[1.5, 2]} 
+           gl={{ antialias: true, preserveDrawingBuffer: true, alpha: true }}
+           style={{ width: '100%', height: '100%' }}
+         >
+          {/* 
+              Lighting Setup for Gradient Effect:
+              - Top-Left: Pink/Purple (#f9cdfd)
+              - Bottom-Right: Light Blue (#d4e8fe)
+          */}
+          <ambientLight intensity={1.0} color="#ffffff" />
           
-          <React.Suspense fallback={<CanvasLoader />}>
-             <FallbackMolecule /> 
-          </React.Suspense>
+          {/* Main Key Light (Pink/Purple) */}
+          <spotLight 
+            position={[-5, 8, 5]} 
+            angle={0.5} 
+            penumbra={1} 
+            intensity={1.0} 
+            color="#f9cdfd" 
+          />
           
-          <ContactShadows resolution={1024} scale={50} blur={2} opacity={0.25} far={10} color="#3B82F6" />
-          <OrbitControls enableZoom={false} enablePan={false} />
+          {/* Fill Light (Light Blue) */}
+          <pointLight position={[5, -5, 5]} intensity={1.0} color="#d4e8fe" />
+          
+          {/* Front Light for brightness */}
+          <directionalLight position={[0, 0, 5]} intensity={0.8} color="#ffffff" />
+
+          {/* Back Light to illuminate the rear side */}
+          <directionalLight position={[0, 0, -5]} intensity={1.0} color="#ffffff" />
+          
+          <Suspense fallback={<CanvasLoader />}>
+             <Center>
+                <group rotation={[Math.PI, 0, 0]}>
+                  <HeroModel />
+                </group>
+             </Center>
+             
+             {/* Floating Particles (Sparkles) */}
+            {/* Pink particles */}
+            <Sparkles 
+                count={30} 
+                scale={12} 
+                size={4} 
+                speed={0.4} 
+                opacity={0.6} 
+                color="#f9cdfd" 
+            />
+            {/* Blue particles */}
+            <Sparkles 
+                count={20} 
+                scale={14} 
+                size={6} 
+                speed={0.3} 
+                opacity={0.5} 
+                color="#d4e8fe" 
+            />
+          </Suspense>
+          
+          <OrbitControls 
+            enableZoom={false} 
+            enablePan={false} 
+            enableRotate={false}
+            autoRotate
+            autoRotateSpeed={2.0}
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI}
+          />
+          
+           {/* Post Processing for Glow/Bloom effect */}
+          <EffectComposer enableNormalPass={false}>
+            <Bloom 
+                luminanceThreshold={0.85} // Only very bright things glow
+                mipmapBlur // Soft blur
+                intensity={0.4} // Glow intensity
+                radius={0.4} // Glow radius
+            />
+          </EffectComposer>
         </Canvas>
       </ErrorBoundary>
     </div>
   );
 };
+
+// Preload the model
+useGLTF.preload('/Sucralose _model.glb');
 
 export default MoleculeViewer;

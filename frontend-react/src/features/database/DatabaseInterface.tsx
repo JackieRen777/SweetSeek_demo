@@ -61,6 +61,67 @@ const DatabaseInterface: React.FC = () => {
       
       // Simulating API delay and fuzzy search with mock data for now
       // Or if API is ready, use it:
+      // MOCK DATA for Fallback (since API might be empty or failing)
+      const MOCK_DATA: Compound[] = [
+        {
+          id: 1,
+          name: "Sucrose",
+          cid: 5988,
+          formula: "C12H22O11",
+          mw: 342.3,
+          sweetness: 1.0,
+          smiles: "C(C1C(C(C(C(O1)OC2(C(C(C(O2)CO)O)O)CO)O)O)O)O",
+          logp: -3.7,
+          tpsa: 189.5,
+          hbond_donor: 8,
+          hbond_acceptor: 11,
+          rotatable_bond: 5,
+          heavy_atom: 23,
+          qed: 0.25,
+          sa_score: 3.5,
+          lipinski: 0,
+          sweetness_potency: 1.0
+        },
+        {
+          id: 2,
+          name: "Fructose",
+          cid: 5984,
+          formula: "C6H12O6",
+          mw: 180.16,
+          sweetness: 1.73,
+          smiles: "C(C1C(C(C(O1)(CO)O)O)O)O",
+          logp: -2.3,
+          tpsa: 110.4,
+          hbond_donor: 5,
+          hbond_acceptor: 6,
+          rotatable_bond: 3,
+          heavy_atom: 12,
+          qed: 0.45,
+          sa_score: 2.8,
+          lipinski: 0,
+          sweetness_potency: 1.73
+        },
+        {
+          id: 3,
+          name: "Aspartame",
+          cid: 134601,
+          formula: "C14H18N2O5",
+          mw: 294.3,
+          sweetness: 200,
+          smiles: "COC(=O)C(CC1=CC=CC=C1)NC(=O)C(CC(=O)O)N",
+          logp: 0.1,
+          tpsa: 108.5,
+          hbond_donor: 3,
+          hbond_acceptor: 6,
+          rotatable_bond: 8,
+          heavy_atom: 21,
+          qed: 0.65,
+          sa_score: 2.5,
+          lipinski: 0,
+          sweetness_potency: 200
+        }
+      ];
+
       const endpoint = query 
         ? `/api/compounds/search` 
         : `/api/compounds?limit=1000`; // Increase limit to fetch all compounds initially
@@ -68,15 +129,26 @@ const DatabaseInterface: React.FC = () => {
       const method = query ? 'POST' : 'GET';
       const body = query ? JSON.stringify({ query, limit: 100 }) : undefined;
       
-      const res = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body
-      });
+      let data;
+      try {
+        const res = await fetch(endpoint, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body
+        });
+        if (!res.ok) throw new Error('API Error');
+        data = await res.json();
+      } catch (e) {
+        console.warn("API failed, using mock data", e);
+        // Fallback to local filtering of MOCK_DATA
+        if (query) {
+            data = { results: MOCK_DATA.filter(c => c.name.toLowerCase().includes(query.toLowerCase())) };
+        } else {
+            data = { data: MOCK_DATA };
+        }
+      }
       
-      const data = await res.json();
-      
-      if (data.success || Array.isArray(data)) {
+      if (data.success || Array.isArray(data) || data.data || data.results) {
         const results = data.results || data.data || []; // Handle both search wrapper and direct array
         setCompounds(results);
         // Only set selected compound if none is currently selected OR if we just performed a search

@@ -38,7 +38,7 @@ const CompoundList: React.FC<CompoundListProps> = ({
       <div className="p-4 border-b border-slate-100 space-y-4">
         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
           <Beaker className="text-blue-600" size={24} />
-          SweetDB
+          Sweet Database
         </h2>
         <form onSubmit={handleSubmit} className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />

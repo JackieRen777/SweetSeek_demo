@@ -14,21 +14,21 @@ const QA: React.FC<QAProps> = ({ onTryNow }) => {
           Professional <span className="text-blue-600">Q&A</span>
         </span>
       }
-      description="Get instant, scientifically accurate answers about sweetness perception, molecular interactions, and sensory data. Our AI is trained on thousands of peer-reviewed papers."
+      description="Get instant, scientifically accurate answers on sweetness, molecular interactions, and sensory data. Our agent is trained on thousands of peer-reviewed papers."
       onTryNow={onTryNow}
       visualComponent={
         <div className="relative w-80 h-96 bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 flex flex-col gap-4 transform rotate-3 hover:rotate-0 transition-transform duration-500">
             {/* Mock Chat UI */}
             <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                    <MessageCircle size={16} />
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                    <MessageCircle size={20} />
                 </div>
                 <div className="bg-slate-50 p-3 rounded-2xl rounded-tl-none text-sm text-slate-600 shadow-sm">
                     How does the receptor T1R2 bind to sucrose?
                 </div>
             </div>
             <div className="flex items-start gap-3 flex-row-reverse">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xs">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
                     AI
                 </div>
                 <div className="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none text-sm shadow-md">

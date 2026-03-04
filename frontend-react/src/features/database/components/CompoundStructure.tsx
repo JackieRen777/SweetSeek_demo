@@ -9,12 +9,12 @@ interface CompoundStructureProps {
 
 const CompoundStructure: React.FC<CompoundStructureProps> = ({ name, cid, smiles }) => {
   const [imgError, setImgError] = useState(false);
-  const [useBackend, setUseBackend] = useState(true);
+  const [useBackend, setUseBackend] = useState(true); // Prioritize local backend
 
   // Reset error state when molecule changes
   React.useEffect(() => {
     setImgError(false);
-    setUseBackend(true);
+    setUseBackend(true); // Reset to try backend first for new molecule
   }, [name, cid, smiles]);
 
   const imageUrl = React.useMemo(() => {
@@ -22,13 +22,22 @@ const CompoundStructure: React.FC<CompoundStructureProps> = ({ name, cid, smiles
       return `/api/structure/render?smiles=${encodeURIComponent(smiles)}&width=400&height=400`;
     }
     
-    // Fallback to PubChem
-    return cid 
-      ? `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/PNG?record_type=2d&image_size=large`
-      : (smiles
-          ? `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smiles)}/PNG?record_type=2d&image_size=large`
-          : `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(name)}/PNG?record_type=2d&image_size=large`
-        );
+    // Fallback to PubChem - Try different formats
+    // Priority: CID -> Name -> SMILES (SMILES often has encoding issues in URLs)
+    if (cid) {
+        return `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;
+    }
+    
+    // Clean up name for URL (remove special chars if needed, though encodeURIComponent usually handles it)
+    if (name) {
+        return `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(name)}/PNG?record_type=2d&image_size=large`;
+    }
+
+    if (smiles) {
+        return `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smiles)}/PNG?record_type=2d&image_size=large`;
+    }
+
+    return '';
   }, [name, cid, smiles, useBackend]);
 
   const handleImageError = () => {
