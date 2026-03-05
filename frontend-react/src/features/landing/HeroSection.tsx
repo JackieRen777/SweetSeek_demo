@@ -14,7 +14,7 @@ const Hero: React.FC<HeroProps> = ({ onNext }) => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 2000); // Change image every 2 seconds
+    }, 3000); // Change image every 3 seconds
 
     return () => clearInterval(timer);
   }, []);

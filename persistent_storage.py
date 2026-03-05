@@ -345,67 +345,26 @@ class PersistentRAGSystem:
         except Exception as e:
              logger.warning(f"LLM 初始化警告: {e}")
 
-        if os.path.exists(self.chroma_path) and os.listdir(self.chroma_path):
+        # 检查是否已存在索引
+        index_exists = os.path.exists(self.chroma_path) and os.listdir(self.chroma_path)
+        if index_exists:
             logger.info("正在加载现有 ChromaDB 索引...")
             if self._load_from_disk():
-                return True
+                # 检查索引是否为空
+                try:
+                    chroma_client = chromadb.PersistentClient(path=self.chroma_path)
+                    collection = chroma_client.get_or_create_collection("sweetseek_docs")
+                    count = collection.count()
+                    logger.info(f"📊 现有索引包含 {count} 个文档片段")
+                    if count > 0:
+                        return True
+                    else:
+                        logger.warning("⚠️ 现有索引为空，准备重新扫描...")
+                except Exception as e:
+                    logger.warning(f"⚠️ 无法检查索引数量: {e}")
         
-        logger.info("未找到索引或加载失败，开始构建...")
-        
-        # 2. 扫描文件
-        if not os.path.exists(config.DATA_DIR):
-            logger.warning(f"数据目录不存在: {config.DATA_DIR}")
-            os.makedirs(config.DATA_DIR)
-            return False
-            
-        logger.info(f"正在扫描文档目录: {config.DATA_DIR}")
-        # 启用递归扫描，以支持子目录
-        documents = SimpleDirectoryReader(config.DATA_DIR, recursive=True).load_data()
-        logger.info(f"📚 扫描到 {len(documents)} 个文档对象")
-        
-        if not documents:
-            logger.warning("❌ 未发现任何文档，跳过索引构建")
-            return False
-
-        # 3. 创建索引
-        logger.info("🚀 开始构建向量索引 (这可能需要几分钟)...")
-        try:
-            # 显式配置全局 LLM，防止隐式回退
-            if 'llm' in locals() and llm:
-                 Settings.llm = llm
-            else:
-                 logger.warning("LLM variable not found, trying to re-initialize...")
-                 self._configure_models() # 尝试重新配置
-                 if hasattr(Settings, 'llm'):
-                     llm = Settings.llm
-            
-            chroma_client = chromadb.PersistentClient(path=self.chroma_path)
-            chroma_collection = chroma_client.get_or_create_collection("sweetseek_docs")
-            vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-            storage_context = StorageContext.from_defaults(vector_store=vector_store)
-            
-            # 使用显式配置的 embed_model
-            self.index = VectorStoreIndex.from_documents(
-                documents, 
-                storage_context=storage_context,
-                embed_model=Settings.embed_model, # 显式传递
-                show_progress=True 
-            )
-            
-            # 配置检索器
-            self.query_engine = self.index.as_query_engine(
-                similarity_top_k=config.RAG_TOP_K,
-                llm=llm,
-                embed_model=Settings.embed_model
-            )
-            logger.info(f"✅ 查询引擎已就绪 (Top-K={config.RAG_TOP_K}, Threshold={config.RAG_SIMILARITY_THRESHOLD})")
-            
-            return True
-        except Exception as e:
-            logger.error(f"❌ 索引构建失败: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
+        logger.info("未找到有效索引或索引为空，开始构建...")
+        return self._build_new_index()
 
     def _load_from_disk(self) -> bool:
         try:
@@ -447,9 +406,11 @@ class PersistentRAGSystem:
 
             all_files = []
             for ext in ['*.pdf', '*.PDF', '*.txt', '*.md']:
-                all_files.extend(glob.glob(os.path.join(self.data_dir, "**", ext), recursive=True))
+                found = glob.glob(os.path.join(self.data_dir, "**", ext), recursive=True)
+                logger.info(f"🔎 扫描 {ext}: 找到 {len(found)} 个文件")
+                all_files.extend(found)
             
-            logger.info(f"📚 扫描到 {len(all_files)} 个文件")
+            logger.info(f"📚 总计扫描到 {len(all_files)} 个文件 (目录: {self.data_dir})")
             if not all_files:
                 logger.warning("未找到文档，跳过索引构建")
                 return False

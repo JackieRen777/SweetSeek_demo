@@ -34,7 +34,7 @@ class Config:
     DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-reasoner')
     
     # RAG Settings
-    DATA_DIR = os.getenv('DATA_DIR', str(BASE_DIR / "sweet_related_paper"))
+    DATA_DIR = os.getenv('DATA_DIR', str(BASE_DIR / "sweet_related_paper/papers"))
     PERSIST_DIR = os.getenv('PERSIST_DIR', str(BASE_DIR / "faiss_db"))
 
     EMBED_MODEL_TYPE = os.getenv("EMBED_MODEL_TYPE", "huggingface").lower()
