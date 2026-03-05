@@ -142,9 +142,11 @@ const ReferencesList: React.FC = () => {
                       </span>
                       <span className="text-slate-600">
                         {/* Display year (bold), web (if present), volume (italic), pages separated by comma */}
-                         <span className="font-bold text-slate-900">{ref.year}</span>, 
-                        {ref.webDisplay && <span> {ref.webDisplay},</span>}
-                        <span className="italic"> {ref.volume}</span>, {ref.pages}.
+                        <span className="font-bold text-slate-900">{ref.year}</span>
+                        {ref.webDisplay && <span>, {ref.webDisplay}</span>}
+                        {ref.volume && <>, <span className="italic">{ref.volume}</span></>}
+                        {ref.pages && <>, {ref.pages}</>}
+                        .
                       </span>
                       
                       {/* Tags */}

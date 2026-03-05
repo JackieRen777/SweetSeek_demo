@@ -130,12 +130,36 @@ def initialize_rag_system():
 # 路由
 @app.route('/')
 def index():
-    """主页"""
+    """主页 - 返回前端入口"""
+    dist_dir = os.path.join(os.path.dirname(__file__), 'frontend-react', 'dist')
+    if os.path.exists(os.path.join(dist_dir, 'index.html')):
+        return send_from_directory(dist_dir, 'index.html')
     return jsonify({
         'message': 'SweetSeek Backend API is running',
         'version': '1.0.0',
         'docs': '/api/health'
     })
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    dist_dir = os.path.join(os.path.dirname(__file__), 'frontend-react', 'dist', 'assets')
+    return send_from_directory(dist_dir, filename)
+
+@app.route('/<path:path>')
+def serve_static_proxy(path):
+    if path.startswith('api/'):
+        return jsonify({'error': 'API endpoint not found'}), 404
+        
+    dist_dir = os.path.join(os.path.dirname(__file__), 'frontend-react', 'dist')
+    
+    if os.path.exists(os.path.join(dist_dir, path)):
+        return send_from_directory(dist_dir, path)
+        
+    # SPA Fallback
+    if '.' not in os.path.basename(path) and os.path.exists(os.path.join(dist_dir, 'index.html')):
+        return send_from_directory(dist_dir, 'index.html')
+        
+    return jsonify({'error': 'Not Found'}), 404
 
 @app.route('/api/structure/render', methods=['GET'])
 @handle_api_errors
