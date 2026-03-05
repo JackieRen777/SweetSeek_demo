@@ -126,19 +126,38 @@ export const useThresholdScroll = ({
     // Else: bounce back (handled by UI state not changing)
   }, [activeScreen, navigateTo, thresholdDistance, thresholdVelocity]);
 
+  // Keyboard Handler
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // 允许在输入框中正常使用方向键
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+    }
+
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+        e.preventDefault();
+        navigateTo(activeScreen + 1);
+    } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        navigateTo(activeScreen - 1);
+    }
+  }, [activeScreen, navigateTo]);
+
   // Setup Global Listeners
   useEffect(() => {
     // 使用 { passive: false } 以便我们可以调用 e.preventDefault()
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
     
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleWheel, handleTouchStart, handleTouchEnd]);
+  }, [handleWheel, handleTouchStart, handleTouchEnd, handleKeyDown]);
 
   return { activeScreen, navigateTo };
 };

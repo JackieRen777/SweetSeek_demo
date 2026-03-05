@@ -153,9 +153,9 @@ function App() {
             onNavigate={navigateTo} 
         />
 
-        {/* Scroll Indicator Arrow (Visible on first 4 screens) */}
+        {/* Scroll Indicator Arrow (Visible on first 3 screens, hidden on last) */}
         <AnimatePresence>
-            {activeScreen < 4 && (
+            {activeScreen < SCREEN_COUNT - 1 && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

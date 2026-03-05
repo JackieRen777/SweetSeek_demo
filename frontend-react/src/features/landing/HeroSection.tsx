@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MoleculeViewer from './components/MoleculeViewer';
+// import MoleculeViewer from './components/MoleculeViewer';
 import { ArrowRight } from 'lucide-react';
 
 interface HeroProps {
@@ -9,7 +9,7 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ onNext }) => {
   // Hero section with image carousel
-  const images = ['/homepicture1.png', '/homepicture2.png'];
+  const images = ['/homepicture1.png', '/homepicture2.png', '/homepicture3.png', '/homepicture4.png'];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {

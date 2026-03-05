@@ -136,18 +136,15 @@ const ReferencesList: React.FC = () => {
                       {highlightAuthor(ref.authors)}
                     </p>
                     
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-x-1 gap-y-2 text-sm">
                       <span className="font-serif italic text-slate-800 font-medium">
                         {ref.journal}.
                       </span>
                       <span className="text-slate-600">
-                        {/* Display year, web (if present), volume, pages separated by comma */}
-                        {[
-                          ref.year,
-                          ref.webDisplay,
-                          ref.volume,
-                          ref.pages
-                        ].filter(Boolean).join(', ')}.
+                        {/* Display year (bold), web (if present), volume (italic), pages separated by comma */}
+                         <span className="font-bold text-slate-900">{ref.year}</span>, 
+                        {ref.webDisplay && <span> {ref.webDisplay},</span>}
+                        <span className="italic"> {ref.volume}</span>, {ref.pages}.
                       </span>
                       
                       {/* Tags */}
