@@ -22,6 +22,21 @@ const SCREEN_COUNT = 4; // Reduced from 5 to 4
 
 type FeatureType = 'qa' | 'equation' | 'database' | 'references' | null;
 
+// URL Mapping
+const PATH_MAP: Record<string, FeatureType> = {
+  '/professionalq&a': 'qa', // URL is usually lowercase
+  '/equation': 'equation',
+  '/database': 'database',
+  '/references': 'references'
+};
+
+const REVERSE_PATH_MAP: Record<string, string> = {
+  'qa': '/professionalQ&A', // Displayed URL
+  'equation': '/equation',
+  'database': '/database',
+  'references': '/references'
+};
+
 function App() {
   const [activeFeature, setActiveFeature] = useState<FeatureType>(null);
   const controls = useAnimation();
@@ -33,6 +48,56 @@ function App() {
     thresholdVelocity: 1.2,
     animationDuration: 600
   });
+
+  // --- URL Routing Logic ---
+
+  // 1. Initial Load: Check URL and set activeFeature
+  useEffect(() => {
+    const path = window.location.pathname.toLowerCase();
+    // Handle potential trailing slashes
+    const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
+    
+    // Support both old and new URL patterns for backward compatibility if needed
+    // But mainly map /professionalq&a
+    let feature = PATH_MAP[cleanPath];
+    if (!feature && cleanPath === '/qa') feature = 'qa'; // Fallback support
+    
+    if (feature) {
+      setActiveFeature(feature);
+    } else if (cleanPath === '/') {
+        setActiveFeature(null);
+    }
+  }, []);
+
+  // 2. Sync URL when activeFeature changes
+  useEffect(() => {
+    if (activeFeature) {
+      const path = REVERSE_PATH_MAP[activeFeature];
+      if (path && window.location.pathname !== path) {
+         window.history.pushState({ feature: activeFeature }, '', path);
+      }
+    } else {
+      // If no active feature (Home), revert to /
+      if (window.location.pathname !== '/') {
+         window.history.pushState({ feature: null }, '', '/');
+      }
+    }
+  }, [activeFeature]);
+
+  // 3. Handle Browser Back/Forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+       const path = window.location.pathname.toLowerCase();
+       const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
+       const feature = PATH_MAP[cleanPath];
+       setActiveFeature(feature || null);
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // -------------------------
 
   // Sync animation with active screen
   useEffect(() => {

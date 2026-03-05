@@ -4,9 +4,12 @@ SweetSeek - Flask Backend
 AI-powered research Q&A system
 """
 
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+try:
+    __import__('pysqlite3')
+    import sys
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass
 
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -1215,6 +1218,9 @@ if __name__ != '__main__':
         app_logger.error(f"自动初始化失败: {e}")
 
 if __name__ == '__main__':
+    # 优先从环境变量读取端口，默认为 5001
+    port = int(os.environ.get('PORT', config.PORT))
+    
     print("SweetSeek 启动中...")
     print("=" * 50)
     
@@ -1228,7 +1234,7 @@ if __name__ == '__main__':
         initialize_rag_system()
         
         host = config.HOST
-        port = config.PORT
+        # port = config.PORT # Removed to use local variable
         debug = config.DEBUG
         
         print("\n" + "=" * 50)

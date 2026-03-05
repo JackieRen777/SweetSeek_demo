@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import MoleculeViewer from './components/MoleculeViewer';
 import { ArrowRight } from 'lucide-react';
 
@@ -8,6 +8,17 @@ interface HeroProps {
 }
 
 const Hero: React.FC<HeroProps> = ({ onNext }) => {
+  const images = ['/homepicture1.png', '/homepicture2.png'];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }, 2000); // Change image every 2 seconds
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="w-full h-full flex flex-col md:flex-row items-center justify-between px-6 md:px-16 max-w-[1400px] mx-auto relative">
       
@@ -49,10 +60,22 @@ const Hero: React.FC<HeroProps> = ({ onNext }) => {
         </motion.div>
       </div>
 
-      {/* Right Column: 3D Molecule - Absolute Positioning to Break Constraints */}
+      {/* Right Column: 3D Molecule / Image Carousel - Absolute Positioning to Break Constraints */}
       <div className="absolute top-0 right-0 w-full md:w-[60%] h-full z-0 flex items-center justify-center overflow-visible pointer-events-none md:pointer-events-auto">
-        <div className="w-full h-full relative translate-x-[10%]">
-          <MoleculeViewer />
+        <div className="w-full h-full relative translate-x-[10%] flex items-center justify-center">
+          {/* <MoleculeViewer /> */}
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={currentImageIndex}
+              src={images[currentImageIndex]}
+              alt="SweetSeek Hero"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+              className="max-w-[80%] max-h-[64%] object-contain drop-shadow-2xl absolute"
+            />
+          </AnimatePresence>
         </div>
       </div>
     </div>

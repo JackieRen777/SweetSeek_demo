@@ -14,7 +14,8 @@ interface Reference {
   impactFactor?: number | string;
   esiLabel?: string; // Changed from isESI to esiLabel
   rank?: string;
-  webUrl?: string; // New field for navigation
+  webDisplay?: string; // New field for display from 'web' column
+  webUrl?: string; // Used for navigation from 'web_hide' column
 }
 
 const ReferencesList: React.FC = () => {
@@ -51,7 +52,10 @@ const ReferencesList: React.FC = () => {
           impactFactor: row.IF,
           esiLabel: row.IsESI, // Use the string value directly (e.g., "ESI高被引论文")
           rank: row.Rank,
-          webUrl: row.Web || row.web, // Support both cases just in case
+          // 'web' column for display
+          webDisplay: row.web || row.Web,
+          // 'Web_Hide' column for navigation (adding explicit Web_Hide support)
+          webUrl: row.Web_Hide || row.web_hide || row.Web_hide || row.wed_hide || row.Wed_hide, 
         }));
 
         setReferences(parsedReferences);
@@ -70,6 +74,14 @@ const ReferencesList: React.FC = () => {
     if (url) {
       window.open(url, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const highlightAuthor = (authors: string) => {
+    // Split by Hujun Xie or Hujun Xie*
+    const parts = authors.split(/(Hujun Xie\*?)/g);
+    return parts.map((part, i) => 
+      part.match(/^Hujun Xie\*?$/) ? <strong key={i} className="font-bold text-slate-900">{part}</strong> : part
+    );
   };
 
   return (
@@ -121,18 +133,21 @@ const ReferencesList: React.FC = () => {
                     </h3>
                     
                     <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-                      {ref.authors}
+                      {highlightAuthor(ref.authors)}
                     </p>
                     
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
                       <span className="font-serif italic text-slate-800 font-medium">
                         {ref.journal}.
                       </span>
-                      <span className="font-bold text-slate-900">
-                        {ref.year}
-                      </span>
                       <span className="text-slate-600">
-                        {ref.volume}{ref.pages ? `, ${ref.pages}.` : '.'}
+                        {/* Display year, web (if present), volume, pages separated by comma */}
+                        {[
+                          ref.year,
+                          ref.webDisplay,
+                          ref.volume,
+                          ref.pages
+                        ].filter(Boolean).join(', ')}.
                       </span>
                       
                       {/* Tags */}

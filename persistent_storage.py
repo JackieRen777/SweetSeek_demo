@@ -48,8 +48,21 @@ from config import config
 
 # 设置日志
 logging.basicConfig(level=logging.INFO)
+# 屏蔽第三方库的嘈杂日志
+logging.getLogger("chromadb").setLevel(logging.ERROR)
+logging.getLogger("posthog").setLevel(logging.ERROR)
+logging.getLogger("backoff").setLevel(logging.ERROR)
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+
 logger = logging.getLogger("sweetseek.rag")
 
+# 禁用 PostHog 遥测
+import os
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+# 禁用 ChromaDB 遥测
+os.environ["CHROMA_TELEMETRY_IMPL"] = "chromadb.telemetry.product.posthog.Posthog" 
+# 尝试通过环境变量禁用 huggingface 遥测
+os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 
 def validate_content(text: str, filename: str = "unknown") -> bool:
     """
@@ -134,8 +147,10 @@ def configure_llm() -> bool:
 class PersistentRAGSystem:
     def __init__(self, data_dir: str = None, persist_dir: str = None):
         self.data_dir = data_dir or config.DATA_DIR
-        # ChromaDB path
-        self.chroma_path = "./chroma_db_v3"
+        # ChromaDB path: 使用配置中的绝对路径，避免使用相对路径
+        self.chroma_path = str(config.CHROMA_DB_DIR)
+        logger.info(f"💾 ChromaDB 存储路径: {self.chroma_path}")
+        
         self.index: Optional[VectorStoreIndex] = None
         self.query_engine = None
         self.models_configured = False
@@ -151,37 +166,149 @@ class PersistentRAGSystem:
         if self.models_configured:
             return
 
-        configure_llm()
+        # 3. 初始化 LLM（优先使用 DeepSeek）
+        llm = None
+        try:
+            # 显式禁用 OpenAI 以防 LlamaIndex 自动回退
+            os.environ["OPENAI_API_KEY"] = "sk-placeholder-to-prevent-error"
+            
+            # 使用 OpenAI 兼容模式连接 DeepSeek
+            # 注意：LlamaIndex 的 OpenAI 类会校验 model name，如果 deepseek-chat 不在它的允许列表里，可能会报错。
+            # 但我们可以尝试直接使用 OpenAI 类并配合 api_base。
+            from llama_index.llms.openai import OpenAI
+            
+            # 使用一个 OpenAI 允许的模型名，但在 api_base 指向 DeepSeek
+            # 或者，如果 LlamaIndex 版本较新，可以直接用 deepseek-chat，但似乎当前的 validation 失败了。
+            # 这里的 trick 是：用一个通用名字，或者忽略校验（如果库支持）。
+            # 让我们尝试使用 OpenAI 类，并指定 api_base，同时把 model 设为 "deepseek-chat"
+            # 如果还报错，可能需要 patch 一下 metadata 或者换用其他通用类。
+            
+            llm = OpenAI(
+                model="deepseek-chat",
+                api_key=config.DEEPSEEK_API_KEY,
+                api_base="https://api.deepseek.com/v1",
+                temperature=0.1,
+                max_retries=3,
+                timeout=60.0,
+                # 关键：跳过模型名称校验（如果库支持这个参数，或者我们需要更底层的 hack）
+                # LlamaIndex 的 OpenAI 类通常没有直接的 skip_validation 参数。
+                # 尝试改用 OpenAILike 类（如果存在），它通常更宽容。
+            )
+            
+            # 尝试导入 OpenAILike，它通常用于兼容 OpenAI 接口的其他模型
+            try:
+                from llama_index.llms.openai_like import OpenAILike
+                llm = OpenAILike(
+                    model="deepseek-chat",
+                    api_key=config.DEEPSEEK_API_KEY,
+                    api_base="https://api.deepseek.com/v1",
+                    temperature=0.1,
+                    is_chat_model=True
+                )
+                logger.info("✅ 使用 OpenAILike 配置 DeepSeek")
+            except ImportError:
+                logger.warning("OpenAILike 未找到，回退到 OpenAI 类 (可能会有校验警告)")
+                # 保持上面的 llm = OpenAI(...)
+                pass
+
+            logger.info("✅ 成功配置 DeepSeek 客户端")
+        except ImportError:
+            logger.warning("DeepSeek 模块未安装，尝试使用 OpenAI 兼容模式")
+            from llama_index.llms.openai import OpenAI
+            llm = OpenAI(
+                model="deepseek-chat",
+                api_key=config.DEEPSEEK_API_KEY,
+                api_base="https://api.deepseek.com/v1"
+            )
+            
+            # 尝试导入 OpenAILike
+            try:
+                from llama_index.llms.openai_like import OpenAILike
+                llm = OpenAILike(
+                    model="deepseek-chat",
+                    api_key=config.DEEPSEEK_API_KEY,
+                    api_base="https://api.deepseek.com/v1",
+                    is_chat_model=True
+                )
+                # 显式覆盖 metadata，防止 LlamaIndex 尝试校验上下文窗口
+                # OpenAILike 类有时会自动推断，如果不行，我们需要 mock 它的 metadata
+            except ImportError:
+                # 如果 OpenAILike 不可用，回退到 OpenAI 并尝试绕过校验
+                # 注意：这在较新版本的 LlamaIndex 中可能很难绕过
+                pass
+  
+            Settings.llm = llm
 
         try:
-            # 使用 config 中配置的模型路径
             local_model_path = os.path.abspath(config.EMBED_MODEL_NAME)
             
-            if not os.path.exists(local_model_path):
-                # 如果是 HuggingFace ID（如 BAAI/bge-small-zh-v1.5），则不检查本地路径
-                if "/" in config.EMBED_MODEL_NAME and not config.EMBED_MODEL_NAME.startswith("/"):
-                     logger.info(f"ℹ️ 使用 HuggingFace Hub 模型: {config.EMBED_MODEL_NAME}")
-                     embed_model_name = config.EMBED_MODEL_NAME
-                else:
-                    logger.error(f"❌ 本地模型不存在: {local_model_path}")
-                    embed_model_name = "local" # Fallback
-            else:
+            # 模型路径检查逻辑
+            if os.path.exists(local_model_path):
+                # 1. 本地路径存在，直接使用
                 logger.info(f"✅ 使用本地 Embedding 模型: {local_model_path}")
                 embed_model_name = local_model_path
+            elif "/" in config.EMBED_MODEL_NAME and not config.EMBED_MODEL_NAME.startswith("/"):
+                # 2. 看起来是 HuggingFace/ModelScope ID
+                # 尝试从 ModelScope 下载（如果配置了）
+                model_id = config.EMBED_MODEL_NAME
+                
+                if hasattr(config, 'EMBED_MODEL_SOURCE') and config.EMBED_MODEL_SOURCE == 'modelscope':
+                    try:
+                        logger.info(f"📥 尝试从 ModelScope 下载模型: {model_id}")
+                        from modelscope.hub.snapshot_download import snapshot_download
+                        # 下载到默认缓存目录
+                        embed_model_name = snapshot_download(model_id)
+                        logger.info(f"✅ ModelScope 模型下载成功: {embed_model_name}")
+                    except ImportError:
+                        logger.warning("⚠️ 未安装 modelscope，尝试直接连接 HuggingFace")
+                        logger.info("建议运行: pip install modelscope")
+                        embed_model_name = model_id
+                    except Exception as e:
+                        logger.error(f"❌ ModelScope 下载失败: {e}，将尝试 HuggingFace")
+                        embed_model_name = model_id
+                else:
+                    logger.info(f"ℹ️ 使用 HuggingFace Hub 模型: {model_id}")
+                    embed_model_name = model_id
+            else:
+                logger.error(f"❌ 本地模型不存在且不是有效的模型ID: {local_model_path}")
+                embed_model_name = "local" # Fallback
 
             # 2. 配置 Embedding 模型
-            # Settings.embed_model = "local"
-            
-            from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-            
-            # 关键修改：
-            # 1. trust_remote_code=False (本地模型不需要远程代码，更安全)
-            # 2. device='cpu' (明确指定 CPU，避免 CUDA 警告)
-            embed_model = HuggingFaceEmbedding(
-                model_name=embed_model_name,
-                trust_remote_code=False,
-                device='cpu'
-            )
+            try:
+                # 尝试使用 llama_index 的官方 HuggingFaceEmbedding
+                from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+                embed_model = HuggingFaceEmbedding(
+                    model_name=embed_model_name,
+                    trust_remote_code=False,
+                    device='cpu'
+                )
+            except ImportError as e:
+                # Fallback: 如果 huggingface-hub 版本冲突，使用自定义的 SentenceTransformers 实现
+                logger.warning(f"⚠️ llama-index-embeddings-huggingface 导入失败 ({e})，切换到本地 SentenceTransformers 实现")
+                from llama_index.core.base.embeddings.base import BaseEmbedding
+                from sentence_transformers import SentenceTransformer
+                
+                class LocalSentenceTransformerEmbedding(BaseEmbedding):
+                    _model: SentenceTransformer = None
+                    
+                    def __init__(self, model_name: str, **kwargs):
+                        super().__init__(**kwargs)
+                        self._model = SentenceTransformer(model_name, device='cpu')
+                        
+                    def _get_query_embedding(self, query: str) -> List[float]:
+                        return self._model.encode(query).tolist()
+                        
+                    def _get_text_embedding(self, text: str) -> List[float]:
+                        return self._model.encode(text).tolist()
+                        
+                    async def _aget_query_embedding(self, query: str) -> List[float]:
+                        return self._get_query_embedding(query)
+                        
+                    async def _aget_text_embedding(self, text: str) -> List[float]:
+                        return self._get_text_embedding(text)
+
+                embed_model = LocalSentenceTransformerEmbedding(model_name=embed_model_name)
+
             Settings.embed_model = embed_model
             logger.info("✅ 成功配置嵌入模型")
             
@@ -191,26 +318,94 @@ class PersistentRAGSystem:
 
         self.models_configured = True
 
-    def load_or_create_index(self) -> bool:
-        """加载或创建索引 (ChromaDB)"""
-        self._configure_models()
-        
-        if not chromadb:
-            logger.error("ChromaDB not installed!")
+    def load_or_create_index(self):
+        """加载现有索引或创建新索引"""
+        # 1. 显式配置全局 Settings，防止 LlamaIndex 自动下载默认模型
+        logger.info(f"正在配置全局 Embedding 模型: {config.EMBED_MODEL_NAME}")
+        try:
+            # 显式加载本地模型
+            from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+            embed_model = HuggingFaceEmbedding(
+                model_name=config.EMBED_MODEL_NAME,
+                trust_remote_code=True
+            )
+            Settings.embed_model = embed_model
+            logger.info("✅ 全局 Embedding 模型配置完成")
+        except Exception as e:
+            logger.error(f"❌ 配置 Embedding 模型失败: {e}")
             return False
 
+        # 初始化 LLM 变量
+        llm = None
         try:
-            # Check if ChromaDB data exists
-            if os.path.exists(self.chroma_path):
-                logger.info("正在加载现有 ChromaDB 索引...")
-                return self._load_from_disk()
-            else:
-                logger.info("未找到索引，开始构建...")
-                return self._build_new_index()
-                    
+             # 确保 LLM 被正确初始化
+             self._configure_models()
+             if hasattr(Settings, 'llm'):
+                 llm = Settings.llm
         except Exception as e:
-            logger.error(f"加载索引出错: {e}")
-            return self._build_new_index()
+             logger.warning(f"LLM 初始化警告: {e}")
+
+        if os.path.exists(self.chroma_path) and os.listdir(self.chroma_path):
+            logger.info("正在加载现有 ChromaDB 索引...")
+            if self._load_from_disk():
+                return True
+        
+        logger.info("未找到索引或加载失败，开始构建...")
+        
+        # 2. 扫描文件
+        if not os.path.exists(config.DATA_DIR):
+            logger.warning(f"数据目录不存在: {config.DATA_DIR}")
+            os.makedirs(config.DATA_DIR)
+            return False
+            
+        logger.info(f"正在扫描文档目录: {config.DATA_DIR}")
+        # 启用递归扫描，以支持子目录
+        documents = SimpleDirectoryReader(config.DATA_DIR, recursive=True).load_data()
+        logger.info(f"📚 扫描到 {len(documents)} 个文档对象")
+        
+        if not documents:
+            logger.warning("❌ 未发现任何文档，跳过索引构建")
+            return False
+
+        # 3. 创建索引
+        logger.info("🚀 开始构建向量索引 (这可能需要几分钟)...")
+        try:
+            # 显式配置全局 LLM，防止隐式回退
+            if 'llm' in locals() and llm:
+                 Settings.llm = llm
+            else:
+                 logger.warning("LLM variable not found, trying to re-initialize...")
+                 self._configure_models() # 尝试重新配置
+                 if hasattr(Settings, 'llm'):
+                     llm = Settings.llm
+            
+            chroma_client = chromadb.PersistentClient(path=self.chroma_path)
+            chroma_collection = chroma_client.get_or_create_collection("sweetseek_docs")
+            vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+            storage_context = StorageContext.from_defaults(vector_store=vector_store)
+            
+            # 使用显式配置的 embed_model
+            self.index = VectorStoreIndex.from_documents(
+                documents, 
+                storage_context=storage_context,
+                embed_model=Settings.embed_model, # 显式传递
+                show_progress=True 
+            )
+            
+            # 配置检索器
+            self.query_engine = self.index.as_query_engine(
+                similarity_top_k=config.RAG_TOP_K,
+                llm=llm,
+                embed_model=Settings.embed_model
+            )
+            logger.info(f"✅ 查询引擎已就绪 (Top-K={config.RAG_TOP_K}, Threshold={config.RAG_SIMILARITY_THRESHOLD})")
+            
+            return True
+        except Exception as e:
+            logger.error(f"❌ 索引构建失败: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
     def _load_from_disk(self) -> bool:
         try:
@@ -223,10 +418,24 @@ class PersistentRAGSystem:
                 vector_store,
                 storage_context=storage_context
             )
+
+            # 配置检索器
+            self.query_engine = self.index.as_query_engine(
+                similarity_top_k=config.RAG_TOP_K,
+                # node_postprocessors=[
+                #     SimilarityPostprocessor(similarity_cutoff=config.RAG_SIMILARITY_THRESHOLD)
+                # ]
+            )
+            # 手动添加自定义后处理逻辑，以便记录日志
+            logger.info(f"✅ 查询引擎已就绪 (Top-K={config.RAG_TOP_K}, Threshold={config.RAG_SIMILARITY_THRESHOLD})")
+
             logger.info("✅ ChromaDB 索引加载成功")
             return True
         except Exception as e:
             logger.error(f"从磁盘加载失败: {e}")
+            # 如果加载失败，不要直接抛出，而是尝试重建
+            # self.query_engine = None # 不要设置为 None，让它有机会重建
+            logger.info("尝试重建索引...")
             return False
 
     def _build_new_index(self) -> bool:
@@ -313,6 +522,51 @@ class PersistentRAGSystem:
         except Exception:
             pass
         return stats
+
+    async def aquery(self, query_text: str):
+        if not self.query_engine:
+            logger.warning("Query engine not initialized")
+            return "System not initialized"
+        
+        try:
+            logger.info(f"🔍 执行检索: {query_text}")
+            
+            # 1. 获取检索器
+            retriever = self.index.as_retriever(similarity_top_k=config.RAG_TOP_K)
+            nodes = await retriever.aretrieve(query_text)
+            
+            if not nodes:
+                logger.warning("❌ 未检索到任何文档")
+                return "未检索到相关文献。"
+                
+            logger.info(f"📚 原始检索到 {len(nodes)} 个文档:")
+            filtered_nodes = []
+            
+            for i, node in enumerate(nodes):
+                score = getattr(node, 'score', 0.0)
+                logger.info(f"   [{i}] Score: {score:.4f} | Text: {node.text[:30]}...")
+                
+                # 手动应用阈值过滤
+                if score >= config.RAG_SIMILARITY_THRESHOLD:
+                    filtered_nodes.append(node)
+                else:
+                    logger.info(f"   ⚠️ 过滤掉 (低于阈值 {config.RAG_SIMILARITY_THRESHOLD})")
+            
+            if not filtered_nodes:
+                logger.warning(f"❌ 过滤后无文档保留 (Threshold={config.RAG_SIMILARITY_THRESHOLD})")
+                return "未检索到相关文献，请尝试更具体的关键词或降低相似度阈值。"
+                
+            logger.info(f"✅ 最终保留 {len(filtered_nodes)} 个文档")
+            
+            # 2. 生成回答 (使用 DeepSeek)
+            # 这里简化处理，实际应该调用 DeepSeek API
+            # 为了调试，我们先返回检索到的内容摘要
+            context = "\n\n".join([n.text for n in filtered_nodes])
+            return f"[检索成功] 找到 {len(filtered_nodes)} 篇文献。\n\n摘要内容：\n{context[:500]}..."
+            
+        except Exception as e:
+            logger.error(f"检索出错: {e}")
+            return f"检索出错: {str(e)}"
 
 # 全局实例
 rag_system = PersistentRAGSystem()

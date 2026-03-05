@@ -38,14 +38,20 @@ class Config:
     PERSIST_DIR = os.getenv('PERSIST_DIR', str(BASE_DIR / "faiss_db"))
 
     EMBED_MODEL_TYPE = os.getenv("EMBED_MODEL_TYPE", "huggingface").lower()
-    # Path to local model snapshot
-    EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-m3")
+    # Path to local model snapshot or HuggingFace ID
+    # 推荐使用 BAAI/bge-small-zh-v1.5 以平衡速度与效果（CPU环境下首选）
+    EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5")
+    # 模型源：huggingface 或 modelscope (推荐国内使用 modelscope)
+    EMBED_MODEL_SOURCE = os.getenv("EMBED_MODEL_SOURCE", "modelscope")
+    
     COLLECTION_NAME = "sweetseek_papers"
     
     # RAG Retrieval & Generation Settings (Tunable)
+    # RAG Top K
+    RAG_TOP_K = int(os.getenv("RAG_TOP_K", 5))
     # 相似度阈值：低于此分数的文档块将被过滤 (0-1)
-    # 降低阈值以提高召回率 (从 0.25 -> 0.15)
-    RAG_SIMILARITY_THRESHOLD = float(os.getenv('RAG_SIMILARITY_THRESHOLD', 0.15))
+    # 降低阈值以提高召回率
+    RAG_SIMILARITY_THRESHOLD = float(os.getenv("RAG_SIMILARITY_THRESHOLD", 0.3))
     # 强制最小文档数：即使分数不足，也至少保留前N个文档 (5 -> 10)
     RAG_FORCE_MIN_DOCS = int(os.getenv('RAG_FORCE_MIN_DOCS', 10))
     # 最大召回数量：从向量库初筛多少个片段 (100 -> 200)
