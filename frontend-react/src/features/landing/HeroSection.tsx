@@ -8,6 +8,7 @@ interface HeroProps {
 }
 
 const Hero: React.FC<HeroProps> = ({ onNext }) => {
+  // Hero section with image carousel
   const images = ['/homepicture1.png', '/homepicture2.png'];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
