@@ -279,7 +279,7 @@ class PersistentRAGSystem:
                 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
                 embed_model = HuggingFaceEmbedding(
                     model_name=embed_model_name,
-                    trust_remote_code=False,
+                    trust_remote_code=True,
                     device='cpu'
                 )
             except ImportError as e:
