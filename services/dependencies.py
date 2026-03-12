@@ -7,6 +7,7 @@ from evidence_ranker import EvidenceRanker
 from logger import setup_logger
 from query_expander import SweetnessQueryExpander
 from services.compound_service import CompoundService
+from services.chat_service import ChatService
 from services.llm_client import DeepSeekLLMClient
 
 
@@ -16,6 +17,7 @@ class Services:
     evidence_ranker: EvidenceRanker
     llm_client: Optional[DeepSeekLLMClient]
     compound_service: CompoundService
+    chat_service: ChatService
 
 
 def build_services() -> Services:
@@ -33,9 +35,17 @@ def build_services() -> Services:
     else:
         logger.warning("DeepSeek client 未配置，LLM功能将不可用")
 
+    chat_service = ChatService(
+        rag_system=persistent_storage.rag_system,
+        query_expander=query_expander,
+        evidence_ranker=evidence_ranker,
+        llm_client=llm_client
+    )
+
     return Services(
         query_expander=query_expander,
         evidence_ranker=evidence_ranker,
         llm_client=llm_client,
         compound_service=compound_service,
+        chat_service=chat_service,
     )

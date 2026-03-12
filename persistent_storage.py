@@ -158,7 +158,9 @@ class PersistentRAGSystem:
         # 初始化元数据管理器
         from metadata_storage import MetadataStorage
         from pdf_metadata_extractor import PDFMetadataExtractor
-        self.metadata_storage = MetadataStorage()
+        
+        metadata_path = os.path.join(self.chroma_path, "metadata.json")
+        self.metadata_storage = MetadataStorage(storage_path=metadata_path)
         self.metadata_extractor = PDFMetadataExtractor()
 
     def _configure_models(self) -> None:

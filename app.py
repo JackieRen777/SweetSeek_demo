@@ -103,6 +103,7 @@ query_expander = services.query_expander
 evidence_ranker = services.evidence_ranker
 llm_client = services.llm_client
 compound_service = services.compound_service
+chat_service = services.chat_service
 
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
@@ -309,23 +310,7 @@ def api_init():
 def api_ask():
     """
     处理问答请求
-    
-    重要概念区分：
-    - Chunk（文本块）：一篇文献被分割成的小段文本，用于向量检索
-    - Paper（文献）：完整的学术论文，一篇文献包含多个chunks
-    
-    处理流程：
-    1. 检索相关的文本块（chunks）
-    2. 过滤低相关度的文本块
-    3. 使用所有文本块生成回答
-    4. 按文献去重，返回唯一的文献引用（papers）
-    
-    返回结果：
-    - answer: 基于所有相关文本块生成的回答
-    - references: 去重后的文献列表（按文献为单位，不是文本块）
     """
-    global system_ready, conversations
-    
     if not system_ready:
         return jsonify({
             'success': False,
@@ -334,10 +319,8 @@ def api_ask():
     
     data = request.json
     question = data.get('question', '').strip()
-    # 相关度阈值：只保留相似度分数高于此值的文档
-    # 分数范围是0-1，0.40表示相关文献（降低阈值以获取更多文献）
     similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
-    # 输入验证
+    
     try:
         similarity_threshold = float(similarity_threshold)
         if not (0 <= similarity_threshold <= 1):
@@ -345,364 +328,24 @@ def api_ask():
     except (ValueError, TypeError):
         similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
         
-    # 最大检索数量（从所有文档中检索）（增加到100以获取更多文献）
     max_results = data.get('max_results', config.RAG_MAX_RESULTS)
     try:
         max_results = int(max_results)
         if max_results < 1:
             raise ValueError
-        if max_results > 200:  # 设置上限
+        if max_results > 200:
             max_results = 200
     except (ValueError, TypeError):
         max_results = config.RAG_MAX_RESULTS
     
-    app_logger.info(f"收到问答请求: {question[:100]}")
-    
     if not question:
-        app_logger.warning("问题为空")
         return jsonify({
             'success': False,
             'error': '问题不能为空'
         }), 400
     
-    try:
-        start_time = time.time()
-        
-        # ============================================================
-        # 第零步：查询扩展（新增）
-        # 扩展同义词和相关术语，提高检索召回率
-        # ============================================================
-        query_expansion = query_expander.expand_query(question)
-        expanded_query = query_expansion['search_query'] if query_expansion['expanded_terms'] else question
-        
-        print(f"[查询扩展] 原始: {question}")
-        if query_expansion['matched_concepts']:
-            print(f"[查询扩展] 匹配概念: {query_expansion['matched_concepts']}")
-            print(f"[查询扩展] 扩展术语: {len(query_expansion['expanded_terms'])} 个")
-        
-        # ============================================================
-        # 第一步：检索文本块（chunks）
-        # 注意：这里返回的是文本块，不是完整文献
-        # 一篇文献可能被分成多个块
-        # ============================================================
-        retriever = rag_system.index.as_retriever(similarity_top_k=max_results)
-        # 使用扩展后的查询进行检索
-        retrieved_chunks = retriever.retrieve(expanded_query)  # 明确命名：chunks
-        
-        print(f"[检索] 检索到 {len(retrieved_chunks)} 个文本块（chunks）")
-        if not retrieved_chunks:
-            end_time = time.time()
-            conversation = {
-                'id': len(conversations) + 1,
-                'question': question,
-                'answer': '未检索到相关文献，请尝试更具体的关键词或降低相似度阈值。',
-                'references': [],
-                'timestamp': datetime.now().isoformat(),
-                'response_time': round(end_time - start_time, 2)
-            }
-            conversations.append(conversation)
-            return jsonify({
-                'success': True,
-                'answer': conversation['answer'],
-                'references': [],
-                'response_time': conversation['response_time']
-            })
-        
-        # ============================================================
-        # 第二步：根据相关度阈值过滤文本块
-        # ============================================================
-        filtered_chunks = []  # 明确命名：chunks
-        for chunk in retrieved_chunks:
-            # 安全检查：确保 chunk.text 不为 None
-            if not getattr(chunk, 'text', None):
-                continue
-                
-            chunk_score = float(chunk.score) if hasattr(chunk, 'score') else 0.0
-            if chunk_score >= similarity_threshold:
-                filtered_chunks.append(chunk)
-        
-        # 如果没有文本块超过阈值，至少保留最相关的3个块
-        if len(filtered_chunks) == 0 and len(retrieved_chunks) > 0:
-            filtered_chunks = retrieved_chunks[:config.RAG_FORCE_MIN_DOCS]
-            print(f"[调整] 没有文本块超过阈值 {similarity_threshold}，保留前 {config.RAG_FORCE_MIN_DOCS} 个最相关的块")
-        
-        print(f"[过滤] 过滤后保留 {len(filtered_chunks)} 个文本块（阈值: {similarity_threshold}）")
-        
-        # ============================================================
-        # 第三步：收集所有文本块的内容用于生成回答
-        # 注意：这里使用所有相关的文本块，不去重
-        # 优化：限制上下文总长度，避免过长的输入
-        # ============================================================
-        # 先不构建上下文，等确定文献列表后再构建
-        
-        # ============================================================
-        # 第四步：按文献去重（重要！）
-        # 目的：将多个文本块合并为唯一的文献引用
-        # 策略：同一篇文献只保留相关度最高的块的分数，并收集该文献的所有chunks
-        # ============================================================
-        unique_papers_dict = {}  # 明确命名：papers（文献）
-        
-        for chunk in filtered_chunks:
-            # 提取文献标识信息
-            paper_file_path = chunk.metadata.get('file_path', '')
-            paper_filename = chunk.metadata.get('file_name', '未知文档')
-            chunk_score = float(chunk.score) if hasattr(chunk, 'score') else 0.0
-            
-            # 使用文件路径作为文献的唯一标识
-            if paper_file_path not in unique_papers_dict:
-                unique_papers_dict[paper_file_path] = {
-                    'file_path': paper_file_path,
-                    'filename': paper_filename,
-                    'max_score': chunk_score,  # 该文献的最高相关度
-                    'chunks': [chunk],  # 收集该文献的所有chunks
-                    'sample_content': chunk.text[:200] + '...' if len(chunk.text) > 200 else chunk.text
-                }
-            else:
-                # 更新最高分数
-                if chunk_score > unique_papers_dict[paper_file_path]['max_score']:
-                    unique_papers_dict[paper_file_path]['max_score'] = chunk_score
-                # 添加chunk到列表
-                unique_papers_dict[paper_file_path]['chunks'].append(chunk)
-        
-        # 按相关度排序文献
-        unique_papers_list = sorted(
-            unique_papers_dict.values(), 
-            key=lambda paper: paper['max_score'], 
-            reverse=True
-        )
-        
-        print(f"[去重] {len(filtered_chunks)} 个文本块 → {len(unique_papers_list)} 篇唯一文献")
-        
-        # ============================================================
-        # 第五步：构建参考文献列表（按文献为单位）
-        # 注意：这里返回的是文献（papers），不是文本块（chunks）
-        # ============================================================
-        references_raw = []  # 原始文献列表
-        
-        for paper_index, paper_info in enumerate(unique_papers_list, 1):
-            paper_file_path = paper_info['file_path']
-            paper_filename = paper_info['filename']
-            paper_max_score = paper_info['max_score']
-            paper_sample_content = paper_info['sample_content']
-            
-            # 获取文献的元数据（期刊、年份、标题等）
-            paper_metadata = rag_system.metadata_storage.get_metadata(paper_file_path) if paper_file_path else None
-            
-            if paper_metadata:
-                # 有元数据的情况（PDF文献）
-                references_raw.append({
-                    'ref_id': f'ref_{paper_index}',
-                    'journal': paper_metadata.get('journal', 'Unknown Journal'),
-                    'year': paper_metadata.get('year', 'N/A'),
-                    'title': paper_metadata.get('title', 'Unknown Title'),
-                    'authors': paper_metadata.get('authors', []),
-                    'doi': paper_metadata.get('doi', 'Not Available'),
-                    'filename': paper_filename,
-                    'file_path': paper_file_path,  # 添加file_path
-                    'score': paper_max_score,  # 该文献的最高相关度
-                    'content': paper_sample_content
-                })
-            else:
-                # 没有元数据的情况（如datasets文件）
-                is_dataset = 'datasets' in paper_file_path.lower() or 'dataset' in paper_filename.lower()
-                references_raw.append({
-                    'ref_id': f'ref_{paper_index}',
-                    'journal': '营养数据集' if is_dataset else 'Unknown',
-                    'year': 'N/A',
-                    'title': paper_filename,
-                    'authors': [],
-                    'doi': 'Not Available',
-                    'filename': paper_filename,
-                    'file_path': paper_file_path,  # 添加file_path
-                    'score': paper_max_score,
-                    'content': paper_sample_content
-                })
-        
-        # ============================================================
-        # 第五步半：证据分级（新增）
-        # 对文献进行质量评估和分级
-        # ============================================================
-        print(f"[证据分级] 对 {len(references_raw)} 篇文献进行分级...")
-        references_ranked = evidence_ranker.rank_papers(references_raw)
-        
-        # 重新排序：综合考虑相关度和证据质量
-        # 策略：相关度权重60%，证据质量权重40%
-        for ref in references_ranked:
-            ref['final_score'] = ref['score'] * 0.6 + (ref['total_score'] / 5.0) * 0.4
-        
-        references_ranked.sort(key=lambda x: x['final_score'], reverse=True)
-        
-        # 重新分配ref_id
-        references = []
-        for idx, ref in enumerate(references_ranked, 1):
-            ref['ref_id'] = f'ref_{idx}'
-            references.append(ref)
-        
-        if references:
-            print(f"[证据分级] 完成，最高质量: Level {references[0]['evidence_level']} ({references[0]['evidence_label']})")
-        
-        # ============================================================
-        # 第六步：构建提示词（关键修复：只使用references中的文献的chunks）
-        # 策略：
-        # 1. 从unique_papers_dict中获取每篇文献的所有chunks
-        # 2. 只使用references中列出的文献
-        # 3. 为每个chunk标注正确的ref_id
-        # ============================================================
-        # 构建file_path到ref的映射
-        filepath_to_ref = {}
-        for ref in references:
-            filepath_to_ref[ref['file_path']] = ref
-        
-        print(f"[调试] References包含 {len(references)} 篇文献")
-        
-        # 只使用references中的文献的chunks
-        numbered_context_chunks = []
-        max_context_length = config.RAG_CONTEXT_WINDOW  # 使用配置
-        total_length = 0
-        matched_count = 0
-        
-        import re
-        
-        for ref in references:
-            ref_file_path = ref['file_path']
-            ref_id = ref['ref_id']
-            
-            # 从unique_papers_dict中获取该文献的所有chunks
-            if ref_file_path in unique_papers_dict:
-                paper_chunks = unique_papers_dict[ref_file_path]['chunks']
-                
-                for chunk in paper_chunks:
-                    chunk_text = chunk.text
-                    
-                    # ============================================================
-                    # 关键：清理原始文档中可能被误解为ref的内容
-                    # 移除类似 [1], [2], [CrossRef], [PubMed] 等标记
-                    # ============================================================
-                    # 移除方括号内的数字引用 [1], [2], [12]
-                    chunk_text = re.sub(r'\[\d+\]', '', chunk_text)
-                    # 移除方括号内的CrossRef、PubMed等
-                    chunk_text = re.sub(r'\[CrossRef\]|\[PubMed\]|\[Google Scholar\]', '', chunk_text, flags=re.IGNORECASE)
-                    # 移除行首的数字编号（如 "9. Author" 或 "46. de Ruyter"）
-                    chunk_text = re.sub(r'^\d+\.\s+', '', chunk_text, flags=re.MULTILINE)
-                    # 清理多余空格
-                    chunk_text = re.sub(r'\s+', ' ', chunk_text).strip()
-                    
-                    # 检查长度限制
-                    if total_length + len(chunk_text) > max_context_length:
-                        print(f"[优化] 达到上下文长度限制 {max_context_length} 字符")
-                        break
-                    
-                    # 添加ref标注（这是唯一的ref标记）
-                    numbered_chunk = f"[{ref_id}] {chunk_text}"
-                    numbered_context_chunks.append(numbered_chunk)
-                    total_length += len(chunk_text)
-                    matched_count += 1
-                
-                # 如果达到长度限制，停止添加更多文献
-                if total_length >= max_context_length:
-                    break
-        
-        print(f"[上下文] 使用 {len(references)} 篇文献的 {matched_count} 个chunks（共 {total_length} 字符）")
-        
-        # 构建参考文献列表摘要（用于prompt）
-        ref_list_summary = "\n".join([
-            f"{ref['ref_id']}: {ref.get('title', ref['filename'])} ({ref.get('journal', 'Unknown')}, {ref.get('year', 'N/A')})"
-            for ref in references
-        ])
-        
-        context = "\n\n".join(numbered_context_chunks)
-        prompt = f"""你是甜味科学领域的专业知识系统。请基于以下参考文献回答问题。
-
-【参考文献列表】（共{len(references)}篇，编号为ref_1到ref_{len(references)}）：
-{ref_list_summary}
-
-【重要】：
-- 只能使用ref_1到ref_{len(references)}这些编号
-- 在回答的关键信息后用[ref_X]或[ref_X, ref_Y]标注来源
-- 不要引用任何其他编号
-
-【参考文献内容】：
-{context}
-
-【问题】：{question}
-
-请用中文回答，结构清晰，在重要观点后标注文献来源。"""
-        
-        # 调用DeepSeek API
-        answer = None
-        reasoning = None
-        max_retries = 3
-        retry_delay = 2
-        
-        if llm_client:
-            for attempt in range(max_retries):
-                try:
-                    messages = [
-                        {"role": "system", "content": f"你是甜味科学领域的专业知识系统。重要：你只能引用ref_1到ref_{len(references)}这{len(references)}篇文献，不要使用其他编号。"},
-                        {"role": "user", "content": prompt},
-                    ]
-
-                    answer, reasoning = llm_client.chat(messages, temperature=0.6, max_tokens=2000)
-                    
-                    import re
-                    valid_ref_ids = {ref['ref_id'] for ref in references}
-
-                    def remove_invalid_ref(match):
-                        ref_num = match.group(1)
-                        return match.group(0) if f'ref_{ref_num}' in valid_ref_ids else ''
-
-                    answer = re.sub(r'\[ref_(\d+)\]', remove_invalid_ref, answer)
-                    if reasoning:
-                        reasoning = re.sub(r'\[ref_(\d+)\]', remove_invalid_ref, reasoning)
-
-                    print(f"[后处理] 已移除不在references中的ref引用，有效ref数: {len(valid_ref_ids)}")
-                    
-                    # 如果有思维链，添加到答案前面
-                    if reasoning and len(reasoning.strip()) > 0:
-                        answer = f"<details><summary>思维链（点击展开）</summary>\n\n{reasoning}\n\n</details>\n\n---\n\n{answer}"
-                    
-                    break  # 成功则退出重试循环
-                except Exception as api_error:
-                    error_str = str(api_error)
-                    if '503' in error_str or 'service_unavailable' in error_str.lower():
-                        if attempt < max_retries - 1:
-                            print(f"[警告] DeepSeek API繁忙，{retry_delay}秒后重试... (尝试 {attempt + 1}/{max_retries})")
-                            time.sleep(retry_delay)
-                            retry_delay *= 2  # 指数退避
-                        else:
-                            answer = f"抱歉，DeepSeek服务当前繁忙，请稍后再试。\n\n基于检索到的文档，我可以提供以下参考信息：\n\n{context[:500]}..."
-                    else:
-                        raise  # 其他错误直接抛出
-        else:
-            answer = "DeepSeek API 未配置，无法生成回答。"
-        
-        end_time = time.time()
-        
-        # 保存对话
-        conversation = {
-            'id': len(conversations) + 1,
-            'question': question,
-            'answer': answer,
-            'references': references,
-            'timestamp': datetime.now().isoformat(),
-            'response_time': round(end_time - start_time, 2)
-        }
-        conversations.append(conversation)
-        
-        return jsonify({
-            'success': True,
-            'answer': answer,
-            'references': references,
-            'response_time': conversation['response_time']
-        })
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': f'查询失败: {str(e)}'
-        }), 500
+    result = chat_service.ask(question, similarity_threshold, max_results)
+    return jsonify(result)
 
 @app.route('/api/search', methods=['POST'])
 @handle_api_errors
@@ -816,7 +459,7 @@ def api_stats():
         'success': True,
         'total_documents': doc_count,
         'total_chunks': doc_count * 10,  # 估算
-        'total_conversations': len(conversations),
+        'total_conversations': len(chat_service.get_conversations()),
         'system_ready': system_ready,
         'index_persisted': stats.get('index_exists', False)
     })
@@ -825,6 +468,7 @@ def api_stats():
 @handle_api_errors
 def api_conversations():
     """获取对话历史"""
+    conversations = chat_service.get_conversations()
     app_logger.debug(f"返回 {len(conversations)} 条对话历史")
     return jsonify({
         'success': True,
@@ -835,8 +479,7 @@ def api_conversations():
 @handle_api_errors
 def api_clear_conversations():
     """清空对话历史"""
-    global conversations
-    conversations = []
+    chat_service.clear_conversations()
     app_logger.info("对话历史已清空")
     return jsonify({
         'success': True,
@@ -908,10 +551,7 @@ def api_ask_stream():
     from flask import Response, stream_with_context
     import json
     
-    global system_ready
-    
     if not system_ready:
-        app_logger.warning("流式问答请求失败：系统未初始化")
         return jsonify({
             'success': False,
             'error': '系统未初始化'
@@ -937,294 +577,13 @@ def api_ask_stream():
     except (ValueError, TypeError):
         max_results = config.RAG_MAX_RESULTS
     
-    app_logger.info(f"收到流式问答请求: {question[:100]}")
-    
     if not question:
-        app_logger.warning("流式问答问题为空")
         return jsonify({
             'success': False,
             'error': '问题不能为空'
         }), 400
     
-    def generate():
-        try:
-            import time
-            
-            # 发送开始信号
-            yield f"data: {json.dumps({'type': 'start', 'message': '开始检索文献...'}, ensure_ascii=False)}\n\n"
-            
-            # 查询扩展
-            query_expansion = query_expander.expand_query(question)
-            expanded_query = query_expansion['search_query'] if query_expansion['expanded_terms'] else question
-            
-            # 检索文本块
-            yield f"data: {json.dumps({'type': 'status', 'message': '正在检索相关文献...'}, ensure_ascii=False)}\n\n"
-            
-            retriever = rag_system.index.as_retriever(similarity_top_k=max_results)
-            retrieved_chunks = retriever.retrieve(expanded_query)
-            if not retrieved_chunks:
-                yield f"data: {json.dumps({'type': 'references', 'references': []}, ensure_ascii=False)}\n\n"
-                yield f"data: {json.dumps({'type': 'answer_start'}, ensure_ascii=False)}\n\n"
-                yield f"data: {json.dumps({'type': 'answer', 'content': '未检索到相关文献，请尝试更具体的关键词或降低相似度阈值。'}, ensure_ascii=False)}\n\n"
-                yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
-                return
-            
-            # 过滤文本块
-            filtered_chunks = []
-            for chunk in retrieved_chunks:
-                # 安全检查
-                if not getattr(chunk, 'text', None):
-                    continue
-                if float(chunk.score) >= similarity_threshold:
-                    filtered_chunks.append(chunk)
-            
-            if len(filtered_chunks) == 0 and len(retrieved_chunks) > 0:
-                # 尝试保留最相关的，但也需检查文本
-                valid_chunks = [c for c in retrieved_chunks if getattr(c, 'text', None)]
-                if valid_chunks:
-                    filtered_chunks = valid_chunks[:config.RAG_FORCE_MIN_DOCS]
-            
-            yield f"data: {json.dumps({'type': 'status', 'message': f'找到 {len(filtered_chunks)} 个相关文本块'}, ensure_ascii=False)}\n\n"
-            
-            # 构建上下文
-            context_chunks = []
-            max_context_length = 8000
-            total_length = 0
-            
-            # 先不构建上下文，等确定文献列表后再构建
-            
-            # 构建参考文献列表（按文献去重）
-            unique_papers_dict = {}
-            for chunk in filtered_chunks:
-                paper_file_path = chunk.metadata.get('file_path', '')
-                paper_filename = chunk.metadata.get('file_name', '未知文档')
-                chunk_score = float(chunk.score) if hasattr(chunk, 'score') else 0.0
-                
-                if paper_file_path not in unique_papers_dict:
-                    unique_papers_dict[paper_file_path] = {
-                        'file_path': paper_file_path,
-                        'filename': paper_filename,
-                        'max_score': chunk_score,
-                        'chunks': [chunk],  # 收集该文献的所有chunks
-                        'sample_content': chunk.text[:200] + '...' if len(chunk.text) > 200 else chunk.text
-                    }
-                else:
-                    if chunk_score > unique_papers_dict[paper_file_path]['max_score']:
-                        unique_papers_dict[paper_file_path]['max_score'] = chunk_score
-                    unique_papers_dict[paper_file_path]['chunks'].append(chunk)
-            
-            unique_papers_list = sorted(unique_papers_dict.values(), key=lambda paper: paper['max_score'], reverse=True)
-            
-            print(f"[流式API-去重] {len(filtered_chunks)} 个文本块 → {len(unique_papers_list)} 篇唯一文献")
-            yield f"data: {json.dumps({'type': 'status', 'message': f'去重后找到 {len(unique_papers_list)} 篇唯一文献'}, ensure_ascii=False)}\n\n"
-            
-            # 构建参考文献
-            references_raw = []
-            for paper_index, paper_info in enumerate(unique_papers_list, 1):
-                # 将绝对路径转换为相对路径
-                file_path = paper_info['file_path']
-                original_path = file_path
-                if file_path.startswith('/'):
-                    # 提取相对路径部分
-                    import os
-                    file_path = os.path.relpath(file_path, os.getcwd())
-                
-                # 调试：打印路径信息
-                print(f"[调试] 原始路径: {original_path}")
-                print(f"[调试] 转换后路径: {file_path}")
-                
-                paper_metadata = rag_system.metadata_storage.get_metadata(file_path) if file_path else None
-                
-                # 调试：打印元数据获取结果
-                if paper_metadata:
-                    print(f"[调试] ✅ 找到元数据: {paper_metadata.get('title', 'N/A')[:50]}")
-                else:
-                    print(f"[调试] ❌ 未找到元数据")
-                
-                if paper_metadata:
-                    references_raw.append({
-                        'ref_id': f'ref_{paper_index}',
-                        'journal': paper_metadata.get('journal', 'Unknown Journal'),
-                        'year': paper_metadata.get('year', 'N/A'),
-                        'title': paper_metadata.get('title', 'Unknown Title'),
-                        'authors': paper_metadata.get('authors', []),
-                        'doi': paper_metadata.get('doi', 'Not Available'),
-                        'filename': paper_info['filename'],
-                        'file_path': paper_info['file_path'],  # 添加file_path
-                        'score': paper_info['max_score'],
-                        'content': paper_info['sample_content']
-                    })
-                else:
-                    # 没有元数据的情况
-                    is_dataset = 'datasets' in file_path.lower() or 'dataset' in paper_info['filename'].lower()
-                    references_raw.append({
-                        'ref_id': f'ref_{paper_index}',
-                        'journal': '营养数据集' if is_dataset else 'Unknown',
-                        'year': 'N/A',
-                        'title': paper_info['filename'],
-                        'authors': [],
-                        'doi': 'Not Available',
-                        'filename': paper_info['filename'],
-                        'file_path': paper_info['file_path'],  # 添加file_path
-                        'score': paper_info['max_score'],
-                        'content': paper_info['sample_content']
-                    })
-            
-            # 证据分级
-            references_ranked = evidence_ranker.rank_papers(references_raw)
-            for ref in references_ranked:
-                ref['final_score'] = ref['score'] * 0.6 + (ref['total_score'] / 5.0) * 0.4
-            references_ranked.sort(key=lambda x: x['final_score'], reverse=True)
-            
-            references = []
-            for idx, ref in enumerate(references_ranked, 1):
-                ref['ref_id'] = f'ref_{idx}'
-                references.append(ref)
-            
-            print(f"[流式API-证据分级] 完成，共 {len(references)} 篇文献")
-            
-            # 准备发送给前端的references数据（只包含必要字段）
-            references_for_frontend = []
-            for ref in references:
-                references_for_frontend.append({
-                    'ref_id': ref['ref_id'],
-                    'title': ref.get('title', ref.get('filename', 'Unknown')),
-                    'journal': ref.get('journal', 'Unknown'),
-                    'year': ref.get('year', 'N/A'),
-                    'authors': ref.get('authors', []),
-                    'doi': ref.get('doi', 'Not Available'),
-                    'filename': ref.get('filename', ''),
-                    'score': ref.get('final_score', 0)
-                })
-            
-            # 发送参考文献
-            yield f"data: {json.dumps({'type': 'references', 'references': references_for_frontend}, ensure_ascii=False)}\n\n"
-            
-            # 开始生成答案
-            yield f"data: {json.dumps({'type': 'status', 'message': '正在生成答案...'}, ensure_ascii=False)}\n\n"
-            
-            # 构建上下文：只使用references中的文献的chunks
-            numbered_context_chunks = []
-            max_context_length = 12000  # 增加到12000字符
-            total_length = 0
-            matched_count = 0
-            
-            import re
-            
-            for ref in references:
-                ref_file_path = ref['file_path']
-                ref_id = ref['ref_id']
-                
-                # 从unique_papers_dict中获取该文献的所有chunks
-                if ref_file_path in unique_papers_dict:
-                    paper_chunks = unique_papers_dict[ref_file_path]['chunks']
-                    
-                    for chunk in paper_chunks:
-                        chunk_text = chunk.text
-                        
-                        # ============================================================
-                        # 关键：清理原始文档中可能被误解为ref的内容
-                        # ============================================================
-                        # 移除方括号内的数字引用 [1], [2], [12]
-                        chunk_text = re.sub(r'\[\d+\]', '', chunk_text)
-                        # 移除方括号内的CrossRef、PubMed等
-                        chunk_text = re.sub(r'\[CrossRef\]|\[PubMed\]|\[Google Scholar\]', '', chunk_text, flags=re.IGNORECASE)
-                        # 移除行首的数字编号（如 "9. Author"）
-                        chunk_text = re.sub(r'^\d+\.\s+', '', chunk_text, flags=re.MULTILINE)
-                        # 清理多余空格
-                        chunk_text = re.sub(r'\s+', ' ', chunk_text).strip()
-                        
-                        # 检查长度限制
-                        if total_length + len(chunk_text) > max_context_length:
-                            break
-                        
-                        # 添加ref标注（这是唯一的ref标记）
-                        numbered_chunk = f"[{ref_id}] {chunk_text}"
-                        numbered_context_chunks.append(numbered_chunk)
-                        total_length += len(chunk_text)
-                        matched_count += 1
-                    
-                    # 如果达到长度限制，停止添加更多文献
-                    if total_length >= max_context_length:
-                        break
-            
-            print(f"[流式API-上下文] 使用 {len(references)} 篇文献的 {matched_count} 个chunks（共 {total_length} 字符）")
-            
-            # 构建参考文献列表摘要（用于prompt）
-            ref_list_summary = "\n".join([
-                f"{ref['ref_id']}: {ref.get('title', ref['filename'])} ({ref.get('journal', 'Unknown')}, {ref.get('year', 'N/A')})"
-                for ref in references
-            ])
-            
-            context = "\n\n".join(numbered_context_chunks)
-            prompt = f"""你是甜味科学领域的专业知识系统。请基于以下参考文献回答问题。
-
-【参考文献列表】（共{len(references)}篇，编号为ref_1到ref_{len(references)}）：
-{ref_list_summary}
-
-【重要】：
-- 只能使用ref_1到ref_{len(references)}这些编号
-- 在回答的关键信息后用[ref_X]或[ref_X, ref_Y]标注来源
-- 不要引用任何其他编号
-
-【参考文献内容】：
-{context}
-
-【问题】：{question}
-
-请用中文回答，结构清晰，在重要观点后标注文献来源。"""
-            
-            if not llm_client:
-                yield f"data: {json.dumps({'type': 'error', 'error': 'DeepSeek API 未配置，无法生成回答。'}, ensure_ascii=False)}\n\n"
-                return
-
-            messages = [
-                {"role": "system", "content": f"你是甜味科学领域的专业知识系统。重要：你只能引用ref_1到ref_{len(references)}这{len(references)}篇文献，不要使用其他编号。"},
-                {"role": "user", "content": prompt},
-            ]
-
-            reasoning_started = False
-            answer_started = False
-            
-            # 缓冲机制：积攒少量字符再一次性发送，减少SSE包数量，提高前端渲染效率
-            content_buffer = ""
-            BUFFER_SIZE = 5
-
-            for delta in llm_client.stream_chat(messages, temperature=0.6, max_tokens=2000):
-                if delta.reasoning_content:
-                    if not reasoning_started:
-                        yield f"data: {json.dumps({'type': 'reasoning_start'}, ensure_ascii=False)}\n\n"
-                        reasoning_started = True
-                    yield f"data: {json.dumps({'type': 'reasoning', 'content': delta.reasoning_content}, ensure_ascii=False)}\n\n"
-
-                if delta.content:
-                    if not answer_started:
-                        if reasoning_started:
-                            yield f"data: {json.dumps({'type': 'reasoning_end'}, ensure_ascii=False)}\n\n"
-
-                        yield f"data: {json.dumps({'type': 'references', 'references': references}, ensure_ascii=False)}\n\n"
-                        yield f"data: {json.dumps({'type': 'answer_start'}, ensure_ascii=False)}\n\n"
-                        answer_started = True
-                    
-                    # 累积 buffer
-                    content_buffer += delta.content
-                    if len(content_buffer) >= BUFFER_SIZE:
-                        yield f"data: {json.dumps({'type': 'answer', 'content': content_buffer}, ensure_ascii=False)}\n\n"
-                        content_buffer = ""
-            
-            # 发送剩余的 buffer
-            if content_buffer:
-                yield f"data: {json.dumps({'type': 'answer', 'content': content_buffer}, ensure_ascii=False)}\n\n"
-            
-            # 发送完成信号
-            yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
-            
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)}, ensure_ascii=False)}\n\n"
-    
-    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+    return Response(stream_with_context(chat_service.ask_stream(question, similarity_threshold, max_results)), mimetype='text/event-stream') 
 
 # 静态文件路由
 @app.route('/static/<path:filename>')

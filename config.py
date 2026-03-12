@@ -18,7 +18,7 @@ class Config:
     """Base configuration."""
     # Base Paths
     BASE_DIR = Path(__file__).resolve().parent
-    CHROMA_DB_DIR = BASE_DIR / "chroma_db"
+    CHROMA_DB_DIR = BASE_DIR / "chroma_db_v3"
     LOG_DIR = BASE_DIR / "logs"
     STATIC_DIR = BASE_DIR / "static"
     TEMPLATE_DIR = BASE_DIR / "frontend"
@@ -34,7 +34,7 @@ class Config:
     DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-reasoner')
     
     # RAG Settings
-    DATA_DIR = os.getenv('DATA_DIR', str(BASE_DIR / "sweet_related_paper/papers"))
+    DATA_DIR = os.getenv('DATA_DIR', str(BASE_DIR / "data"))
     PERSIST_DIR = os.getenv('PERSIST_DIR', str(BASE_DIR / "faiss_db"))
 
     EMBED_MODEL_TYPE = os.getenv("EMBED_MODEL_TYPE", "huggingface").lower()
