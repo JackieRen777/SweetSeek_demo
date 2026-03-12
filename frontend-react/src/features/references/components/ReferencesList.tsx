@@ -141,11 +141,11 @@ const ReferencesList: React.FC = () => {
                         {ref.journal}.
                       </span>
                       <span className="text-slate-600">
-                        {/* Display year (bold), web (if present), volume (italic), pages separated by comma */}
+                        {/* Display year (bold), volume (italic), pages, then web link */}
                         <span className="font-bold text-slate-900">{ref.year}</span>
-                        {ref.webDisplay && <span>, {ref.webDisplay}</span>}
                         {ref.volume && <>, <span className="italic">{ref.volume}</span></>}
                         {ref.pages && <>, {ref.pages}</>}
+                        {ref.webDisplay && <span>, {ref.webDisplay}</span>}
                         .
                       </span>
                       
