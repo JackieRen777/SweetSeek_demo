@@ -125,7 +125,7 @@ class MetadataStorage:
 **存储格式**:
 ```json
 {
-    "food_research_data/papers/nutrients-12-03408_1.pdf": {
+    "sweet_related_paper/papers/nutrients-12-03408_1.pdf": {
         "journal": "Nutrients",
         "year": "2020",
         "title": "Effects of Sweeteners on Health",

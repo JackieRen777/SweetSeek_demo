@@ -1,0 +1,16 @@
+[Unit]
+Description=SweetSeek Backend Service
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/www/wwwroot/FCN_SweetSeek
+ExecStart=/www/wwwroot/FCN_SweetSeek/venv/bin/gunicorn -c gunicorn_config.py app:app
+Restart=always
+RestartSec=5
+Environment="PATH=/www/wwwroot/FCN_SweetSeek/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin"
+StandardOutput=append:/www/wwwlogs/sweetseek_backend.log
+StandardError=append:/www/wwwlogs/sweetseek_backend.log
+
+[Install]
+WantedBy=multi-user.target

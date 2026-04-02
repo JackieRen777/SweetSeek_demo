@@ -6,10 +6,10 @@
 
 import json
 import logging
+import os
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
-from datetime import datetime
-import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class MetadataStorage:
     """元数据存储管理器"""
     
-    def __init__(self, storage_path: str = "./storage/metadata.json"):
+    def __init__(self, storage_path: str = "./chroma_db/metadata.json"):
         """
         初始化存储管理器
         
@@ -33,10 +33,19 @@ class MetadataStorage:
         """确保存储目录存在"""
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # 如果文件不存在，创建空的JSON文件
         if not self.storage_path.exists():
-            self._save_to_disk({})
-            logger.info(f"创建元数据存储文件: {self.storage_path}")
+            backup_path = self.storage_path.with_suffix('.json.bak')
+            if backup_path.exists():
+                try:
+                    import shutil
+                    shutil.copy2(backup_path, self.storage_path)
+                    logger.info(f"从备份恢复元数据存储文件: {self.storage_path}")
+                except Exception:
+                    self._save_to_disk({})
+                    logger.info(f"创建元数据存储文件: {self.storage_path}")
+            else:
+                self._save_to_disk({})
+                logger.info(f"创建元数据存储文件: {self.storage_path}")
     
     def _load_metadata(self) -> Dict:
         """从磁盘加载元数据"""
@@ -48,35 +57,51 @@ class MetadataStorage:
                     return data
         except Exception as e:
             logger.error(f"加载元数据失败: {str(e)}")
+
+        backup_path = self.storage_path.with_suffix('.json.bak')
+        try:
+            if backup_path.exists():
+                with open(backup_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    logger.info(f"从备份加载了 {len(data)} 个文件的元数据")
+                    return data
+        except Exception as e:
+            logger.error(f"从备份加载元数据失败: {str(e)}")
         
         return {}
     
     def _save_to_disk(self, data: Dict):
         """保存元数据到磁盘"""
+        import shutil
+        import tempfile
+        
         try:
-            # 创建备份
-            if self.storage_path.exists():
-                backup_path = self.storage_path.with_suffix('.json.bak')
-                self.storage_path.rename(backup_path)
-            
-            # 保存新数据
-            with open(self.storage_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            
-            # 删除备份
             backup_path = self.storage_path.with_suffix('.json.bak')
-            if backup_path.exists():
-                backup_path.unlink()
+            if self.storage_path.exists():
+                shutil.copy2(self.storage_path, backup_path)
+
+            fd, temp_path = tempfile.mkstemp(dir=self.storage_path.parent, text=True)
+            try:
+                with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                    f.flush()
+                    os.fsync(f.fileno())
+                os.replace(temp_path, self.storage_path)
+                logger.debug(f"元数据已保存到 {self.storage_path}")
                 
-            logger.debug(f"元数据已保存到 {self.storage_path}")
+            except Exception as write_error:
+                os.unlink(temp_path)
+                raise write_error
             
         except Exception as e:
             logger.error(f"保存元数据失败: {str(e)}")
-            # 尝试恢复备份
             backup_path = self.storage_path.with_suffix('.json.bak')
             if backup_path.exists():
-                backup_path.rename(self.storage_path)
-                logger.info("已从备份恢复元数据")
+                try:
+                    shutil.copy2(backup_path, self.storage_path)
+                    logger.info("已从备份恢复元数据")
+                except Exception as restore_error:
+                    logger.error(f"恢复备份失败: {str(restore_error)}")
     
     def save_metadata(self, file_path: str, metadata: Dict) -> None:
         """
@@ -101,9 +126,41 @@ class MetadataStorage:
         
         logger.info(f"保存元数据: {metadata.get('title', 'Unknown')[:50]}...")
     
+    def _parse_filename_metadata(self, filename: str) -> Optional[Dict]:
+        """
+        从文件名解析元数据
+        格式: Author 等 - Year - Title.pdf 或 Author et al - Year - Title.pdf
+        """
+        import re
+        # 移除扩展名
+        name = Path(filename).stem
+        
+        # 尝试匹配: Author (等/et al) - Year - Title
+        # 兼容多种分隔符和格式
+        pattern = r'^(.+?)\s*(?:等|et al\.?|and others)?\s*-\s*(\d{4})\s*-\s*(.+)$'
+        match = re.match(pattern, name)
+        
+        if match:
+            author_str, year, title = match.groups()
+            # 简单的作者处理
+            authors = [author_str.strip()]
+            
+            return {
+                'title': title.strip(),
+                'authors': authors,
+                'year': year,
+                'journal': 'Unknown Journal', # 无法从文件名获知
+                'doi': 'Not Available',
+                'filename': filename,
+                'source': 'filename_parsed',
+                'file_path': filename
+            }
+        return None
+
     def get_metadata(self, file_path: str) -> Optional[Dict]:
         """
         获取文件的元数据
+        支持路径模糊匹配和文件名解析回退
         
         Args:
             file_path: 文件路径
@@ -112,7 +169,28 @@ class MetadataStorage:
             元数据字典，如果不存在返回None
         """
         normalized_path = str(Path(file_path).as_posix())
-        return self._metadata_cache.get(normalized_path)
+        
+        # 1. 尝试精确匹配
+        if normalized_path in self._metadata_cache:
+            return self._metadata_cache[normalized_path]
+            
+        # 2. 尝试通过文件名匹配（忽略路径差异）
+        # 这解决了本地和服务器路径结构不一致的问题
+        target_filename = Path(file_path).name
+        for stored_path, meta in self._metadata_cache.items():
+            if Path(stored_path).name == target_filename:
+                # 找到匹配的文件名
+                logger.debug(f"通过文件名匹配找到元数据: {target_filename}")
+                return meta
+                
+        # 3. 尝试从文件名解析（最后的回退策略）
+        # 这解决了元数据丢失但文件名包含信息的情况
+        parsed_meta = self._parse_filename_metadata(target_filename)
+        if parsed_meta:
+            logger.info(f"从文件名解析元数据成功: {target_filename}")
+            return parsed_meta
+            
+        return None
     
     def get_all_metadata(self) -> Dict:
         """
