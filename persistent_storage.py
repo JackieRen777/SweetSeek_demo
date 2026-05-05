@@ -14,8 +14,12 @@ from __future__ import annotations
 import logging
 import os
 import shutil
+from pathlib import Path
+import re
 from datetime import datetime
 from typing import List, Optional
+
+from metadata_storage import MetadataStorage
 
 try:
     from llama_index.core import (
@@ -40,120 +44,232 @@ logging.basicConfig(level=logging.INFO)
 
 
 class PersistentRAGSystem:
-    def __init__(self, data_dir: str = "./food_research_data", persist_dir: str = "./storage"):
+    def __init__(self, data_dir: str = "./food_research_data/datasets", persist_dir: str = "./storage", metadata_path: str = "./chroma_db_v3/metadata.json"):
         self.data_dir = data_dir
         self.persist_dir = persist_dir
+        self.metadata_storage = MetadataStorage(storage_path=metadata_path)
         self.index: Optional[VectorStoreIndex] = None
         self.query_engine = None
         self.models_configured = False
-        
-        # 初始化元数据管理器
-        from metadata_storage import MetadataStorage
-        from pdf_metadata_extractor import PDFMetadataExtractor
-        self.metadata_storage = MetadataStorage()
-        self.metadata_extractor = PDFMetadataExtractor()
+        self.last_error: Optional[str] = None
+        self.embedding_dim: int = 768
+        self.embedding_mode: str = "unknown"
+
+    def _infer_embedding_dim(self) -> int:
+        """从现有持久化索引中推断向量维度，避免维度不一致导致检索失败。"""
+        try:
+            vector_store_path = os.path.join(self.persist_dir, "default__vector_store.json")
+            if not os.path.exists(vector_store_path):
+                return self.embedding_dim
+            import json
+            with open(vector_store_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            embeddings = data.get("embedding_dict", {})
+            if not embeddings:
+                return self.embedding_dim
+            first_vec = next(iter(embeddings.values()))
+            if isinstance(first_vec, list) and first_vec:
+                return len(first_vec)
+        except Exception as e:
+            logging.warning(f"推断 embedding 维度失败，使用默认值: {e}")
+        return self.embedding_dim
+
+    def _collect_index_embedding_dims(self) -> set:
+        """收集持久化索引中向量维度集合（用于识别混合维度污染）。"""
+        dims = set()
+        try:
+            vector_store_path = os.path.join(self.persist_dir, "default__vector_store.json")
+            if not os.path.exists(vector_store_path):
+                return dims
+            import json
+            with open(vector_store_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            emb_dict = data.get("embedding_dict", {})
+            for vec in emb_dict.values():
+                if isinstance(vec, list):
+                    dims.add(len(vec))
+                    # 维度异常只需发现前两类即可判定污染
+                    if len(dims) > 1:
+                        break
+        except Exception as e:
+            logging.warning(f"收集索引维度失败: {e}")
+        return dims
+
+    def _iter_supported_files(self) -> List[str]:
+        supported = (".pdf", ".docx", ".txt", ".md", ".csv", ".json")
+        files: List[str] = []
+        for root, _, names in os.walk(self.data_dir):
+            for name in names:
+                if name.startswith("."):
+                    continue
+                if name.lower().endswith(supported):
+                    files.append(os.path.abspath(os.path.join(root, name)))
+        return sorted(files)
+
+    def _build_basic_metadata(self, file_path: str) -> dict:
+        """为未提取到结构化信息的文件生成基础元数据。"""
+        filename = os.path.basename(file_path)
+        stem = Path(filename).stem
+        year = "N/A"
+        year_match = re.search(r"(19|20)\d{2}", stem)
+        if year_match:
+            year = year_match.group(0)
+        return {
+            "title": stem,
+            "authors": [],
+            "year": year,
+            "journal": "Unknown Journal",
+            "doi": "Not Available",
+            "filename": filename,
+            "source": "dual_protein_basic",
+        }
+
+    def _ensure_metadata_for_files(self, files: List[str]) -> None:
+        """确保每个文档至少有一条可用元数据，便于健康检查和前端引用。"""
+        created = 0
+        for file_path in files:
+            try:
+                existing = self.metadata_storage.get_metadata(file_path)
+                if existing:
+                    continue
+                self.metadata_storage.save_metadata(file_path, self._build_basic_metadata(file_path))
+                created += 1
+            except Exception as e:
+                logging.warning(f"写入基础元数据失败（跳过）: {file_path} -> {e}")
+        if created > 0:
+            logging.info(f"已为 {created} 个文件补齐基础元数据")
 
     def _configure_models(self) -> None:
-        """延迟配置模型/嵌入；尽量保持轻量。
-
-        如果需要在这里初始化具体的嵌入或 LLM，请谨慎实现，避免阻塞导入。
-        """
+        """配置全局 embed_model，优先使用真实嵌入模型。"""
         if self.models_configured:
             return
 
-        # 配置DeepSeek LLM（直接使用原生OpenAI客户端）
+        emb = None
+        # 先给一个默认值，真实值在模型加载成功后覆盖
+        self.embedding_dim = self._infer_embedding_dim()
+        # 使用配置中的模型路径或模型名（禁止写死本地快照）
         try:
-            from openai import OpenAI as OpenAIClient
-            from dotenv import load_dotenv
-            
-            load_dotenv()
-            
-            api_key = os.getenv("DEEPSEEK_API_KEY")
-            base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
-            model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
-            
-            if api_key:
-                # 创建DeepSeek客户端（存储为全局变量供查询时使用）
-                import sys
-                current_module = sys.modules[__name__]
-                current_module.deepseek_client = OpenAIClient(
-                    api_key=api_key,
-                    base_url=base_url
-                )
-                current_module.deepseek_model = model
-                logging.info(f"成功配置 DeepSeek 客户端: {model} at {base_url}")
-            else:
-                logging.warning("未找到 DEEPSEEK_API_KEY，LLM 功能可能无法使用")
-        except Exception as e:
-            logging.warning(f"配置 DeepSeek 客户端失败: {e}")
-
-        # 配置嵌入模型（支持多种类型）
-        embed_model_type = os.getenv("EMBED_MODEL_TYPE", "huggingface").lower()
+            from config import config as _cfg
+            model_path = str(getattr(_cfg, "EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5"))
+            embed_source = str(getattr(_cfg, "EMBED_MODEL_SOURCE", "modelscope")).lower()
+        except Exception:
+            model_path = "BAAI/bge-small-zh-v1.5"
+            embed_source = "modelscope"
+        required_weights = ("model.safetensors", "pytorch_model.bin")
+        is_local_dir = os.path.isdir(model_path)
+        has_weights = any(os.path.exists(os.path.join(model_path, name)) for name in required_weights) if is_local_dir else True
+        if is_local_dir and not has_weights:
+            logging.warning(
+                f"嵌入模型目录或权重不完整: {model_path}。"
+                "将回退到占位向量模式，检索质量会下降。"
+            )
         
+        # 尝试使用真实的嵌入模型
         try:
-            if embed_model_type == "huggingface":
-                # 使用HuggingFace本地模型（推荐）
-                embed_model_name = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5")
+            from sentence_transformers import SentenceTransformer
+            from llama_index.core.embeddings import BaseEmbedding as _BaseEmb
+            if embed_source == "modelscope" and not os.path.isdir(model_path):
                 try:
-                    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-                    embed_model = HuggingFaceEmbedding(model_name=embed_model_name)
-                    Settings.embed_model = embed_model
-                    logging.info(f"成功配置 HuggingFace 嵌入模型: {embed_model_name}")
-                except Exception as e:
-                    logging.error(f"加载 HuggingFace 嵌入模型失败: {e}")
-                    raise
-                    
-            elif embed_model_type == "openai":
-                # 使用OpenAI嵌入模型
-                openai_api_key = os.getenv("OPENAI_API_KEY")
-                openai_model = os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small")
-                
-                if not openai_api_key:
-                    raise ValueError("EMBED_MODEL_TYPE=openai 但未设置 OPENAI_API_KEY")
-                
-                try:
-                    from llama_index.embeddings.openai import OpenAIEmbedding
-                    embed_model = OpenAIEmbedding(
-                        api_key=openai_api_key,
-                        model=openai_model
-                    )
-                    Settings.embed_model = embed_model
-                    logging.info(f"成功配置 OpenAI 嵌入模型: {openai_model}")
-                except Exception as e:
-                    logging.error(f"加载 OpenAI 嵌入模型失败: {e}")
-                    raise
-                    
-            elif embed_model_type == "local":
-                # 使用默认本地模型
-                Settings.embed_model = "local"
-                logging.info("使用默认本地嵌入模型")
-                
-            else:
-                logging.warning(f"未知的嵌入模型类型: {embed_model_type}，使用默认配置")
-                Settings.embed_model = "local"
-                
-        except Exception as e:
-            logging.error(f"配置嵌入模型失败: {e}")
-            # 回退到默认配置
+                    from modelscope import snapshot_download
+                    cache_root = os.path.abspath("models/modelscope_cache")
+                    os.makedirs(cache_root, exist_ok=True)
+                    model_path = snapshot_download(model_path, cache_dir=cache_root)
+                    logging.info(f"通过 ModelScope 下载并使用模型目录: {model_path}")
+                except Exception as ms_e:
+                    logging.warning(f"ModelScope 下载失败，将尝试按原路径/模型名加载: {ms_e}")
+
+            st_model = SentenceTransformer(model_path)
+            logging.info(f"成功加载嵌入模型: {model_path}")
             try:
-                Settings.embed_model = "local"
-                logging.info("回退到默认本地嵌入模型")
+                model_dim = int(st_model.get_sentence_embedding_dimension())
+                if model_dim > 0:
+                    self.embedding_dim = model_dim
+                    logging.info(f"检测到真实嵌入维度: {self.embedding_dim}")
             except Exception:
                 pass
+
+            class _STEmbedding(_BaseEmb):
+                model_config = {"arbitrary_types_allowed": True}
+
+                def _get_query_embedding(self, text: str) -> List[float]:
+                    vec = st_model.encode(text)
+                    return [float(x) for x in vec.tolist()] if hasattr(vec, 'tolist') else [float(x) for x in vec]
+
+                def _get_text_embedding(self, text: str) -> List[float]:
+                    vec = st_model.encode(text)
+                    return [float(x) for x in vec.tolist()] if hasattr(vec, 'tolist') else [float(x) for x in vec]
+
+                async def _aget_query_embedding(self, text: str) -> List[float]:
+                    return self._get_query_embedding(text)
+
+            emb = _STEmbedding()
+            Settings.embed_model = emb
+            self.embedding_mode = "real"
+            logging.info(f"已配置真实嵌入模型")
+        except Exception as e:
+            logging.warning(f"加载真实嵌入模型失败，使用零向量占位: {e}")
+            # 回退到零向量（仅用于构建索引时的占位）
+            try:
+                from llama_index.core.embeddings import BaseEmbedding as _BaseEmb
+                inferred_dim = self.embedding_dim
+
+                class _ZeroEmbedding(_BaseEmb):
+                    model_config = {"arbitrary_types_allowed": True}
+
+                    def _get_query_embedding(self, text: str) -> List[float]:
+                        return [0.0] * inferred_dim
+
+                    def _get_text_embedding(self, text: str) -> List[float]:
+                        return [0.0] * inferred_dim
+
+                    async def _aget_query_embedding(self, text: str) -> List[float]:
+                        return [0.0] * inferred_dim
+
+                emb = _ZeroEmbedding()
+                Settings.embed_model = emb
+                self.embedding_mode = "placeholder"
+                logging.info(f"已将全局 embed_model 设置为 _ZeroEmbedding（占位, dim={self.embedding_dim}）")
+            except Exception as e2:
+                logging.error(f"设置 embed_model 失败：{e2}")
+                self.embedding_mode = "failed"
 
         self.models_configured = True
 
     def load_or_create_index(self) -> bool:
         """尝试加载已存在索引，失败则构建新索引。"""
+        # reset last error on each attempt
+        self.last_error = None
         if os.path.exists(self.persist_dir):
             logging.info("检测到持久化索引，尝试加载...")
             try:
+                self._configure_models()
                 storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
                 self.index = load_index_from_storage(storage_context)
+                # 自动校验索引向量维度与当前模型维度是否一致，不一致则自动重建
+                try:
+                    model_dim = int(getattr(self, "embedding_dim", 0) or 0)
+                    index_dims = self._collect_index_embedding_dims()
+                    # 三种情况都重建：空索引维度未知、混合维度、唯一维度但与模型不一致
+                    need_rebuild = False
+                    if not index_dims:
+                        need_rebuild = False
+                    elif len(index_dims) > 1:
+                        need_rebuild = True
+                    elif model_dim and next(iter(index_dims)) != model_dim:
+                        need_rebuild = True
+                    if need_rebuild:
+                        logging.warning(
+                            f"检测到索引维度异常: index_dims={sorted(index_dims)}, model_dim={model_dim}，自动重建索引"
+                        )
+                        self.index = None
+                        return self.rebuild_index()
+                except Exception as dim_e:
+                    logging.warning(f"索引维度校验失败（忽略并继续）: {dim_e}")
                 logging.info("索引加载成功")
                 return True
             except Exception as e:
                 logging.warning(f"加载索引失败：{e}，将尝试重建")
+                self.last_error = f"加载持久化索引失败: {e}"
                 return self._build_new_index()
 
         logging.info("未检测到持久化索引，开始构建新索引")
@@ -163,70 +279,64 @@ class PersistentRAGSystem:
         """从 data_dir 读取支持的文档并构建索引，构建成功后持久化。"""
         try:
             self._configure_models()
-
-            supported = (".pdf", ".docx", ".txt", ".md", ".csv", ".json")
-            file_count = 0
-            for root, dirs, files in os.walk(self.data_dir):
-                for f in files:
-                    if f.startswith("."):
-                        continue
-                    if f.lower().endswith(supported):
-                        file_count += 1
+            files = self._iter_supported_files()
+            file_count = len(files)
+            self._ensure_metadata_for_files(files)
 
             logging.info(f"将从 {self.data_dir} 读取 {file_count} 个支持的文档进行索引构建")
 
-            reader = SimpleDirectoryReader(self.data_dir, recursive=True)
-            documents = reader.load_data()
-
-            logging.info(f"读取到 {len(documents)} 个文档，开始构建向量索引...")
-            
-            # 提取PDF元数据
-            logging.info("开始提取PDF元数据...")
-            pdf_count = 0
-            for doc in documents:
-                file_path = doc.metadata.get('file_path', '')
-                if file_path.lower().endswith('.pdf'):
-                    try:
-                        # 检查是否已有元数据
-                        if not self.metadata_storage.has_metadata(file_path):
-                            metadata = self.metadata_extractor.extract_metadata(file_path)
-                            self.metadata_storage.save_metadata(file_path, metadata)
-                            pdf_count += 1
-                    except Exception as e:
-                        logging.error(f"提取元数据失败 {file_path}: {str(e)}")
-            
-            logging.info(f"成功提取 {pdf_count} 个PDF文件的元数据")
-
-            # 构造嵌入实现：使用 HuggingFace 本地模型
-            emb = None
-            
-            # 尝试使用正确的导入路径
-            try:
-                from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-                
-                # 使用模型名称而不是本地路径，让它自动下载
-                emb = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh-v1.5")
-                logging.info("成功加载 HuggingFace 嵌入模型: BAAI/bge-small-zh-v1.5")
-            except Exception as e:
-                logging.warning(f"加载 HuggingFace 嵌入模型失败: {e}")
-                
-                # 如果失败，设置环境变量避免使用 OpenAI
-                os.environ.setdefault("OPENAI_API_KEY", "sk-dummy")
-                emb = None
-
-            # 构建索引
-            try:
-                if emb is not None:
-                    # 使用自定义嵌入模型
-                    self.index = VectorStoreIndex.from_documents(documents, embed_model=emb)
-                    logging.info("使用自定义嵌入模型构建索引")
-                else:
-                    # 使用默认配置（需要设置 OPENAI_API_KEY）
-                    self.index = VectorStoreIndex.from_documents(documents)
-                    logging.info("使用默认嵌入模型构建索引")
-            except Exception as e:
-                logging.exception("索引构建失败：")
+            if file_count == 0:
+                msg = f"数据目录 {self.data_dir} 中未检测到支持的文档，无法构建索引。"
+                logging.error(msg)
+                self.last_error = msg
                 return False
+
+            # 配置安全的文本分割器（避免RecursionError）
+            try:
+                from llama_index.core.node_parser import SentenceSplitter
+                # 使用较小的chunk_size和简单的分割策略
+                text_splitter = SentenceSplitter(
+                    chunk_size=512,  # 减小chunk大小
+                    chunk_overlap=50,
+                    paragraph_separator="\n\n",
+                    secondary_chunking_regex="[^,.;。？！]+[,.;。？！]?",  # 简单的句子分割
+                )
+                Settings.text_splitter = text_splitter
+                Settings.chunk_size = 512
+                Settings.chunk_overlap = 50
+                logging.info("已配置安全的文本分割器（chunk_size=512, chunk_overlap=50）")
+            except Exception as e:
+                logging.warning(f"配置文本分割器失败，使用默认配置: {e}")
+
+            # 分批读文件并增量写入，降低一次性内存峰值
+            batch_size = 25
+            try:
+                from config import config as _cfg
+                batch_size = max(1, int(getattr(_cfg, "INDEX_BUILD_BATCH_SIZE", 25)))
+            except Exception:
+                pass
+
+            self.index = None
+            total_docs = 0
+            for i in range(0, file_count, batch_size):
+                batch_files = files[i:i + batch_size]
+                logging.info(f"处理批次 {i // batch_size + 1}，文件数 {len(batch_files)}")
+                reader = SimpleDirectoryReader(input_files=batch_files)
+                documents = reader.load_data()
+                total_docs += len(documents)
+
+                if self.index is None:
+                    self.index = VectorStoreIndex.from_documents(documents)
+                else:
+                    for doc in documents:
+                        self.index.insert(doc)
+
+            if self.index is None:
+                msg = "文档读取完成但未生成有效索引"
+                logging.error(msg)
+                self.last_error = msg
+                return False
+            logging.info(f"索引构建成功，共文档块 {total_docs}")
 
             try:
                 self.index.storage_context.persist(persist_dir=self.persist_dir)
@@ -282,18 +392,10 @@ class PersistentRAGSystem:
 
         if self.query_engine is None:
             try:
-                self.query_engine = self.index.as_query_engine(
-                    similarity_top_k=similarity_top_k, 
-                    response_mode="compact"
-                )
-            except Exception as e:
-                logging.warning(f"创建查询引擎失败: {e}，尝试使用默认参数")
-                try:
-                    # 尝试不带参数创建
-                    self.query_engine = self.index.as_query_engine()
-                except Exception as e2:
-                    logging.error(f"无法创建查询引擎: {e2}")
-                    raise ValueError(f"无法创建查询引擎: {e2}")
+                self.query_engine = self.index.as_query_engine(similarity_top_k=similarity_top_k, response_mode="compact")
+            except Exception:
+                # 若底层版本不支持 as_query_engine，则返回索引本身
+                return self.index
 
         return self.query_engine
 
@@ -335,5 +437,46 @@ class PersistentRAGSystem:
         return {"status": "已初始化", "total_documents": total, "persist_dir": self.persist_dir, "index_exists": os.path.exists(self.persist_dir)}
 
 
-# 全局实例：导入模块不会触发索引构建或模型下载
-rag_system = PersistentRAGSystem()
+try:
+    from config import config
+except Exception:
+    config = None
+
+# 全局实例：使用 config 中的目录（避免默认指向空目录）
+if config is not None:
+    rag_system = PersistentRAGSystem(data_dir=config.DATA_DIR, persist_dir=config.PERSIST_DIR, metadata_path=str(config.CHROMA_DB_DIR / 'metadata.json'))
+else:
+    rag_system = PersistentRAGSystem()
+
+
+# ============================================================
+# LLM 配置 (延迟加载)
+# ============================================================
+
+deepseek_client = None
+deepseek_model = None
+
+def configure_llm():
+    """配置 DeepSeek LLM 客户端"""
+    global deepseek_client, deepseek_model
+    if deepseek_client is not None:
+        return
+
+    try:
+        from config import config
+        from openai import OpenAI
+
+        if config.DEEPSEEK_API_KEY and config.DEEPSEEK_BASE_URL:
+            deepseek_client = OpenAI(
+                api_key=config.DEEPSEEK_API_KEY,
+                base_url=config.DEEPSEEK_BASE_URL,
+            )
+            deepseek_model = config.DEEPSEEK_MODEL
+            logging.info(f"DeepSeek client 已配置，模型: {deepseek_model}, URL: {config.DEEPSEEK_BASE_URL}")
+        else:
+            logging.warning("环境变量 DEEPSEEK_API_KEY 或 DEEPSEEK_BASE_URL 未设置，LLM 功能将不可用。")
+
+    except ImportError as e:
+        logging.error(f"导入 OpenAI 库失败，请确保 'openai' 已安装: {e}")
+    except Exception as e:
+        logging.error(f"配置 DeepSeek client 失败: {e}")

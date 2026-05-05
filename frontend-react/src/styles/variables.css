@@ -1,0 +1,36 @@
+:root {
+  /* Main Colors - Spline-inspired Low Saturation */
+  --color-primary: #3B82F6;    /* Keep Blue but use softly */
+  --color-secondary: #64748B;  /* Slate instead of Pink */
+  --color-accent: #60A5FA;     /* Soft Blue */
+  
+  /* Background Colors */
+  --bg-white: #FFFFFF;
+  --bg-light: #F8FAFC;         /* Ultra light slate */
+  
+  /* Text Colors - High Contrast but Soft */
+  --text-primary: #0F172A;     /* Slate 900 */
+  --text-secondary: #64748B;   /* Slate 500 */
+  
+  /* Glass Effect - Clearer, more "crystalline" */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-blur: 20px;
+  
+  /* Shadows - Softer, more diffused */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-blue: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  
+  /* Layout */
+  --nav-height: 64px; /* Slightly smaller for cleaner look */
+  --max-width: 1280px;
+}
