@@ -23,6 +23,7 @@ import logging
 from functools import wraps
 import traceback
 import sys
+import threading
 from config import config
 from logger import setup_logger
 from services.dependencies import build_services
@@ -100,6 +101,7 @@ dual_protein_system_ready = False
 dual_protein_initializing = False
 dual_protein_docs_count_cache = 0
 dual_protein_dim_fix_attempted = False
+main_rag_initializing = False
 conversations = []
 
 services = build_services()
@@ -125,9 +127,10 @@ dual_protein_chat_service = ChatService(
 
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
-    global system_ready
+    global system_ready, main_rag_initializing
     
     try:
+        main_rag_initializing = True
         print("[系统] 初始化RAG系统...")
         
         # 加载或创建索引（自动使用持久化）
@@ -145,6 +148,8 @@ def initialize_rag_system():
     except Exception as e:
         print(f"[失败] 系统初始化失败: {str(e)}")
         return False
+    finally:
+        main_rag_initializing = False
 
 def initialize_dual_protein_rag():
     """初始化双蛋白RAG系统"""
@@ -869,11 +874,15 @@ def serve_static(filename):
 
 # 自动初始化（针对 Gunicorn 等 WSGI 容器）
 if __name__ != '__main__':
-    try:
-        app_logger.info("检测到非主程序运行模式，尝试初始化 RAG 系统...")
-        initialize_rag_system()
-    except Exception as e:
-        app_logger.error(f"自动初始化失败: {e}")
+    def _background_init_main_rag():
+        try:
+            app_logger.info("检测到非主程序运行模式，后台初始化 RAG 系统...")
+            initialize_rag_system()
+        except Exception as e:
+            app_logger.error(f"自动初始化失败: {e}")
+
+    # 避免阻塞 gunicorn worker 启动，初始化放到后台线程执行
+    threading.Thread(target=_background_init_main_rag, daemon=True).start()
 
 if __name__ == '__main__':
     # 优先从环境变量读取端口，默认为 5001
