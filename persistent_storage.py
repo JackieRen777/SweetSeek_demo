@@ -207,31 +207,10 @@ class PersistentRAGSystem:
             self.embedding_mode = "real"
             logging.info(f"已配置真实嵌入模型")
         except Exception as e:
-            logging.warning(f"加载真实嵌入模型失败，使用零向量占位: {e}")
-            # 回退到零向量（仅用于构建索引时的占位）
-            try:
-                from llama_index.core.embeddings import BaseEmbedding as _BaseEmb
-                inferred_dim = self.embedding_dim
-
-                class _ZeroEmbedding(_BaseEmb):
-                    model_config = {"arbitrary_types_allowed": True}
-
-                    def _get_query_embedding(self, text: str) -> List[float]:
-                        return [0.0] * inferred_dim
-
-                    def _get_text_embedding(self, text: str) -> List[float]:
-                        return [0.0] * inferred_dim
-
-                    async def _aget_query_embedding(self, text: str) -> List[float]:
-                        return [0.0] * inferred_dim
-
-                emb = _ZeroEmbedding()
-                Settings.embed_model = emb
-                self.embedding_mode = "placeholder"
-                logging.info(f"已将全局 embed_model 设置为 _ZeroEmbedding（占位, dim={self.embedding_dim}）")
-            except Exception as e2:
-                logging.error(f"设置 embed_model 失败：{e2}")
-                self.embedding_mode = "failed"
+            self.embedding_mode = "failed"
+            self.last_error = f"加载真实嵌入模型失败: {e}"
+            logging.error(f"加载真实嵌入模型失败，已停止索引操作: {e}")
+            raise
 
         self.models_configured = True
 

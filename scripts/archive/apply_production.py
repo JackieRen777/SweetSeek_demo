@@ -1,6 +1,6 @@
 import pexpect
 
-password = "Fcn509509"
+password = None
 
 # 1. Upload Nginx Conf
 scp_cmd = "scp -o StrictHostKeyChecking=no production_nginx.conf root@sweetseek.top:/www/server/panel/vhost/nginx/sweetseek.top.conf"
@@ -18,6 +18,9 @@ for cmd in [scp_cmd, reload_cmd, restart_cmd]:
     try:
         i = child.expect(['password:', pexpect.EOF, pexpect.TIMEOUT], timeout=30)
         if i == 0:
+            if not password:
+                print("Password is not set; skip interactive login.")
+                raise SystemExit(1)
             child.sendline(password)
             child.expect(pexpect.EOF)
             print(child.before.decode())

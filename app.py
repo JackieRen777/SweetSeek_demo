@@ -93,7 +93,28 @@ def validate_config():
     app_logger.info("✅ 配置验证通过")
 
 app = Flask(__name__)
-CORS(app)
+
+def _parse_csv_env(value: str) -> list[str]:
+    return [item.strip() for item in (value or "").split(",") if item.strip()]
+
+_cors_allow_all = os.getenv("CORS_ALLOW_ALL", "false").lower() == "true"
+if _cors_allow_all:
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+else:
+    default_origins = ",".join([
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://sweetseek.top",
+        "https://www.sweetseek.top",
+    ])
+    allowed_origins = _parse_csv_env(os.getenv("CORS_ALLOWED_ORIGINS", default_origins))
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
+
+
+def _get_json_dict() -> dict:
+    """Safely parse JSON body and always return a dict."""
+    data = request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}
 
 # 全局变量
 system_ready = False
@@ -274,7 +295,7 @@ def api_render_structure():
 def api_search_compounds():
     """搜索化合物"""
     if request.method == 'POST':
-        data = request.json
+        data = _get_json_dict()
         query = data.get('query', '').strip()
         limit = data.get('limit', 5)
     else:
@@ -391,7 +412,7 @@ def api_ask():
             'error': '系统未初始化，请先初始化系统'
         }), 400
     
-    data = request.json
+    data = _get_json_dict()
     question = data.get('question', '').strip()
     similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
     
@@ -467,7 +488,7 @@ def api_dual_protein_ask():
             'error': '双蛋白系统未初始化，请先调用 /api/dual-protein/init'
         }), 400
 
-    data = request.json
+    data = _get_json_dict()
     question = data.get('question', '').strip()
     if not question:
         return jsonify({'success': False, 'error': '问题不能为空'}), 400
@@ -546,7 +567,7 @@ def api_search():
             'error': '系统未初始化'
         }), 400
     
-    data = request.json
+    data = _get_json_dict()
     query = data.get('query', '').strip()
     
     app_logger.info(f"收到搜索请求: {query}")
@@ -702,9 +723,10 @@ def api_health():
         import persistent_storage
         if not hasattr(persistent_storage, 'deepseek_client') and hasattr(persistent_storage, "configure_llm"):
             persistent_storage.configure_llm()
-            
+
+        deepseek_client = getattr(persistent_storage, 'deepseek_client', None)
         health_status['components']['deepseek_api'] = {
-            'status': 'configured' if hasattr(persistent_storage, 'deepseek_client') else 'not_configured'
+            'status': 'configured' if deepseek_client is not None else 'not_configured'
         }
     except Exception as e:
         health_status['components']['deepseek_api'] = {
@@ -774,19 +796,17 @@ def api_ask_stream():
             'error': '系统未初始化'
         }), 400
     
-    data = request.json
+    data = _get_json_dict()
     question = data.get('question', '').strip()
-    dual_default_threshold = float(os.getenv("DUAL_RAG_SIMILARITY_THRESHOLD", "0.18"))
-    similarity_threshold = data.get('similarity_threshold', dual_default_threshold)
+    similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
     try:
         similarity_threshold = float(similarity_threshold)
         if not (0 <= similarity_threshold <= 1):
             raise ValueError
     except (ValueError, TypeError):
-        similarity_threshold = dual_default_threshold
+        similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
 
-    dual_default_max_results = int(os.getenv("DUAL_RAG_MAX_RESULTS", "120"))
-    max_results = data.get('max_results', dual_default_max_results)
+    max_results = data.get('max_results', config.RAG_MAX_RESULTS)
     try:
         max_results = int(max_results)
         if max_results < 1:
@@ -794,7 +814,7 @@ def api_ask_stream():
         if max_results > 200:
             max_results = 200
     except (ValueError, TypeError):
-        max_results = dual_default_max_results
+        max_results = config.RAG_MAX_RESULTS
     
     if not question:
         return jsonify({
@@ -823,20 +843,22 @@ def api_dual_protein_ask_stream():
             'error': '双蛋白系统未初始化，请先调用 /api/dual-protein/init'
         }), 400
 
-    data = request.json
+    data = _get_json_dict()
     question = data.get('question', '').strip()
     if not question:
         return jsonify({'success': False, 'error': '问题不能为空'}), 400
 
-    similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
+    dual_default_threshold = float(os.getenv("DUAL_RAG_SIMILARITY_THRESHOLD", "0.18"))
+    similarity_threshold = data.get('similarity_threshold', dual_default_threshold)
     try:
         similarity_threshold = float(similarity_threshold)
         if not (0 <= similarity_threshold <= 1):
             raise ValueError
     except (ValueError, TypeError):
-        similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
+        similarity_threshold = dual_default_threshold
 
-    max_results = data.get('max_results', config.RAG_MAX_RESULTS)
+    dual_default_max_results = int(os.getenv("DUAL_RAG_MAX_RESULTS", "120"))
+    max_results = data.get('max_results', dual_default_max_results)
     try:
         max_results = int(max_results)
         if max_results < 1:
@@ -844,7 +866,7 @@ def api_dual_protein_ask_stream():
         if max_results > 200:
             max_results = 200
     except (ValueError, TypeError):
-        max_results = config.RAG_MAX_RESULTS
+        max_results = dual_default_max_results
 
     def _safe_stream():
         try:

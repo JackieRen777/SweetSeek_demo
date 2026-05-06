@@ -1,6 +1,6 @@
 import pexpect
 
-password = "Fcn509509"
+password = None
 
 # Safe script generation
 # We will write the python script to a file on the server line by line to avoid quoting hell
@@ -142,6 +142,9 @@ child = pexpect.spawn(full_cmd)
 try:
     i = child.expect(['password:', pexpect.EOF, pexpect.TIMEOUT], timeout=60)
     if i == 0:
+        if not password:
+            print("Password is not set; skip interactive login.")
+            raise SystemExit(1)
         child.sendline(password)
         child.expect(pexpect.EOF)
         print(child.before.decode())

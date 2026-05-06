@@ -1,7 +1,7 @@
 import pexpect
 import time
 
-password = "Fcn509509"
+password = None
 
 def run_command(cmd, timeout=60):
     full_cmd = f"ssh -o StrictHostKeyChecking=no root@sweetseek.top '{cmd}'"
@@ -10,6 +10,9 @@ def run_command(cmd, timeout=60):
     try:
         i = child.expect(['password:', pexpect.EOF, pexpect.TIMEOUT], timeout=timeout)
         if i == 0:
+            if not password:
+                print("Password is not set; skip interactive login.")
+                return ""
             child.sendline(password)
             child.expect(pexpect.EOF, timeout=timeout)
             output = child.before.decode()
