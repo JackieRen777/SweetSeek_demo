@@ -307,23 +307,64 @@ class ChatService:
             'warning': warning,
         }
 
+    def _extract_topic_tokens(self, query: str) -> List[str]:
+        """提取查询中的主题词（中英文），用于弱约束的主题相关性判断。"""
+        query_text = (query or "").strip().lower()
+        if not query_text:
+            return []
+        query_text = re.sub(r"(如何|怎么|是什么|是怎样|请问|有关|相关|机制|机理)", " ", query_text)
+
+        english_tokens = re.findall(r"[a-z][a-z0-9+._-]{2,}", query_text)
+        chinese_chunks = re.findall(r"[\u4e00-\u9fff]{2,}", query_text)
+        stopwords = {"如何", "怎么", "什么", "为何", "请问", "是否", "以及", "关于", "之间", "机制", "作用", "结合"}
+
+        tokens = set(english_tokens)
+        for chunk in chinese_chunks:
+            for part in re.split(r"[和与及或、在是的了呢吗吧将把对跟同]", chunk):
+                part = part.strip()
+                if len(part) >= 2 and part not in stopwords:
+                    tokens.add(part)
+
+        return sorted(tokens)
+
+    def _reference_text(self, ref: Dict[str, Any]) -> str:
+        return " ".join([
+            str(ref.get("title", "")),
+            str(ref.get("filename", "")),
+            str(ref.get("content", "")),
+            " ".join(str(x) for x in ref.get("authors", []) if x),
+        ]).lower()
+
     def _apply_topic_boundary(self, references: List[Dict[str, Any]], original_query: str) -> List[Dict[str, Any]]:
-        query_lower = (original_query or "").lower()
-        if "藜麦" not in query_lower and "quinoa" not in query_lower:
+        """主题约束：优先保留主题命中的文献；若命中不足则回退到原结果，避免误清空。"""
+        if not references:
             return references
 
-        direct_refs = []
+        topic_tokens = self._extract_topic_tokens(original_query)
+        if not topic_tokens:
+            return references
+
+        matched_refs = []
+        unmatched_refs = []
         for ref in references:
-            ref_text = " ".join([
-                str(ref.get("title", "")),
-                str(ref.get("filename", "")),
-                str(ref.get("content", "")),
-            ]).lower()
-            if "藜麦" in ref_text or "quinoa" in ref_text:
-                direct_refs.append(ref)
-        for idx, ref in enumerate(direct_refs, 1):
+            ref_text = self._reference_text(ref)
+            if any(token in ref_text for token in topic_tokens):
+                matched_refs.append(ref)
+            else:
+                unmatched_refs.append(ref)
+
+        # 不再硬过滤为空：命中不足时保留原排序，防止“明明检索到了却无文献”。
+        min_keep = max(1, int(os.getenv("TOPIC_BOUNDARY_MIN_KEEP", "3")))
+        if len(matched_refs) >= min_keep:
+            merged = matched_refs + unmatched_refs
+        elif matched_refs:
+            merged = matched_refs + unmatched_refs
+        else:
+            merged = references
+
+        for idx, ref in enumerate(merged, 1):
             ref["ref_id"] = f"ref_{idx}"
-        return direct_refs
+        return merged
 
     def _build_retrieval_warning(self, references: List[Dict[str, Any]], original_query: str) -> Optional[str]:
         warnings = []
@@ -331,18 +372,13 @@ class ChatService:
         if len(references) < min_refs:
             warnings.append("相关文献较少，请尝试英文名/缩写或补充语料。")
 
-        query_lower = (original_query or "").lower()
-        if "藜麦" in query_lower or "quinoa" in query_lower:
-            ref_text = " ".join(
-                " ".join([
-                    str(ref.get("title", "")),
-                    str(ref.get("filename", "")),
-                    str(ref.get("content", "")),
-                ]).lower()
-                for ref in references
-            )
-            if "藜麦" not in ref_text and "quinoa" not in ref_text:
-                warnings.append("当前结果未发现明确的藜麦/quinoa文献命中，请确认语料是否已包含对应文献。")
+        topic_tokens = self._extract_topic_tokens(original_query)
+        if topic_tokens and references:
+            ref_text = " ".join(self._reference_text(ref) for ref in references)
+            missed_tokens = [token for token in topic_tokens if token not in ref_text]
+            if len(missed_tokens) == len(topic_tokens):
+                sample = ", ".join(missed_tokens[:3])
+                warnings.append(f"当前结果未发现与主题词直接匹配的文献（示例：{sample}），可尝试英文名/缩写或补充语料。")
 
         return " ".join(warnings) if warnings else None
 
@@ -545,14 +581,28 @@ class ChatService:
         answer, reasoning = self.llm_client.chat(messages, temperature=0.6, max_tokens=self.qa_max_tokens)
         
         valid_ref_ids = {ref['ref_id'] for ref in references}
-        
-        def remove_invalid_ref(match):
-            ref_num = match.group(1)
-            return match.group(0) if f'ref_{ref_num}' in valid_ref_ids else ''
 
-        answer = re.sub(r'\[ref_(\d+)\]', remove_invalid_ref, answer)
+        def clean_ref_brackets(text: str) -> str:
+            if not text:
+                return text
+            if not valid_ref_ids:
+                return re.sub(r'\[ref_\d+(?:\s*,\s*ref_\d+)*\]', '', text)
+
+            def _normalize(match):
+                content = match.group(1)
+                parts = [part.strip() for part in content.split(",")]
+                kept = [part for part in parts if part in valid_ref_ids]
+                if not kept:
+                    return ""
+                return "[" + ", ".join(kept) + "]"
+
+            text = re.sub(r'\[((?:ref_\d+\s*,\s*)*ref_\d+)\]', _normalize, text)
+            text = re.sub(r'\s{2,}', ' ', text)
+            return text
+
+        answer = clean_ref_brackets(answer)
         if reasoning:
-            reasoning = re.sub(r'\[ref_(\d+)\]', remove_invalid_ref, reasoning)
+            reasoning = clean_ref_brackets(reasoning)
 
         if self.show_reasoning and (not self.disable_reasoning_hard) and reasoning and len(reasoning.strip()) > 0:
             answer = f"<details><summary>思维链（点击展开）</summary>\n\n{reasoning}\n\n</details>\n\n---\n\n{answer}"
