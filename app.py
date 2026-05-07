@@ -142,7 +142,8 @@ system_ready = False
 dual_protein_system_ready = False
 dual_protein_initializing = False
 dual_protein_docs_count_cache = 0
-dual_protein_dim_fix_attempted = False
+dual_protein_dim_fix_lock = threading.Lock()
+dual_protein_last_dim_fix_ts = 0.0
 main_rag_initializing = False
 conversations = []
 
@@ -197,7 +198,11 @@ def initialize_dual_protein_rag():
     """初始化双蛋白RAG系统"""
     global dual_protein_system_ready, dual_protein_initializing, dual_protein_docs_count_cache
     if dual_protein_initializing:
-        return False
+        # 并发请求到达时，等待正在进行的初始化完成，避免直接返回失败。
+        wait_deadline = time.time() + 120
+        while dual_protein_initializing and time.time() < wait_deadline:
+            time.sleep(0.2)
+        return dual_protein_system_ready
     dual_protein_initializing = True
     try:
         success = dual_protein_rag.load_or_create_index()
@@ -206,35 +211,65 @@ def initialize_dual_protein_rag():
             stats = dual_protein_rag.get_stats()
             dual_protein_docs_count_cache = stats.get('total_documents', 0)
             print("[成功] 双蛋白系统初始化完成")
+        else:
+            dual_protein_system_ready = False
         return success
     except Exception as e:
         print(f"[失败] 双蛋白系统初始化失败: {str(e)}")
+        dual_protein_system_ready = False
         return False
     finally:
         dual_protein_initializing = False
 
 def _ensure_dual_protein_dim_consistent() -> bool:
-    """确保 dual-protein 索引与当前 embedding 维度一致；仅在必要时重建一次。"""
-    global dual_protein_dim_fix_attempted, dual_protein_system_ready
+    """确保 dual-protein 索引与当前 embedding 维度一致。"""
+    global dual_protein_system_ready, dual_protein_last_dim_fix_ts
+
+    def _is_mismatch() -> bool:
+        dims = dual_protein_rag._collect_index_embedding_dims() if hasattr(dual_protein_rag, "_collect_index_embedding_dims") else set()
+        model_dim = int(getattr(dual_protein_rag, "embedding_dim", 0) or 0)
+        return (len(dims) > 1) or (len(dims) == 1 and model_dim and next(iter(dims)) != model_dim)
+
     try:
         success = initialize_dual_protein_rag() if not dual_protein_system_ready else True
         if not success:
             return False
-        dims = dual_protein_rag._collect_index_embedding_dims() if hasattr(dual_protein_rag, "_collect_index_embedding_dims") else set()
-        model_dim = int(getattr(dual_protein_rag, "embedding_dim", 0) or 0)
-        # 维度集合为空时交给后续流程；混合维度或与模型维度不一致时触发一次重建
-        mismatch = (len(dims) > 1) or (len(dims) == 1 and model_dim and next(iter(dims)) != model_dim)
-        if mismatch:
-            if dual_protein_dim_fix_attempted:
-                app_logger.error(f"dual-protein 维度仍不一致（已尝试修复）: dims={sorted(dims)}, model_dim={model_dim}")
-                return False
-            dual_protein_dim_fix_attempted = True
-            app_logger.warning(f"检测到 dual-protein 维度不一致，执行一次自动重建: dims={sorted(dims)}, model_dim={model_dim}")
+
+        if not _is_mismatch():
+            return True
+
+        # 同一 worker 内串行执行维度修复；并发请求等待修复完成再复检。
+        if not dual_protein_dim_fix_lock.acquire(blocking=False):
+            wait_deadline = time.time() + 180
+            while time.time() < wait_deadline:
+                if initialize_dual_protein_rag() and not _is_mismatch():
+                    return True
+                time.sleep(1)
+            return False
+
+        try:
+            # 双重检查，避免重复重建。
+            if not _is_mismatch():
+                return True
+
+            now = time.time()
+            if now - dual_protein_last_dim_fix_ts < 30:
+                app_logger.warning("dual-protein 维度修复处于冷却窗口，等待初始化后重试")
+                return initialize_dual_protein_rag() and not _is_mismatch()
+
+            dual_protein_last_dim_fix_ts = now
+            dims = dual_protein_rag._collect_index_embedding_dims() if hasattr(dual_protein_rag, "_collect_index_embedding_dims") else set()
+            model_dim = int(getattr(dual_protein_rag, "embedding_dim", 0) or 0)
+            app_logger.warning(f"检测到 dual-protein 维度不一致，执行自动重建: dims={sorted(dims)}, model_dim={model_dim}")
             rebuilt = dual_protein_rag.rebuild_index()
             if not rebuilt:
+                app_logger.error("dual-protein 自动重建失败")
                 return False
             dual_protein_system_ready = False
-            return initialize_dual_protein_rag()
+            return initialize_dual_protein_rag() and not _is_mismatch()
+        finally:
+            dual_protein_dim_fix_lock.release()
+
         return True
     except Exception as e:
         app_logger.error(f"dual-protein 维度一致性检查失败: {e}")
