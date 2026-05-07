@@ -879,7 +879,8 @@ if __name__ != '__main__':
     threading.Thread(target=_background_init_main_rag, daemon=True).start()
 
 if __name__ == '__main__':
-    # 优先从环境变量读取端口，默认为 5001
+    # 固定默认端口 5001：与现有 gunicorn/nginx/部署脚本保持一致，降低本地与线上端口漂移风险。
+    # 允许通过 PORT 覆盖仅用于极少数临时调试场景；常规开发与部署保持 5001 不变。
     port = int(os.environ.get('PORT', config.PORT))
     
     print("SweetSeek 启动中...")

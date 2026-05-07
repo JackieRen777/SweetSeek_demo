@@ -309,7 +309,7 @@ MIT License
 
 5. **本地一键重启（推荐本机开发）**
    ```bash
-   ./scripts/maintenance/restart-local-5050.sh
+   ./scripts/maintenance/restart-local-5001.sh
    ```
 
 ### 可用脚本
@@ -317,7 +317,7 @@ MIT License
 - `scripts/maintenance/network/git_push.sh` - 智能推送（推荐）
 - `scripts/maintenance/deploy/deploy.sh` - 部署到服务器
 - `scripts/maintenance/restart-server.sh` - 快速重启
-- `scripts/maintenance/restart-local-5050.sh` - 本地一键重启（127.0.0.1:5050）
+- `scripts/maintenance/restart-local-5001.sh` - 本地一键重启（127.0.0.1:5001）
 
 ---
 

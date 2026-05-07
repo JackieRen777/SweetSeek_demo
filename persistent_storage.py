@@ -17,7 +17,7 @@ import shutil
 from pathlib import Path
 import re
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from metadata_storage import MetadataStorage
 
@@ -54,6 +54,7 @@ class PersistentRAGSystem:
         self.last_error: Optional[str] = None
         self.embedding_dim: int = 768
         self.embedding_mode: str = "unknown"
+        self.last_build_report: Dict[str, Any] = {}
 
     def _infer_embedding_dim(self) -> int:
         """从现有持久化索引中推断向量维度，避免维度不一致导致检索失败。"""
@@ -105,6 +106,43 @@ class PersistentRAGSystem:
                 if name.lower().endswith(supported):
                     files.append(os.path.abspath(os.path.join(root, name)))
         return sorted(files)
+
+    def _preflight_readable_files(self, files: List[str]) -> Tuple[List[str], List[Dict[str, str]]]:
+        """重建前预检：跳过损坏/不可读文件并记录原因。"""
+        usable: List[str] = []
+        skipped: List[Dict[str, str]] = []
+
+        pdf_reader = None
+        pdf_reader_err = None
+        try:
+            from pypdf import PdfReader as _PdfReader
+            pdf_reader = _PdfReader
+        except Exception as e:
+            pdf_reader_err = e
+
+        for file_path in files:
+            ext = os.path.splitext(file_path)[1].lower()
+            try:
+                if ext == ".pdf":
+                    if pdf_reader is None:
+                        # 无 pypdf 时仅检查文件可打开，避免直接阻断索引。
+                        with open(file_path, "rb") as fh:
+                            fh.read(1024)
+                    else:
+                        reader = pdf_reader(file_path)
+                        _ = len(reader.pages)
+                else:
+                    with open(file_path, "rb") as fh:
+                        fh.read(1024)
+                usable.append(file_path)
+            except Exception as e:
+                reason = f"{type(e).__name__}: {e}"
+                skipped.append({"file": file_path, "reason": reason})
+
+        if pdf_reader is None and pdf_reader_err is not None:
+            logging.warning(f"未启用 pypdf 预检，仅执行基础可读性检查: {pdf_reader_err}")
+
+        return usable, skipped
 
     def _build_basic_metadata(self, file_path: str) -> dict:
         """为未提取到结构化信息的文件生成基础元数据。"""
@@ -259,15 +297,34 @@ class PersistentRAGSystem:
         try:
             self._configure_models()
             files = self._iter_supported_files()
-            file_count = len(files)
-            self._ensure_metadata_for_files(files)
+            total_supported_files = len(files)
+            usable_files, skipped_files = self._preflight_readable_files(files)
+            file_count = len(usable_files)
+            self._ensure_metadata_for_files(usable_files)
 
-            logging.info(f"将从 {self.data_dir} 读取 {file_count} 个支持的文档进行索引构建")
+            self.last_build_report = {
+                "data_dir": os.path.abspath(self.data_dir),
+                "persist_dir": os.path.abspath(self.persist_dir),
+                "total_supported_files": total_supported_files,
+                "usable_files": file_count,
+                "skipped_files_count": len(skipped_files),
+                "skipped_files": skipped_files,
+                "indexed_documents": 0,
+                "status": "running",
+            }
+
+            logging.info(
+                f"将从 {self.data_dir} 构建索引：支持文件 {total_supported_files}，可用文件 {file_count}，跳过 {len(skipped_files)}"
+            )
+            if skipped_files:
+                sample = ", ".join(item["file"] for item in skipped_files[:5])
+                logging.warning(f"预检跳过 {len(skipped_files)} 个不可读文件，示例: {sample}")
 
             if file_count == 0:
                 msg = f"数据目录 {self.data_dir} 中未检测到支持的文档，无法构建索引。"
                 logging.error(msg)
                 self.last_error = msg
+                self.last_build_report["status"] = "failed"
                 return False
 
             # 配置安全的文本分割器（避免RecursionError）
@@ -298,7 +355,7 @@ class PersistentRAGSystem:
             self.index = None
             total_docs = 0
             for i in range(0, file_count, batch_size):
-                batch_files = files[i:i + batch_size]
+                batch_files = usable_files[i:i + batch_size]
                 logging.info(f"处理批次 {i // batch_size + 1}，文件数 {len(batch_files)}")
                 reader = SimpleDirectoryReader(input_files=batch_files)
                 documents = reader.load_data()
@@ -314,8 +371,11 @@ class PersistentRAGSystem:
                 msg = "文档读取完成但未生成有效索引"
                 logging.error(msg)
                 self.last_error = msg
+                self.last_build_report["status"] = "failed"
                 return False
             logging.info(f"索引构建成功，共文档块 {total_docs}")
+            self.last_build_report["indexed_documents"] = total_docs
+            self.last_build_report["status"] = "success"
 
             try:
                 self.index.storage_context.persist(persist_dir=self.persist_dir)
@@ -326,6 +386,25 @@ class PersistentRAGSystem:
             return True
         except Exception as e:
             logging.exception("构建索引失败：")
+            self.last_error = str(e)
+            if self.last_build_report:
+                self.last_build_report["status"] = "failed"
+            return False
+
+    def load_existing_index(self) -> bool:
+        """仅加载已有索引；不存在时返回 False。"""
+        self.last_error = None
+        if not os.path.exists(self.persist_dir):
+            self.last_error = f"索引目录不存在: {self.persist_dir}"
+            return False
+        try:
+            self._configure_models()
+            storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
+            self.index = load_index_from_storage(storage_context)
+            return True
+        except Exception as e:
+            self.last_error = f"加载已有索引失败: {e}"
+            logging.warning(self.last_error)
             return False
 
     def rebuild_index(self) -> bool:

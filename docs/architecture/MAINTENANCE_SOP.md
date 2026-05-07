@@ -23,9 +23,9 @@
 ./scripts/maintenance/restart-server.sh
 ```
 
-### 本地开发一键重启（127.0.0.1:5050）
+### 本地开发一键重启（127.0.0.1:5001）
 ```bash
-./scripts/maintenance/restart-local-5050.sh
+./scripts/maintenance/restart-local-5001.sh
 ```
 
 ### 推送并可选部署

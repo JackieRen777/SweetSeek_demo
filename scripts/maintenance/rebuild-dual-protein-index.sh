@@ -62,4 +62,4 @@ PY
 
 echo ""
 echo "✅ Dual-Protein 索引更新完成"
-echo "可访问: http://127.0.0.1:5050/dual-protein"
+echo "可访问: http://127.0.0.1:5001/dual-protein"

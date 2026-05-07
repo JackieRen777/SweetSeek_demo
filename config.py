@@ -25,6 +25,7 @@ class Config:
     
     # Server
     HOST = os.getenv('HOST', '0.0.0.0')
+    # 固定默认端口 5001：与 gunicorn/nginx/部署脚本一致，减少多环境端口分叉导致的代理与健康检查失败。
     PORT = int(os.getenv('PORT', 5001))
     DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
     
