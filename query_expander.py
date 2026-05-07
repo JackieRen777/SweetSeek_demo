@@ -142,6 +142,7 @@ class DualProteinQueryExpander:
             "乳清蛋白": ["whey protein", "beta-lactoglobulin", "β-lactoglobulin", "WPI"],
             "酪蛋白": ["casein", "sodium caseinate", "SC"],
             "大豆蛋白": ["soy protein", "soy protein isolate", "SPI"],
+            "藜麦蛋白": ["quinoa protein", "quinoa", "Chenopodium quinoa"],
             "玉米醇溶蛋白": ["zein", "corn protein"],
             "乳铁蛋白": ["lactoferrin", "LF"],
             "卵转铁蛋白": ["ovotransferrin", "OTF"],

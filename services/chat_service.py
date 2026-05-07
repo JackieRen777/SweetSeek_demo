@@ -27,6 +27,12 @@ class ChatService:
         self.qa_max_tokens = int(os.getenv("QA_MAX_TOKENS", "1200"))
         self.show_reasoning = os.getenv("QA_SHOW_REASONING", "false").lower() == "true"
         self.disable_reasoning_hard = os.getenv("QA_DISABLE_REASONING_HARD", "true").lower() == "true"
+        self.retrieval_target_min = int(os.getenv("RETRIEVAL_TARGET_MIN", "8"))
+        self.retrieval_target_max = int(os.getenv("RETRIEVAL_TARGET_MAX", "20"))
+        self.retrieval_min_threshold = float(os.getenv("RETRIEVAL_MIN_THRESHOLD", "0.12"))
+        self.retrieval_threshold_step = float(os.getenv("RETRIEVAL_THRESHOLD_STEP", "0.05"))
+        self.retrieval_max_top_k = int(os.getenv("RETRIEVAL_MAX_TOP_K", str(config.RAG_MAX_RESULTS)))
+        self.max_chunks_per_paper = int(os.getenv("RETRIEVAL_MAX_CHUNKS_PER_PAPER", "3"))
 
     def get_conversations(self) -> List[Dict[str, Any]]:
         return self.conversations
@@ -60,50 +66,14 @@ class ChatService:
         if query_expansion['matched_concepts']:
             print(f"[查询扩展] 匹配概念: {query_expansion['matched_concepts']}")
 
-        # 1. 检索文本块
-        retriever = self.rag_system.index.as_retriever(similarity_top_k=max_results)
-        retrieved_chunks = retriever.retrieve(expanded_query)
-        
-        if not retrieved_chunks:
+        retrieval = self._retrieve_references(expanded_query, similarity_threshold, max_results, question)
+
+        if not retrieval["retrieved_chunks"]:
             end_time = time.time()
             return self._create_empty_response(question, start_time, end_time)
 
-        # 2. 过滤
-        filtered_chunks = []
-        for chunk in retrieved_chunks:
-            if not getattr(chunk, 'text', None):
-                continue
-            chunk_score = float(chunk.score) if hasattr(chunk, 'score') else 0.0
-            if chunk_score >= similarity_threshold:
-                filtered_chunks.append(chunk)
-        
-        if len(filtered_chunks) == 0 and len(retrieved_chunks) > 0:
-            filtered_chunks = retrieved_chunks[:config.RAG_FORCE_MIN_DOCS]
-
-        # 4. 按文献去重
-        unique_papers_dict = self._deduplicate_chunks(filtered_chunks)
-        unique_papers_list = sorted(
-            unique_papers_dict.values(), 
-            key=lambda paper: paper['max_score'], 
-            reverse=True
-        )
-
-        # 5. 构建参考文献列表
-        references_raw = self._build_references_raw(unique_papers_list)
-
-        # 5.5 证据分级
-        references_ranked = self.evidence_ranker.rank_papers(references_raw)
-        
-        # 重新排序
-        for ref in references_ranked:
-            ref['final_score'] = ref['score'] * 0.6 + (ref['total_score'] / 5.0) * 0.4
-        
-        references_ranked.sort(key=lambda x: x['final_score'], reverse=True)
-        
-        references = []
-        for idx, ref in enumerate(references_ranked, 1):
-            ref['ref_id'] = f'ref_{idx}'
-            references.append(ref)
+        unique_papers_dict = retrieval["unique_papers_dict"]
+        references = retrieval["references"]
 
         # 6. 构建上下文和提示词
         context = self._build_context(references, unique_papers_dict, config.RAG_CONTEXT_WINDOW)
@@ -131,6 +101,8 @@ class ChatService:
             'answer': answer,
             'references': self._format_references_for_frontend(references),
             'references_raw': references,
+            'retrieval_stats': retrieval["stats"],
+            'retrieval_warning': retrieval["warning"],
             'timestamp': datetime.now().isoformat(),
             'response_time': round(end_time - start_time, 2)
         }
@@ -140,6 +112,8 @@ class ChatService:
             'success': True,
             'answer': answer,
             'references': self._format_references_for_frontend(references),
+            'retrieval_stats': retrieval["stats"],
+            'retrieval_warning': retrieval["warning"],
             'response_time': conversation['response_time']
         }
 
@@ -164,50 +138,25 @@ class ChatService:
             
             yield f"data: {json.dumps({'type': 'status', 'message': '正在检索相关文献...'}, ensure_ascii=False)}\n\n"
             
-            retriever = self.rag_system.index.as_retriever(similarity_top_k=max_results)
-            retrieved_chunks = retriever.retrieve(expanded_query)
+            retrieval = self._retrieve_references(expanded_query, similarity_threshold, max_results, question)
+            retrieved_chunks = retrieval["retrieved_chunks"]
             
             if not retrieved_chunks:
                 yield f"data: {json.dumps({'type': 'references', 'references': []}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'type': 'retrieval_stats', 'stats': self._empty_retrieval_stats(), 'warning': '未检索到相关文献'}, ensure_ascii=False)}\n\n"
                 yield f"data: {json.dumps({'type': 'answer_start'}, ensure_ascii=False)}\n\n"
                 yield f"data: {json.dumps({'type': 'answer', 'content': '未检索到相关文献，请尝试更具体的关键词或降低相似度阈值。'}, ensure_ascii=False)}\n\n"
                 yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
                 return
 
-            # 过滤
-            filtered_chunks = []
-            for chunk in retrieved_chunks:
-                if not getattr(chunk, 'text', None):
-                    continue
-                if float(chunk.score) >= similarity_threshold:
-                    filtered_chunks.append(chunk)
-            
-            if len(filtered_chunks) == 0 and len(retrieved_chunks) > 0:
-                valid_chunks = [c for c in retrieved_chunks if getattr(c, 'text', None)]
-                if valid_chunks:
-                    filtered_chunks = valid_chunks[:config.RAG_FORCE_MIN_DOCS]
-            
-            yield f"data: {json.dumps({'type': 'status', 'message': f'找到 {len(filtered_chunks)} 个相关文本块'}, ensure_ascii=False)}\n\n"
-            
-            # 去重
-            unique_papers_dict = self._deduplicate_chunks(filtered_chunks)
-            unique_papers_list = sorted(unique_papers_dict.values(), key=lambda paper: paper['max_score'], reverse=True)
-            
-            yield f"data: {json.dumps({'type': 'status', 'message': f'去重后找到 {len(unique_papers_list)} 篇唯一文献'}, ensure_ascii=False)}\n\n"
-            
-            # 构建参考文献
-            references_raw = self._build_references_raw(unique_papers_list)
-            
-            # 证据分级
-            references_ranked = self.evidence_ranker.rank_papers(references_raw)
-            for ref in references_ranked:
-                ref['final_score'] = ref['score'] * 0.6 + (ref['total_score'] / 5.0) * 0.4
-            references_ranked.sort(key=lambda x: x['final_score'], reverse=True)
-            
-            references = []
-            for idx, ref in enumerate(references_ranked, 1):
-                ref['ref_id'] = f'ref_{idx}'
-                references.append(ref)
+            unique_papers_dict = retrieval["unique_papers_dict"]
+            references = retrieval["references"]
+            stats = retrieval["stats"]
+            filtered_count = stats["after_threshold"]
+            unique_count = stats["unique_papers"]
+
+            yield f"data: {json.dumps({'type': 'status', 'message': f'找到 {filtered_count} 个相关文本块'}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'status', 'message': f'去重后找到 {unique_count} 篇唯一文献'}, ensure_ascii=False)}\n\n"
             
             # 发送参考文献
             references_for_frontend = []
@@ -233,6 +182,7 @@ class ChatService:
                 references_for_frontend.append(item)
 
             yield f"data: {json.dumps({'type': 'references', 'references': references_for_frontend}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'retrieval_stats', 'stats': retrieval['stats'], 'warning': retrieval['warning']}, ensure_ascii=False)}\n\n"
             
             yield f"data: {json.dumps({'type': 'status', 'message': '正在生成答案...'}, ensure_ascii=False)}\n\n"
             
@@ -296,7 +246,155 @@ class ChatService:
             'success': True,
             'answer': conversation['answer'],
             'references': [],
+            'retrieval_stats': self._empty_retrieval_stats(),
+            'retrieval_warning': '未检索到相关文献',
             'response_time': conversation['response_time']
+        }
+
+    def _retrieve_references(self, query: str, similarity_threshold: float, max_results: int, original_query: str = "") -> Dict[str, Any]:
+        top_k = min(max(1, int(max_results), self.retrieval_max_top_k), 200)
+        retriever = self.rag_system.index.as_retriever(similarity_top_k=top_k)
+        retrieved_chunks = retriever.retrieve(query)
+        valid_chunks = [chunk for chunk in retrieved_chunks if getattr(chunk, 'text', None)]
+
+        threshold = float(similarity_threshold)
+        filtered_chunks = self._filter_chunks(valid_chunks, threshold)
+        selected_chunks = self._diversify_chunks(filtered_chunks)
+        unique_papers_dict = self._deduplicate_chunks(selected_chunks)
+
+        while len(unique_papers_dict) < self.retrieval_target_min and threshold > self.retrieval_min_threshold:
+            threshold = max(self.retrieval_min_threshold, threshold - self.retrieval_threshold_step)
+            filtered_chunks = self._filter_chunks(valid_chunks, threshold)
+            selected_chunks = self._diversify_chunks(filtered_chunks)
+            unique_papers_dict = self._deduplicate_chunks(selected_chunks)
+
+        if len(unique_papers_dict) < self.retrieval_target_min and valid_chunks:
+            selected_chunks = self._diversify_chunks(valid_chunks)
+            unique_papers_dict = self._deduplicate_chunks(selected_chunks)
+
+        if not selected_chunks and valid_chunks:
+            selected_chunks = self._diversify_chunks(valid_chunks[:config.RAG_FORCE_MIN_DOCS])
+            unique_papers_dict = self._deduplicate_chunks(selected_chunks)
+
+        unique_papers_list = sorted(unique_papers_dict.values(), key=lambda paper: paper['max_score'], reverse=True)
+        references = self._rank_references(unique_papers_list)
+        references = self._apply_topic_boundary(references, original_query)
+        if len(references) > self.retrieval_target_max:
+            references = references[:self.retrieval_target_max]
+            keep_paths = {ref['file_path'] for ref in references}
+            unique_papers_dict = {path: info for path, info in unique_papers_dict.items() if path in keep_paths}
+
+        stats = {
+            'raw_chunks': len(retrieved_chunks),
+            'valid_chunks': len(valid_chunks),
+            'after_threshold': len(filtered_chunks),
+            'selected_chunks': len(selected_chunks),
+            'unique_papers': len(unique_papers_list),
+            'final_references': len(references),
+            'requested_threshold': float(similarity_threshold),
+            'effective_threshold': threshold,
+            'top_k': top_k,
+            'max_chunks_per_paper': self.max_chunks_per_paper,
+        }
+        warning = self._build_retrieval_warning(references, original_query)
+
+        return {
+            'retrieved_chunks': retrieved_chunks,
+            'selected_chunks': selected_chunks,
+            'unique_papers_dict': unique_papers_dict,
+            'references': references,
+            'stats': stats,
+            'warning': warning,
+        }
+
+    def _apply_topic_boundary(self, references: List[Dict[str, Any]], original_query: str) -> List[Dict[str, Any]]:
+        query_lower = (original_query or "").lower()
+        if "藜麦" not in query_lower and "quinoa" not in query_lower:
+            return references
+
+        direct_refs = []
+        for ref in references:
+            ref_text = " ".join([
+                str(ref.get("title", "")),
+                str(ref.get("filename", "")),
+                str(ref.get("content", "")),
+            ]).lower()
+            if "藜麦" in ref_text or "quinoa" in ref_text:
+                direct_refs.append(ref)
+        for idx, ref in enumerate(direct_refs, 1):
+            ref["ref_id"] = f"ref_{idx}"
+        return direct_refs
+
+    def _build_retrieval_warning(self, references: List[Dict[str, Any]], original_query: str) -> Optional[str]:
+        warnings = []
+        min_refs = max(1, int(os.getenv("RETRIEVAL_WARNING_MIN_REFS", "6")))
+        if len(references) < min_refs:
+            warnings.append("相关文献较少，请尝试英文名/缩写或补充语料。")
+
+        query_lower = (original_query or "").lower()
+        if "藜麦" in query_lower or "quinoa" in query_lower:
+            ref_text = " ".join(
+                " ".join([
+                    str(ref.get("title", "")),
+                    str(ref.get("filename", "")),
+                    str(ref.get("content", "")),
+                ]).lower()
+                for ref in references
+            )
+            if "藜麦" not in ref_text and "quinoa" not in ref_text:
+                warnings.append("当前结果未发现明确的藜麦/quinoa文献命中，请确认语料是否已包含对应文献。")
+
+        return " ".join(warnings) if warnings else None
+
+    def _filter_chunks(self, chunks, threshold: float) -> List[Any]:
+        filtered = []
+        for chunk in chunks:
+            try:
+                score = float(chunk.score) if hasattr(chunk, 'score') else 0.0
+            except (TypeError, ValueError):
+                score = 0.0
+            if score >= threshold:
+                filtered.append(chunk)
+        return filtered
+
+    def _diversify_chunks(self, chunks) -> List[Any]:
+        selected = []
+        per_paper: Dict[str, int] = {}
+        for chunk in chunks:
+            metadata = getattr(chunk, 'metadata', {}) or {}
+            paper_file_path = metadata.get('file_path') or metadata.get('file_name') or 'unknown'
+            if per_paper.get(paper_file_path, 0) >= self.max_chunks_per_paper:
+                continue
+            selected.append(chunk)
+            per_paper[paper_file_path] = per_paper.get(paper_file_path, 0) + 1
+            if len(per_paper) >= self.retrieval_target_max and len(selected) >= self.retrieval_target_max:
+                break
+        return selected
+
+    def _rank_references(self, unique_papers_list) -> List[Dict[str, Any]]:
+        references_raw = self._build_references_raw(unique_papers_list)
+        references_ranked = self.evidence_ranker.rank_papers(references_raw)
+        for ref in references_ranked:
+            ref['final_score'] = ref['score'] * 0.6 + (ref['total_score'] / 5.0) * 0.4
+        references_ranked.sort(key=lambda x: x['final_score'], reverse=True)
+        references = []
+        for idx, ref in enumerate(references_ranked, 1):
+            ref['ref_id'] = f'ref_{idx}'
+            references.append(ref)
+        return references
+
+    def _empty_retrieval_stats(self) -> Dict[str, Any]:
+        return {
+            'raw_chunks': 0,
+            'valid_chunks': 0,
+            'after_threshold': 0,
+            'selected_chunks': 0,
+            'unique_papers': 0,
+            'final_references': 0,
+            'requested_threshold': None,
+            'effective_threshold': None,
+            'top_k': 0,
+            'max_chunks_per_paper': self.max_chunks_per_paper,
         }
 
     def _deduplicate_chunks(self, chunks) -> Dict[str, Any]:

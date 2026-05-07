@@ -32,6 +32,7 @@ const ChatInterface: React.FC = () => {
     const [activeReferences, setActiveReferences] = useState<Reference[]>([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false); // For mobile drawer
     const [error, setError] = useState<string | null>(null);
+    const [retrievalWarning, setRetrievalWarning] = useState<string | null>(null);
     const [systemReady, setSystemReady] = useState(false);
     const [initializing, setInitializing] = useState(true);
 
@@ -100,6 +101,7 @@ const ChatInterface: React.FC = () => {
         setInput('');
         setIsTyping(true);
         setError(null);
+        setRetrievalWarning(null);
         scrollToBottom(); // Force scroll on send
 
         // Add empty assistant message to start streaming into
@@ -118,7 +120,11 @@ const ChatInterface: React.FC = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ question: input }),
+                body: JSON.stringify({
+                    question: input,
+                    similarity_threshold: 0.3,
+                    max_results: 200,
+                }),
                 signal: abortControllerRef.current.signal,
             });
 
@@ -233,6 +239,9 @@ const ChatInterface: React.FC = () => {
                   break;
               case 'references':
                   setActiveReferences(data.references);
+                  break;
+              case 'retrieval_stats':
+                  setRetrievalWarning(data.warning || null);
                   break;
               case 'answer_start':
                   lastMsg.isThinking = false; // Ensure thinking stops
@@ -363,6 +372,12 @@ const ChatInterface: React.FC = () => {
           </div>
           <div className="text-center mt-2 flex justify-center items-center gap-2">
             <span className="text-[10px] text-slate-400">Powered by DeepSeek-R1, Designed by FCN lab</span>
+            {retrievalWarning && (
+                <span className="text-[10px] text-amber-600 flex items-center gap-1">
+                    <AlertCircle size={10} />
+                    {retrievalWarning}
+                </span>
+            )}
             {error && (
               <span className="text-[10px] text-red-500 flex items-center gap-1">
                 <AlertCircle size={10} />

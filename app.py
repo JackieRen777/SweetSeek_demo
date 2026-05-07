@@ -116,6 +116,27 @@ def _get_json_dict() -> dict:
     data = request.get_json(silent=True)
     return data if isinstance(data, dict) else {}
 
+def _parse_retrieval_params(data: dict, default_threshold: float, default_max_results: int) -> tuple[float, int]:
+    similarity_threshold = data.get('similarity_threshold', default_threshold)
+    try:
+        similarity_threshold = float(similarity_threshold)
+        if not (0 <= similarity_threshold <= 1):
+            raise ValueError
+    except (ValueError, TypeError):
+        similarity_threshold = default_threshold
+
+    max_results = data.get('max_results', default_max_results)
+    try:
+        max_results = int(max_results)
+        if max_results < 1:
+            raise ValueError
+        if max_results > 200:
+            max_results = 200
+    except (ValueError, TypeError):
+        max_results = default_max_results
+
+    return similarity_threshold, max_results
+
 # 全局变量
 system_ready = False
 dual_protein_system_ready = False
@@ -414,24 +435,11 @@ def api_ask():
     
     data = _get_json_dict()
     question = data.get('question', '').strip()
-    similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
-    
-    try:
-        similarity_threshold = float(similarity_threshold)
-        if not (0 <= similarity_threshold <= 1):
-            raise ValueError
-    except (ValueError, TypeError):
-        similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
-        
-    max_results = data.get('max_results', config.RAG_MAX_RESULTS)
-    try:
-        max_results = int(max_results)
-        if max_results < 1:
-            raise ValueError
-        if max_results > 200:
-            max_results = 200
-    except (ValueError, TypeError):
-        max_results = config.RAG_MAX_RESULTS
+    similarity_threshold, max_results = _parse_retrieval_params(
+        data,
+        config.RAG_SIMILARITY_THRESHOLD,
+        config.RAG_MAX_RESULTS,
+    )
     
     if not question:
         return jsonify({
@@ -494,24 +502,12 @@ def api_dual_protein_ask():
         return jsonify({'success': False, 'error': '问题不能为空'}), 400
 
     dual_default_threshold = float(os.getenv("DUAL_RAG_SIMILARITY_THRESHOLD", "0.18"))
-    similarity_threshold = data.get('similarity_threshold', dual_default_threshold)
-    try:
-        similarity_threshold = float(similarity_threshold)
-        if not (0 <= similarity_threshold <= 1):
-            raise ValueError
-    except (ValueError, TypeError):
-        similarity_threshold = dual_default_threshold
-
     dual_default_max_results = int(os.getenv("DUAL_RAG_MAX_RESULTS", "120"))
-    max_results = data.get('max_results', dual_default_max_results)
-    try:
-        max_results = int(max_results)
-        if max_results < 1:
-            raise ValueError
-        if max_results > 200:
-            max_results = 200
-    except (ValueError, TypeError):
-        max_results = dual_default_max_results
+    similarity_threshold, max_results = _parse_retrieval_params(
+        data,
+        dual_default_threshold,
+        dual_default_max_results,
+    )
 
     try:
         result = dual_protein_chat_service.ask(question, similarity_threshold, max_results)
@@ -798,23 +794,11 @@ def api_ask_stream():
     
     data = _get_json_dict()
     question = data.get('question', '').strip()
-    similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
-    try:
-        similarity_threshold = float(similarity_threshold)
-        if not (0 <= similarity_threshold <= 1):
-            raise ValueError
-    except (ValueError, TypeError):
-        similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
-
-    max_results = data.get('max_results', config.RAG_MAX_RESULTS)
-    try:
-        max_results = int(max_results)
-        if max_results < 1:
-            raise ValueError
-        if max_results > 200:
-            max_results = 200
-    except (ValueError, TypeError):
-        max_results = config.RAG_MAX_RESULTS
+    similarity_threshold, max_results = _parse_retrieval_params(
+        data,
+        config.RAG_SIMILARITY_THRESHOLD,
+        config.RAG_MAX_RESULTS,
+    )
     
     if not question:
         return jsonify({
@@ -849,24 +833,12 @@ def api_dual_protein_ask_stream():
         return jsonify({'success': False, 'error': '问题不能为空'}), 400
 
     dual_default_threshold = float(os.getenv("DUAL_RAG_SIMILARITY_THRESHOLD", "0.18"))
-    similarity_threshold = data.get('similarity_threshold', dual_default_threshold)
-    try:
-        similarity_threshold = float(similarity_threshold)
-        if not (0 <= similarity_threshold <= 1):
-            raise ValueError
-    except (ValueError, TypeError):
-        similarity_threshold = dual_default_threshold
-
     dual_default_max_results = int(os.getenv("DUAL_RAG_MAX_RESULTS", "120"))
-    max_results = data.get('max_results', dual_default_max_results)
-    try:
-        max_results = int(max_results)
-        if max_results < 1:
-            raise ValueError
-        if max_results > 200:
-            max_results = 200
-    except (ValueError, TypeError):
-        max_results = dual_default_max_results
+    similarity_threshold, max_results = _parse_retrieval_params(
+        data,
+        dual_default_threshold,
+        dual_default_max_results,
+    )
 
     def _safe_stream():
         try:
