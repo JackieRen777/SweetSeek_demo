@@ -910,8 +910,16 @@ if __name__ != '__main__':
         except Exception as e:
             app_logger.error(f"自动初始化失败: {e}")
 
+    def _background_init_dual_protein_rag():
+        try:
+            app_logger.info("检测到非主程序运行模式，后台初始化双蛋白 RAG 系统...")
+            initialize_dual_protein_rag()
+        except Exception as e:
+            app_logger.error(f"双蛋白自动初始化失败: {e}")
+
     # 避免阻塞 gunicorn worker 启动，初始化放到后台线程执行
     threading.Thread(target=_background_init_main_rag, daemon=True).start()
+    threading.Thread(target=_background_init_dual_protein_rag, daemon=True).start()
 
 if __name__ == '__main__':
     # 固定默认端口 5001：与现有 gunicorn/nginx/部署脚本保持一致，降低本地与线上端口漂移风险。
