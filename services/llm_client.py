@@ -32,6 +32,8 @@ class DeepSeekLLMClient:
             raise LLMClientError(str(e)) from e
 
         for chunk in stream:
+            if not chunk.choices:
+                continue
             delta = chunk.choices[0].delta
             content = getattr(delta, "content", None) or ""
             reasoning = getattr(delta, "reasoning_content", None) or ""

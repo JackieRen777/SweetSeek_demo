@@ -33,7 +33,7 @@ const DualProteinChatInterface: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [retrievalWarning, setRetrievalWarning] = useState<string | null>(null);
   const [systemReady, setSystemReady] = useState(false);
-  const [initializing, setInitializing] = useState(true);
+  const [warmupHint, setWarmupHint] = useState<string | null>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -41,23 +41,36 @@ const DualProteinChatInterface: React.FC = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const isAtBottomRef = useRef(true);
 
-  // Initialize dual protein system on mount, retry until ready
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  // Background prewarm + readiness polling (non-blocking UX)
   useEffect(() => {
     let cancelled = false;
-    const tryInit = async () => {
+    const bootstrap = async () => {
+      try {
+        await fetch('/api/dual-protein/prewarm', { method: 'POST' });
+      } catch { /* ignore network error */ }
+
       while (!cancelled) {
         try {
-          const res = await fetch('/api/dual-protein/init', { method: 'POST' });
+          const res = await fetch('/api/dual-protein/health');
           const data = await res.json();
-          if (data.success) {
-            if (!cancelled) { setSystemReady(true); setInitializing(false); }
+          if (data?.system_ready) {
+            if (!cancelled) {
+              setSystemReady(true);
+              setWarmupHint(null);
+            }
             return;
           }
+          if (!cancelled) {
+            setWarmupHint(null);
+          }
         } catch { /* network error, retry */ }
-        if (!cancelled) await new Promise(r => setTimeout(r, 3000));
+        if (!cancelled) await sleep(2000);
       }
     };
-    tryInit();
+
+    bootstrap();
     return () => { cancelled = true; };
   }, []);
 
@@ -88,6 +101,58 @@ const DualProteinChatInterface: React.FC = () => {
     }
   };
 
+  const isInitRelatedError = (message: string) => {
+    const text = (message || '').toLowerCase();
+    return (
+      text.includes('未初始化') ||
+      text.includes('initializing') ||
+      text.includes('not initialized') ||
+      text.includes('dimguardfailed')
+    );
+  };
+
+  const fetchStreamWithRetry = async (question: string) => {
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      const response = await fetch('/api/dual-protein/ask_stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          similarity_threshold: 0.18,
+          max_results: 200,
+        }),
+        signal: abortControllerRef.current?.signal,
+      });
+
+      if (response.ok) {
+        setSystemReady(true);
+        setWarmupHint(null);
+        return response;
+      }
+
+      let errorMessage = response.statusText;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) errorMessage = errorData.error;
+      } catch { /* ignore */ }
+
+      if (isInitRelatedError(errorMessage) && attempt < maxAttempts) {
+        setSystemReady(false);
+        setWarmupHint('System is warming up in the background. Retrying automatically...');
+        try {
+          await fetch('/api/dual-protein/prewarm', { method: 'POST' });
+        } catch { /* ignore */ }
+        await sleep(1200 * attempt);
+        continue;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    throw new Error('System is still initializing, please retry in a few seconds.');
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -109,28 +174,7 @@ const DualProteinChatInterface: React.FC = () => {
     abortControllerRef.current = new AbortController();
 
     try {
-      const response = await fetch('/api/dual-protein/ask_stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: input,
-          similarity_threshold: 0.18,
-          max_results: 200,
-        }),
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!response.ok) {
-        let errorMessage = response.statusText;
-        try {
-          const errorData = await response.json();
-          if (errorData.error) errorMessage = errorData.error;
-        } catch { /* ignore */ }
-        if (errorMessage.includes('未初始化') || errorMessage.includes('not initialized')) {
-          throw new Error('System is initializing, please try again in a moment...');
-        }
-        throw new Error(errorMessage);
-      }
+      const response = await fetchStreamWithRetry(input);
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No response body');
@@ -246,14 +290,6 @@ const DualProteinChatInterface: React.FC = () => {
     });
   };
 
-  if (initializing) {
-    return (
-      <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
-        Initializing Dual-Protein system...
-      </div>
-    );
-  }
-
   return (
     <div className="w-full h-full flex flex-col bg-slate-50 overflow-hidden relative">
       <div className="flex-1 flex w-full h-full gap-6 relative overflow-hidden p-4 md:p-6">
@@ -316,18 +352,16 @@ const DualProteinChatInterface: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSend()}
                 placeholder={
-                  !systemReady
-                    ? 'System not ready...'
-                    : isTyping
+                  isTyping
                     ? 'DeepSeek is thinking...'
                     : 'Ask a question about dual-protein interactions...'
                 }
-                disabled={isTyping || !systemReady}
+                disabled={isTyping}
                 className="w-full pl-6 pr-28 py-4 rounded-xl bg-white/80 border border-slate-200/60 focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 focus:outline-none transition-all text-slate-700 placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 onClick={isTyping ? handleStop : handleSend}
-                disabled={(!isTyping && !input.trim()) || !systemReady}
+                disabled={!isTyping && !input.trim()}
                 className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-medium shadow-md hover:shadow-lg transition-all active:scale-95 ${
                   isTyping
                     ? 'bg-[var(--color-primary)] hover:bg-blue-600 opacity-90'
@@ -344,6 +378,12 @@ const DualProteinChatInterface: React.FC = () => {
                 <span className="text-[10px] text-amber-600 flex items-center gap-1">
                   <AlertCircle size={10} />
                   {retrievalWarning}
+                </span>
+              )}
+              {warmupHint && false && (
+                <span className="text-[10px] text-sky-600 flex items-center gap-1">
+                  <AlertCircle size={10} />
+                  {warmupHint}
                 </span>
               )}
               {error && (

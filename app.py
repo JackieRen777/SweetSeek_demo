@@ -166,19 +166,26 @@ dual_protein_chat_service = ChatService(
     query_expander=DualProteinQueryExpander(),
     evidence_ranker=evidence_ranker,
     llm_client=llm_client,
+    mode="dual",
 )
 
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
     global system_ready, main_rag_initializing
-    
+
     try:
         main_rag_initializing = True
         print("[系统] 初始化RAG系统...")
-        
+
+        # 启动时自动迁移元数据路径（绝对→相对）
+        try:
+            rag_system.metadata_storage.migrate_to_relative_paths()
+        except Exception as e:
+            app_logger.warning(f"元数据路径迁移跳过: {e}")
+
         # 加载或创建索引（自动使用持久化）
         success = rag_system.load_or_create_index()
-        
+
         if success:
             system_ready = True
             stats = rag_system.get_stats()
@@ -187,7 +194,7 @@ def initialize_rag_system():
             return True
         else:
             return False
-        
+
     except Exception as e:
         print(f"[失败] 系统初始化失败: {str(e)}")
         return False
@@ -205,6 +212,12 @@ def initialize_dual_protein_rag():
         return dual_protein_system_ready
     dual_protein_initializing = True
     try:
+        # 启动时自动迁移元数据路径（绝对→相对）
+        try:
+            dual_protein_rag.metadata_storage.migrate_to_relative_paths()
+        except Exception as e:
+            app_logger.warning(f"双蛋白元数据路径迁移跳过: {e}")
+
         success = dual_protein_rag.load_or_create_index()
         if success:
             dual_protein_system_ready = True
@@ -513,6 +526,25 @@ def api_dual_protein_init():
         'documents_count': dual_protein_docs_count_cache if success else 0
     })
 
+@app.route('/api/dual-protein/prewarm', methods=['POST'])
+@handle_api_errors
+def api_dual_protein_prewarm():
+    """触发双蛋白系统后台预热（非阻塞）。"""
+    global dual_protein_system_ready, dual_protein_initializing
+    if dual_protein_system_ready:
+        return jsonify({'success': True, 'status': 'ready'})
+    if dual_protein_initializing:
+        return jsonify({'success': True, 'status': 'initializing'})
+
+    def _warm():
+        try:
+            _ensure_dual_protein_dim_consistent()
+        except Exception as e:
+            app_logger.warning(f"dual-protein 后台预热失败: {e}")
+
+    threading.Thread(target=_warm, daemon=True).start()
+    return jsonify({'success': True, 'status': 'warming'})
+
 @app.route('/api/dual-protein/ask', methods=['POST'])
 @handle_api_errors
 @monitor_performance
@@ -578,6 +610,7 @@ def api_dual_protein_health():
     return jsonify({
         'success': True,
         'system_ready': dual_protein_system_ready,
+        'initializing': dual_protein_initializing,
         'dual_protein_docs_count': dual_protein_docs_count_cache if dual_protein_system_ready else 0,
         'dual_protein_metadata_count': dual_metadata_count,
         'index_exists': stats.get('index_exists', False),

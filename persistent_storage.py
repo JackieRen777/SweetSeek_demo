@@ -209,7 +209,7 @@ class PersistentRAGSystem:
             if embed_source == "modelscope" and not os.path.isdir(model_path):
                 try:
                     from modelscope import snapshot_download
-                    cache_root = os.path.abspath("models/modelscope_cache")
+                    cache_root = str(Path(__file__).resolve().parent / "models" / "modelscope_cache")
                     os.makedirs(cache_root, exist_ok=True)
                     model_path = snapshot_download(model_path, cache_dir=cache_root)
                     logging.info(f"通过 ModelScope 下载并使用模型目录: {model_path}")

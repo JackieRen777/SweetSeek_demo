@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sweet_001",
+    "question": "阿斯巴甜的甜度是蔗糖的多少倍？",
+    "difficulty": "easy",
+    "expected_keywords": ["200", "倍", "甜度"],
+    "expected_references_min": 3,
+    "category": "基础知识"
+  },
+  {
+    "id": "sweet_002",
+    "question": "三氯蔗糖的热稳定性如何？",
+    "difficulty": "easy",
+    "expected_keywords": ["热稳定", "sucralose", "加热"],
+    "expected_references_min": 3,
+    "category": "基础知识"
+  },
+  {
+    "id": "sweet_003",
+    "question": "甜菊糖苷的提取方法有哪些？",
+    "difficulty": "medium",
+    "expected_keywords": ["提取", "stevia", "纯化"],
+    "expected_references_min": 5,
+    "category": "工艺方法"
+  },
+  {
+    "id": "sweet_004",
+    "question": "人工甜味剂对肠道菌群有什么影响？",
+    "difficulty": "medium",
+    "expected_keywords": ["肠道", "菌群", "microbiota"],
+    "expected_references_min": 5,
+    "category": "健康影响"
+  },
+  {
+    "id": "sweet_005",
+    "question": "甜味感知的分子机制是什么？",
+    "difficulty": "hard",
+    "expected_keywords": ["T1R2", "T1R3", "受体", "receptor"],
+    "expected_references_min": 5,
+    "category": "机制研究"
+  },
+  {
+    "id": "sweet_006",
+    "question": "天然甜味剂和人工甜味剂在食品加工中的应用差异？",
+    "difficulty": "medium",
+    "expected_keywords": ["天然", "人工", "加工", "应用"],
+    "expected_references_min": 5,
+    "category": "应用比较"
+  },
+  {
+    "id": "sweet_007",
+    "question": "甜味剂的协同增效作用是什么？",
+    "difficulty": "medium",
+    "expected_keywords": ["协同", "synergy", "复配"],
+    "expected_references_min": 4,
+    "category": "配方设计"
+  },
+  {
+    "id": "sweet_008",
+    "question": "赤藓糖醇的代谢途径和安全性如何？",
+    "difficulty": "medium",
+    "expected_keywords": ["erythritol", "代谢", "安全"],
+    "expected_references_min": 4,
+    "category": "健康影响"
+  },
+  {
+    "id": "sweet_009",
+    "question": "甜味与其他味觉之间的交互作用机制？",
+    "difficulty": "hard",
+    "expected_keywords": ["交互", "interaction", "味觉", "抑制"],
+    "expected_references_min": 5,
+    "category": "机制研究"
+  },
+  {
+    "id": "sweet_010",
+    "question": "罗汉果甜苷的结构与甜味强度的关系？",
+    "difficulty": "hard",
+    "expected_keywords": ["罗汉果", "mogroside", "结构"],
+    "expected_references_min": 3,
+    "category": "构效关系"
+  }
+]

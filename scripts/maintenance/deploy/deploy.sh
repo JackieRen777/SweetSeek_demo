@@ -2,7 +2,7 @@
 
 # SweetSeek 自动部署脚本 v3.0 (React + Flask + Nginx)
 # 服务器配置
-SERVER_IP="8.137.32.247"
+SERVER_IP="8.136.8.223"
 SERVER_USER="root"
 SERVER_PATH="/www/wwwroot/FCN_SweetSeek"
 
@@ -101,6 +101,15 @@ REMOTE_CMDS="
     # 使用阿里云镜像源加速，如果失败则回退到官方源
     pip install -r requirements.txt --quiet -i https://mirrors.aliyun.com/pypi/simple/ || pip install -r requirements.txt --quiet
     pip install gunicorn gevent --quiet -i https://mirrors.aliyun.com/pypi/simple/
+
+    echo '   迁移元数据路径（绝对→相对）...'
+    python3 -c \"
+from metadata_storage import MetadataStorage
+from config import config
+ms = MetadataStorage(storage_path=str(config.CHROMA_DB_DIR / 'metadata.json'))
+count = ms.migrate_to_relative_paths()
+print(f'  迁移完成: {count} 条记录')
+\" || echo '   (迁移跳过或无需迁移)'
 
     echo '   重启 Gunicorn 服务...'
     # 查找并杀掉旧进程

@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -12,6 +13,91 @@ def _normalize_openai_base_url(url: str) -> str:
     if not cleaned:
         return "https://api.deepseek.com/v1"
     return cleaned if cleaned.endswith("/v1") else f"{cleaned}/v1"
+
+
+@dataclass
+class RAGConfig:
+    """甜味模式 RAG 参数（默认值偏快、偏精）"""
+    target_min: int = 15
+    target_max: int = 30
+    similarity_threshold: float = 0.3
+    min_threshold: float = 0.10
+    threshold_step: float = 0.03
+    max_top_k: int = 120
+    hard_top_k: int = 200
+    max_chunks_per_paper: int = 2
+    context_window: int = 9000
+    qa_max_tokens: int = 900
+    show_reasoning: bool = False
+    disable_reasoning_hard: bool = True
+    allow_weak_supplement: bool = True
+
+    @classmethod
+    def from_env(cls, prefix: str = "SWEET") -> "RAGConfig":
+        """从环境变量加载，prefix 为 SWEET 或空"""
+        def _int(key: str, default: int) -> int:
+            return int(os.getenv(f"{prefix}_{key}", os.getenv(key, str(default))))
+        def _float(key: str, default: float) -> float:
+            return float(os.getenv(f"{prefix}_{key}", os.getenv(key, str(default))))
+        def _bool(key: str, default: bool) -> bool:
+            return os.getenv(key, str(default).lower()).lower() in ("true", "1", "yes")
+
+        return cls(
+            target_min=_int("RETRIEVAL_TARGET_MIN", cls.target_min),
+            target_max=_int("RETRIEVAL_TARGET_MAX", cls.target_max),
+            similarity_threshold=_float("RAG_SIMILARITY_THRESHOLD", cls.similarity_threshold),
+            min_threshold=_float("RETRIEVAL_MIN_THRESHOLD", cls.min_threshold),
+            threshold_step=_float("RETRIEVAL_THRESHOLD_STEP", cls.threshold_step),
+            max_top_k=_int("RETRIEVAL_TOPK_CAP", cls.max_top_k),
+            hard_top_k=_int("RETRIEVAL_HARD_TOPK", cls.hard_top_k),
+            max_chunks_per_paper=_int("RETRIEVAL_MAX_CHUNKS_PER_PAPER", cls.max_chunks_per_paper),
+            context_window=_int("RAG_CONTEXT_WINDOW", cls.context_window),
+            qa_max_tokens=_int("QA_MAX_TOKENS", cls.qa_max_tokens),
+            show_reasoning=_bool("QA_SHOW_REASONING", cls.show_reasoning),
+            disable_reasoning_hard=_bool("QA_DISABLE_REASONING_HARD", cls.disable_reasoning_hard),
+            allow_weak_supplement=_bool("RETRIEVAL_ALLOW_WEAK_SUPPLEMENT", cls.allow_weak_supplement),
+        )
+
+
+@dataclass
+class DualRAGConfig(RAGConfig):
+    """双蛋白模式 RAG 参数（默认值偏深、偏广）"""
+    target_min: int = 25
+    target_max: int = 60
+    similarity_threshold: float = 0.15
+    min_threshold: float = 0.08
+    threshold_step: float = 0.02
+    max_top_k: int = 260
+    hard_top_k: int = 400
+    context_window: int = 18000
+    qa_max_tokens: int = 1800
+    allow_weak_supplement: bool = False
+
+    @classmethod
+    def from_env(cls) -> "DualRAGConfig":
+        def _int(key: str, default: int) -> int:
+            return int(os.getenv(f"DUAL_{key}", os.getenv(key, str(default))))
+        def _float(key: str, default: float) -> float:
+            return float(os.getenv(f"DUAL_{key}", os.getenv(key, str(default))))
+        def _bool(key: str, default: bool) -> bool:
+            val = os.getenv(f"DUAL_{key}", os.getenv(key, str(default).lower()))
+            return val.lower() in ("true", "1", "yes")
+
+        return cls(
+            target_min=_int("RETRIEVAL_TARGET_MIN", cls.target_min),
+            target_max=_int("RETRIEVAL_TARGET_MAX", cls.target_max),
+            similarity_threshold=_float("RAG_SIMILARITY_THRESHOLD", cls.similarity_threshold),
+            min_threshold=_float("RETRIEVAL_MIN_THRESHOLD", cls.min_threshold),
+            threshold_step=_float("RETRIEVAL_THRESHOLD_STEP", cls.threshold_step),
+            max_top_k=_int("RETRIEVAL_TOPK_CAP", cls.max_top_k),
+            hard_top_k=_int("RETRIEVAL_HARD_TOPK", cls.hard_top_k),
+            max_chunks_per_paper=_int("RETRIEVAL_MAX_CHUNKS_PER_PAPER", cls.max_chunks_per_paper),
+            context_window=_int("RAG_CONTEXT_WINDOW", cls.context_window),
+            qa_max_tokens=_int("QA_MAX_TOKENS", cls.qa_max_tokens),
+            show_reasoning=_bool("QA_SHOW_REASONING", cls.show_reasoning),
+            disable_reasoning_hard=_bool("QA_DISABLE_REASONING_HARD", cls.disable_reasoning_hard),
+            allow_weak_supplement=_bool("RETRIEVAL_ALLOW_WEAK_SUPPLEMENT", cls.allow_weak_supplement),
+        )
 
 
 class Config:
@@ -84,3 +170,7 @@ class ProductionConfig(Config):
 
 # Select config based on environment
 config = DevelopmentConfig() if os.getenv('FLASK_ENV') == 'development' else ProductionConfig()
+
+# RAG parameter configs (single source of truth)
+sweet_rag_config = RAGConfig.from_env(prefix="SWEET")
+dual_rag_config = DualRAGConfig.from_env()

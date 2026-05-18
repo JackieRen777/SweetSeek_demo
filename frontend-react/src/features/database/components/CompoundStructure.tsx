@@ -9,43 +9,33 @@ interface CompoundStructureProps {
 
 const CompoundStructure: React.FC<CompoundStructureProps> = ({ name, cid, smiles }) => {
   const [imgError, setImgError] = useState(false);
-  const [useBackend, setUseBackend] = useState(true); // Prioritize local backend
+  const [fallbackIndex, setFallbackIndex] = useState(0);
 
-  // Reset error state when molecule changes
   React.useEffect(() => {
     setImgError(false);
-    setUseBackend(true); // Reset to try backend first for new molecule
+    setFallbackIndex(0);
   }, [name, cid, smiles]);
 
-  const imageUrl = React.useMemo(() => {
-    if (useBackend && smiles) {
-      return `/api/structure/render?smiles=${encodeURIComponent(smiles)}&width=400&height=400`;
-    }
-    
-    // Fallback to PubChem - Try different formats
-    // Priority: CID -> Name -> SMILES (SMILES often has encoding issues in URLs)
+  const imageUrls = React.useMemo(() => {
+    const urls: string[] = [];
     if (cid) {
-        return `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;
+      urls.push(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/PNG?record_type=2d&image_size=large`);
     }
-    
-    // Clean up name for URL (remove special chars if needed, though encodeURIComponent usually handles it)
     if (name) {
-        return `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(name)}/PNG?record_type=2d&image_size=large`;
+      urls.push(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(name)}/PNG?record_type=2d&image_size=large`);
     }
-
     if (smiles) {
-        return `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smiles)}/PNG?record_type=2d&image_size=large`;
+      urls.push(`/api/structure/render?smiles=${encodeURIComponent(smiles)}&width=400&height=400`);
     }
+    return urls;
+  }, [name, cid, smiles]);
 
-    return '';
-  }, [name, cid, smiles, useBackend]);
+  const imageUrl = imageUrls[fallbackIndex] || '';
 
   const handleImageError = () => {
-    if (useBackend && smiles) {
-      // If backend fails, try PubChem
-      setUseBackend(false);
+    if (fallbackIndex < imageUrls.length - 1) {
+      setFallbackIndex(prev => prev + 1);
     } else {
-      // If PubChem also fails (or was already trying PubChem), show placeholder
       setImgError(true);
     }
   };
@@ -85,10 +75,10 @@ const CompoundStructure: React.FC<CompoundStructureProps> = ({ name, cid, smiles
       </div>
       
       {!imgError ? (
-        <img 
-          src={imageUrl} 
+        <img
+          src={imageUrl}
           alt={`${name} Structure`}
-          className="w-full h-full object-contain p-8 transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-contain p-8 bg-white transition-transform duration-500 group-hover:scale-105"
           onError={handleImageError}
         />
       ) : (

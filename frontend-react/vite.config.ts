@@ -9,9 +9,10 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
-        // 固定到 5001：与 app.py 默认端口、gunicorn 与 nginx 配置保持一致，避免多端口错配。
         target: 'http://127.0.0.1:5001',
         changeOrigin: true,
         secure: false,

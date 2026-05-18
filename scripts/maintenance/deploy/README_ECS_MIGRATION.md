@@ -25,9 +25,9 @@ bash scripts/maintenance/deploy/deploy_ecs_oneclick.sh
 1. 新 ECS 上线并验收
 2. 切 DNS
 3. 观察 24-48 小时
-4. 再停旧机 `8.137.32.247`
+4. 再停旧机 `8.136.8.223`
 5. 最后删除旧机
 
 ### 5) 回退（紧急）
-把 `sweetseek.top` A 记录改回旧 IP `8.137.32.247`。
+把 `sweetseek.top` A 记录改回旧 IP `8.136.8.223`。
 

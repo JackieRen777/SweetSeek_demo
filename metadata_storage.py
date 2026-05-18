@@ -11,6 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
+from path_utils import normalize_for_storage
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -106,24 +108,19 @@ class MetadataStorage:
     def save_metadata(self, file_path: str, metadata: Dict) -> None:
         """
         保存文件的元数据
-        
+
         Args:
             file_path: 文件路径（作为键）
             metadata: 元数据字典
         """
-        # 标准化文件路径
-        normalized_path = str(Path(file_path).as_posix())
-        
-        # 添加时间戳
+        normalized_path = normalize_for_storage(file_path)
+
         metadata['last_modified'] = datetime.now().isoformat()
         metadata['file_path'] = normalized_path
-        
-        # 更新缓存
+
         self._metadata_cache[normalized_path] = metadata
-        
-        # 保存到磁盘
         self._save_to_disk(self._metadata_cache)
-        
+
         logger.info(f"保存元数据: {metadata.get('title', 'Unknown')[:50]}...")
     
     def _parse_filename_metadata(self, filename: str) -> Optional[Dict]:
@@ -161,35 +158,36 @@ class MetadataStorage:
         """
         获取文件的元数据
         支持路径模糊匹配和文件名解析回退
-        
+
         Args:
             file_path: 文件路径
-            
+
         Returns:
             元数据字典，如果不存在返回None
         """
-        normalized_path = str(Path(file_path).as_posix())
-        
-        # 1. 尝试精确匹配
-        if normalized_path in self._metadata_cache:
-            return self._metadata_cache[normalized_path]
-            
-        # 2. 尝试通过文件名匹配（忽略路径差异）
-        # 这解决了本地和服务器路径结构不一致的问题
+        # 1. 尝试归一化相对路径匹配
+        rel_key = normalize_for_storage(file_path)
+        if rel_key in self._metadata_cache:
+            return self._metadata_cache[rel_key]
+
+        # 2. 尝试原始 POSIX 路径（向后兼容迁移前数据）
+        raw_posix = str(Path(file_path).as_posix())
+        if raw_posix in self._metadata_cache:
+            return self._metadata_cache[raw_posix]
+
+        # 3. 尝试通过文件名匹配（忽略路径差异）
         target_filename = Path(file_path).name
         for stored_path, meta in self._metadata_cache.items():
             if Path(stored_path).name == target_filename:
-                # 找到匹配的文件名
                 logger.debug(f"通过文件名匹配找到元数据: {target_filename}")
                 return meta
-                
-        # 3. 尝试从文件名解析（最后的回退策略）
-        # 这解决了元数据丢失但文件名包含信息的情况
+
+        # 4. 尝试从文件名解析（最后的回退策略）
         parsed_meta = self._parse_filename_metadata(target_filename)
         if parsed_meta:
             logger.info(f"从文件名解析元数据成功: {target_filename}")
             return parsed_meta
-            
+
         return None
     
     def get_all_metadata(self) -> Dict:
@@ -204,45 +202,70 @@ class MetadataStorage:
     def update_metadata(self, file_path: str, metadata: Dict) -> None:
         """
         更新文件的元数据
-        
+
         Args:
             file_path: 文件路径
             metadata: 新的元数据字典
         """
         self.save_metadata(file_path, metadata)
-    
+
     def delete_metadata(self, file_path: str) -> bool:
         """
         删除文件的元数据
-        
+
         Args:
             file_path: 文件路径
-            
+
         Returns:
             是否成功删除
         """
-        normalized_path = str(Path(file_path).as_posix())
-        
+        normalized_path = normalize_for_storage(file_path)
+
         if normalized_path in self._metadata_cache:
             del self._metadata_cache[normalized_path]
             self._save_to_disk(self._metadata_cache)
             logger.info(f"删除元数据: {file_path}")
             return True
-        
+
         return False
-    
+
     def has_metadata(self, file_path: str) -> bool:
         """
         检查文件是否有元数据
-        
+
         Args:
             file_path: 文件路径
-            
+
         Returns:
             是否存在元数据
         """
-        normalized_path = str(Path(file_path).as_posix())
-        return normalized_path in self._metadata_cache
+        normalized_path = normalize_for_storage(file_path)
+        if normalized_path in self._metadata_cache:
+            return True
+        # Fallback: filename match
+        target_filename = Path(file_path).name
+        for stored_path in self._metadata_cache:
+            if Path(stored_path).name == target_filename:
+                return True
+        return False
+
+    def migrate_to_relative_paths(self) -> int:
+        """One-time migration: convert absolute-path keys to relative paths."""
+        migrated = 0
+        new_cache: Dict = {}
+        for old_key, meta in self._metadata_cache.items():
+            new_key = normalize_for_storage(old_key)
+            if new_key != old_key:
+                migrated += 1
+            meta['file_path'] = new_key
+            if new_key not in new_cache:
+                new_cache[new_key] = meta
+
+        if migrated > 0:
+            self._metadata_cache = new_cache
+            self._save_to_disk(self._metadata_cache)
+            logger.info(f"Migrated {migrated} metadata keys from absolute to relative paths")
+        return migrated
     
     def get_stats(self) -> Dict:
         """
