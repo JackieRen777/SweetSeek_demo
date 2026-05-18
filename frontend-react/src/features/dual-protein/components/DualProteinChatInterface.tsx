@@ -32,7 +32,7 @@ const DualProteinChatInterface: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retrievalWarning, setRetrievalWarning] = useState<string | null>(null);
-  const [systemReady, setSystemReady] = useState(false);
+  const [systemReady, setSystemReady] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [warmupHint, setWarmupHint] = useState<string | null>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
