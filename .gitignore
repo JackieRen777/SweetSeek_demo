@@ -119,3 +119,10 @@ Dual_Protein_related_paper/papers/
 food_research_data/datasets/
 *.pdf
 *.pdf.pdf
+
+# ML pipeline data (third-party raw, derived files; redownload via data/raw/README.md)
+data/raw/
+data/interim/
+data/processed/
+data/features/
+!data/raw/README.md
