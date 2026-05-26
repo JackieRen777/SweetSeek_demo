@@ -125,4 +125,8 @@ data/raw/
 data/interim/
 data/processed/
 data/features/
+data/models/
 !data/raw/README.md
+
+# Excel workbooks containing molecule-level CTD-derived data (CC BY-NC-ND 4.0)
+reports/*.xlsx
