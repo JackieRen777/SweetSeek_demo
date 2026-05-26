@@ -110,8 +110,8 @@ def to_unified(props: pd.DataFrame, names: pd.DataFrame) -> pd.DataFrame:
         row["source_refs"] = None  # BitterDB props CSV has no per-row refs column
         row["pubchem_cid"] = _clean_text(r.get("pubChemID"))
         row["cas_number"] = _clean_text(r.get("Cas_Number_Final"))
-        # Targets — whole DB is bitter
-        row["taste_class_raw"] = "Bitter"
+        # Targets — whole DB is bitter; align with ChemTastesDB's "-ness" naming
+        row["taste_class_raw"] = "Bitterness"
         # Stratification
         row["is_natural"] = _map_is_natural(r.get("isNatural"))
         rows.append(row)
