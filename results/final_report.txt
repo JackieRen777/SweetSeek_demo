@@ -1,0 +1,36 @@
+
+SweetSeek V1 - Final Test Set Evaluation Report
+================================================
+
+Date: 2026-05-26 16:01:39
+Model: Ensemble (RF + XGBoost), threshold=0.36
+
+TEST SET PERFORMANCE (n=577, Sweet=132, NonSweet=445):
+  Accuracy:  0.9151
+  F1 Score:  0.8372
+  Precision: 0.7456
+  Recall:    0.9545
+  ROC-AUC:   0.9759
+  PR-AUC:    0.9186
+
+CONFUSION MATRIX:
+                Predicted NonSweet  Predicted Sweet
+  Actual NonSweet       402                43
+  Actual Sweet            6               126
+
+VAL vs TEST GENERALIZATION:
+  Accuracy:  val=0.9064  test=0.9151  (diff=+0.0087)
+  F1:        val=0.8212  test=0.8372  (diff=+0.0160)
+  ROC-AUC:   val=0.9681  test=0.9759  (diff=+0.0078)
+
+CONCLUSION:
+  ✓ Test performance matches validation, no overfitting detected.
+  ✓ F1 >= 0.80 target achieved.
+  ✓ ROC-AUC >= 0.95, strong ranking ability.
+
+FILES GENERATED:
+  - results/test_metrics.csv
+  - results/test_confusion.csv
+  - results/test_roc.csv
+  - results/test_pr.csv
+  - results/final_report.txt
