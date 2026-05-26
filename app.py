@@ -954,6 +954,56 @@ if __name__ != '__main__':
     threading.Thread(target=_background_init_main_rag, daemon=True).start()
     threading.Thread(target=_background_init_dual_protein_rag, daemon=True).start()
 
+# ============================================================
+# ML 甜味预测 API
+# ============================================================
+
+@app.route('/api/ml/predict', methods=['POST'])
+@handle_api_errors
+@monitor_performance
+def api_ml_predict():
+    """
+    甜味预测 API
+    输入: {"smiles": "CCO"} 或 {"smiles": ["CCO", "C1=CC=C(C=C1)O"]}
+    输出: 单个预测结果或列表
+    """
+    from services.sweetness_prediction_service import get_sweetness_prediction_service
+
+    data = _get_json_dict()
+    smiles_input = data.get('smiles', '')
+
+    if not smiles_input:
+        return jsonify({
+            'success': False,
+            'error': 'SMILES 不能为空'
+        }), 400
+
+    predictor = get_sweetness_prediction_service().predictor
+
+    # 支持单个或批量
+    if isinstance(smiles_input, str):
+        result = predictor.predict(smiles_input)
+        return jsonify({
+            'success': True,
+            'result': result
+        })
+    elif isinstance(smiles_input, list):
+        results = predictor.predict_batch(smiles_input)
+        return jsonify({
+            'success': True,
+            'results': results
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'error': 'smiles 参数必须是字符串或字符串列表'
+        }), 400
+
+@app.route('/predict')
+def predict_page():
+    """甜味预测页面"""
+    return render_template('predict.html')
+
 if __name__ == '__main__':
     # 固定默认端口 5001：与现有 gunicorn/nginx/部署脚本保持一致，降低本地与线上端口漂移风险。
     # 允许通过 PORT 覆盖仅用于极少数临时调试场景；常规开发与部署保持 5001 不变。

@@ -18,10 +18,11 @@ const SweetTasteEquation = lazy(() => import('./features/equation/components/Swe
 const DatabaseInterface = lazy(() => import('./features/database/DatabaseInterface'));
 const ReferencesList = lazy(() => import('./features/references/components/ReferencesList'));
 const DualProteinChatInterface = lazy(() => import('./features/dual-protein/components/DualProteinChatInterface'));
+const MLPredictSection = lazy(() => import('./features/ml-predict/MLPredictSection'));
 
 const SCREEN_COUNT = 4; // Reduced from 5 to 4
 
-type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | null;
+type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'ml-predict' | null;
 
 // URL Mapping
 const PATH_MAP: Record<string, FeatureType> = {
@@ -30,7 +31,8 @@ const PATH_MAP: Record<string, FeatureType> = {
   '/equation': 'equation',
   '/database': 'database',
   '/references': 'references',
-  '/dual-protein': 'dual-protein'
+  '/dual-protein': 'dual-protein',
+  '/ml-predict': 'ml-predict'
 };
 
 const REVERSE_PATH_MAP: Record<string, string> = {
@@ -38,7 +40,8 @@ const REVERSE_PATH_MAP: Record<string, string> = {
   'equation': '/equation',
   'database': '/database',
   'references': '/references',
-  'dual-protein': '/dual-protein'
+  'dual-protein': '/dual-protein',
+  'ml-predict': '/ml-predict'
 };
 
 function App() {
@@ -238,6 +241,7 @@ function App() {
                       {activeFeature === 'database' && <DatabaseInterface />}
                       {activeFeature === 'references' && <ReferencesList />}
                       {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
+                      {activeFeature === 'ml-predict' && <MLPredictSection onClose={() => setActiveFeature(null)} />}
                     </Suspense>
                   </div>
                 </div>

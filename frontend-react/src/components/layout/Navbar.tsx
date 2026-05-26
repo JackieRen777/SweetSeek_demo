@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 interface NavbarProps {
   activeScreen: number;
   onNavigate: (index: number) => void;
-  activeFeature: 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | null;
+  activeFeature: 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'ml-predict' | null;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature }) => {
@@ -15,6 +15,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
     { label: 'Sweet Database', index: 3, feature: 'database' },
     { label: 'References', index: 4, feature: 'references' },
     { label: 'Dual-Protein Q&A', index: 5, feature: 'dual-protein' },
+    { label: 'ML Predict', index: 6, feature: 'ml-predict' },
   ];
 
   const isActive = (item: typeof navItems[0]) => {
