@@ -11,6 +11,7 @@ from typing import Any, Dict, Generator, List, Optional, Tuple
 from config import config, sweet_rag_config, dual_rag_config, RAGConfig
 from path_utils import normalize_for_storage
 from services.llm_client import DeepSeekLLMClient
+from services.sweetness_prediction_service import get_sweetness_prediction_service
 
 class ChatService:
     def __init__(
@@ -49,6 +50,9 @@ class ChatService:
         }
         focus_file = os.getenv("DUAL_FOCUS_FILELIST", "./data/dual_focus_quinoa_soy_files.txt")
         self.dual_focus_files = self._load_focus_filelist(focus_file) if self.mode == "dual" else set()
+
+        # Sweetness prediction service (lazy-loaded on first SMILES detection)
+        self.sweetness_service = get_sweetness_prediction_service()
 
     def get_conversations(self) -> List[Dict[str, Any]]:
         return self.conversations
@@ -124,6 +128,14 @@ class ChatService:
         else:
             answer = "DeepSeek API 未配置，无法生成回答。"
 
+        # Augment answer with sweetness prediction if SMILES detected
+        ml_prediction = None
+        if self.mode == "main":  # Only for main RAG, not dual-protein
+            try:
+                answer, ml_prediction = self.sweetness_service.augment_answer(question, answer)
+            except Exception as e:
+                self.logger.warning(f"Sweetness prediction failed: {e}")
+
         end_time = time.time()
         
         # 保存对话
@@ -135,6 +147,7 @@ class ChatService:
             'references_raw': references,
             'retrieval_stats': retrieval["stats"],
             'retrieval_warning': retrieval["warning"],
+            'ml_prediction': ml_prediction,  # Add ML prediction to conversation history
             'timestamp': datetime.now().isoformat(),
             'response_time': round(end_time - start_time, 2)
         }
@@ -146,6 +159,7 @@ class ChatService:
             'references': self._format_references_for_frontend(references),
             'retrieval_stats': retrieval["stats"],
             'retrieval_warning': retrieval["warning"],
+            'ml_prediction': ml_prediction,  # Include in API response
             'response_time': conversation['response_time']
         }
 
