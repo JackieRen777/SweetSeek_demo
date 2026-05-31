@@ -133,7 +133,8 @@ function App() {
       else if (index === 3) setActiveFeature('database');
       else if (index === 4) { setActiveFeature('references'); return; }
       else if (index === 5) { setActiveFeature('dual-protein'); return; }
-      
+      else if (index === 6) { setActiveFeature('ml-predict'); return; }
+
       // Also scroll to that section in the background
       navigateTo(index);
   };
@@ -230,21 +231,32 @@ function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-xl"
+              className={`fixed inset-0 z-[100] ${
+                activeFeature === 'ml-predict'
+                  ? 'bg-white'
+                  : 'bg-white/95 backdrop-blur-xl'
+              }`}
             >
               <div className="w-full h-full overflow-hidden relative flex flex-col pt-[120px]">
-                <div className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 pb-4 md:pb-8 overflow-hidden">
-                  <div className="w-full h-full bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden relative">
+                {activeFeature === 'ml-predict' ? (
+                  <div className="flex-1 w-full overflow-hidden">
                     <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
-                      {activeFeature === 'qa' && <ChatInterface />}
-                      {activeFeature === 'equation' && <SweetTasteEquation />}
-                      {activeFeature === 'database' && <DatabaseInterface />}
-                      {activeFeature === 'references' && <ReferencesList />}
-                      {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
-                      {activeFeature === 'ml-predict' && <MLPredictSection onClose={() => setActiveFeature(null)} />}
+                      <MLPredictSection onClose={() => setActiveFeature(null)} />
                     </Suspense>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 pb-4 md:pb-8 overflow-hidden">
+                    <div className="w-full h-full bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden relative">
+                      <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
+                        {activeFeature === 'qa' && <ChatInterface />}
+                        {activeFeature === 'equation' && <SweetTasteEquation />}
+                        {activeFeature === 'database' && <DatabaseInterface />}
+                        {activeFeature === 'references' && <ReferencesList />}
+                        {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
+                      </Suspense>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

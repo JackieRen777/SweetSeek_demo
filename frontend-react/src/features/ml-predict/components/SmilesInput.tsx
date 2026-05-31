@@ -10,11 +10,11 @@ interface Props {
 }
 
 const EXAMPLES = [
-  { name: '乙醇', smiles: 'CCO' },
-  { name: '苯酚', smiles: 'C1=CC=C(C=C1)O' },
-  { name: '阿司匹林', smiles: 'CC(=O)Oc1ccccc1C(=O)O' },
-  { name: '糖精', smiles: 'C1=CC=C2C(=C1)C(=O)NS2(=O)=O' },
-  { name: '蔗糖', smiles: 'C(C1C(C(C(C(O1)OC2(C(C(C(O2)CO)O)O)CO)O)O)O)O' },
+  { name: 'Ethanol', smiles: 'CCO' },
+  { name: 'Phenol', smiles: 'C1=CC=C(C=C1)O' },
+  { name: 'Aspirin', smiles: 'CC(=O)Oc1ccccc1C(=O)O' },
+  { name: 'Saccharin', smiles: 'C1=CC=C2C(=C1)C(=O)NS2(=O)=O' },
+  { name: 'Sucrose', smiles: 'C(C1C(C(C(C(O1)OC2(C(C(C(O2)CO)O)O)CO)O)O)O)O' },
 ];
 
 export default function SmilesInput({ onPredict, loading }: Props) {
@@ -33,33 +33,33 @@ export default function SmilesInput({ onPredict, loading }: Props) {
 
   return (
     <div>
-      <h3 className="text-xl font-semibold mb-4 text-gray-200">输入 SMILES 字符串</h3>
+      <h3 className="text-lg font-semibold mb-4 text-slate-700">Enter SMILES String</h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             SMILES
           </label>
           <input
             type="text"
             value={smiles}
             onChange={(e) => setSmiles(e.target.value)}
-            placeholder="例如: CCO (乙醇)"
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            placeholder="e.g., CCO (ethanol)"
+            className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={loading}
           />
         </div>
 
         {/* Example Buttons */}
         <div>
-          <p className="text-sm text-gray-400 mb-2">快速示例:</p>
+          <p className="text-sm text-slate-600 mb-2 font-medium">Quick Examples:</p>
           <div className="flex flex-wrap gap-2">
             {EXAMPLES.map((ex) => (
               <button
                 key={ex.smiles}
                 type="button"
                 onClick={() => loadExample(ex.smiles)}
-                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md text-sm text-gray-300 transition-colors"
+                className="px-3 py-1.5 bg-white border border-slate-300 hover:border-blue-500 hover:bg-blue-50 rounded-md text-sm text-slate-700 transition-colors"
                 disabled={loading}
               >
                 {ex.name}
@@ -71,9 +71,9 @@ export default function SmilesInput({ onPredict, loading }: Props) {
         <button
           type="submit"
           disabled={loading || !smiles.trim()}
-          className="w-full py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-all shadow-lg"
+          className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-colors"
         >
-          {loading ? '预测中...' : '🔮 预测甜味'}
+          {loading ? 'Predicting...' : 'Predict Sweetness'}
         </button>
       </form>
     </div>

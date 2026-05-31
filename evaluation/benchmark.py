@@ -108,18 +108,82 @@ def _compute_summary(results: List[Dict], total_time: float, errors: int, mode: 
     }
 
 
+def compare_with_baseline(current_report: Dict[str, Any], baseline_path: str) -> None:
+    if not os.path.exists(baseline_path):
+        print(f"[对比] 基线文件不存在: {baseline_path}")
+        return
+    with open(baseline_path, "r", encoding="utf-8") as f:
+        baseline = json.load(f)
+
+    cur = current_report["summary"]
+    base = baseline["summary"]
+
+    print("\n" + "=" * 60)
+    print("  版本回归对比")
+    print("=" * 60)
+    print(f"{'指标':<20} {'基线':>10} {'当前':>10} {'变化':>10}")
+    print("-" * 60)
+
+    metrics = [
+        ("成功率", "success_rate", "%"),
+        ("关键词命中", "avg_keyword_hit", "%"),
+        ("引用覆盖率", "avg_reference_coverage", "%"),
+        ("引用达标率", "ref_count_pass_rate", "%"),
+        ("引用率", "citation_rate", "%"),
+        ("平均响应时间", "avg_response_time", "s"),
+    ]
+
+    regressions = []
+    for label, key, unit in metrics:
+        b_val = base.get(key, 0)
+        c_val = cur.get(key, 0)
+        if unit == "%":
+            b_str = f"{b_val:.0%}"
+            c_str = f"{c_val:.0%}"
+            diff = c_val - b_val
+            d_str = f"{diff:+.1%}"
+        else:
+            b_str = f"{b_val:.1f}{unit}"
+            c_str = f"{c_val:.1f}{unit}"
+            diff = c_val - b_val
+            d_str = f"{diff:+.1f}{unit}"
+
+        # 响应时间越低越好，其他越高越好
+        is_regression = (diff < -0.05 if key != "avg_response_time" else diff > 5)
+        marker = " ⚠️" if is_regression else ""
+        print(f"{label:<20} {b_str:>10} {c_str:>10} {d_str:>10}{marker}")
+        if is_regression:
+            regressions.append(label)
+
+    print("-" * 60)
+    if regressions:
+        print(f"⚠️  回归警告: {', '.join(regressions)}")
+    else:
+        print("✅ 无回归，所有指标持平或改善")
+    print()
+
+
 def main():
     parser = argparse.ArgumentParser(description="SweetSeek RAG 评测基准")
     parser.add_argument("--mode", choices=["sweet", "dual"], default="sweet")
     parser.add_argument("--output", default="evaluation/reports/")
     parser.add_argument("--url", default=None, help="覆盖 API 地址")
+    parser.add_argument("--compare", default=None, help="与基线文件对比（如 evaluation/baselines/sweet_v1.0.json）")
     args = parser.parse_args()
 
     global BASE_URL
     if args.url:
         BASE_URL = args.url
 
-    run_benchmark(args.mode, args.output)
+    report = run_benchmark(args.mode, args.output)
+
+    if args.compare:
+        compare_with_baseline(report, args.compare)
+    else:
+        # 自动查找默认基线
+        default_baseline = f"evaluation/baselines/{args.mode}_v1.0.json"
+        if os.path.exists(default_baseline):
+            compare_with_baseline(report, default_baseline)
 
 
 if __name__ == "__main__":

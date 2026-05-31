@@ -1,21 +1,21 @@
 /**
- * ML Sweetness Prediction Page
+ * ML Sweetness Prediction Interface
  *
- * Features:
- * - Three input methods: SMILES text, JSME editor, file upload
- * - Real-time prediction with ensemble model
- * - SHAP feature importance visualization
- * - Batch prediction support
+ * Two-stage flow:
+ *   1. Landing — dark intro page with SMILES textarea or "Use Molecule Editor"
+ *   2. Detail  — flat layout with steps, visualization and SHAP attribution
  */
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import SmilesInput from './SmilesInput';
 import JsmeEditor from './JsmeEditor';
-import FileUpload from './FileUpload';
 import PredictionResult from './PredictionResult';
+import MoleculeVisualization from './MoleculeVisualization';
+import MLPredictLanding from './MLPredictLanding';
 
-type InputMode = 'smiles' | 'draw' | 'file';
+type InputMode = 'smiles' | 'draw';
+type View = 'landing' | 'detail';
 
 interface PredictionData {
   smiles: string;
@@ -23,10 +23,21 @@ interface PredictionData {
   is_sweet_pred: number;
   sweet_prob: number;
   shap_top5: Array<{ feature: string; shap: number }>;
+  properties?: {
+    mw?: number;
+    logp?: number;
+    tpsa?: number;
+    hba?: number;
+    hbd?: number;
+    rot_bonds?: number;
+    aromatic_rings?: number;
+    heavy_atoms?: number;
+  };
   status: string;
 }
 
 export default function MLPredictInterface() {
+  const [view, setView] = useState<View>('landing');
   const [inputMode, setInputMode] = useState<InputMode>('smiles');
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,91 +58,162 @@ export default function MLPredictInterface() {
       const data = await response.json();
 
       if (!data.success) {
-        setError(data.error || '预测失败');
+        setError(data.error || 'Prediction failed');
         return;
       }
 
       setPrediction(data.result);
     } catch (err) {
-      setError('网络错误，请稍后重试');
+      setError('Network error, please try again later');
       console.error('Prediction error:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleUseEditor = () => {
+    setInputMode('draw');
+    setView('detail');
+  };
+
+  const handleTryNow = () => {
+    setInputMode('smiles');
+    setView('detail');
+  };
+
+  if (view === 'landing') {
+    return (
+      <MLPredictLanding
+        onUseEditor={handleUseEditor}
+        onTryNow={handleTryNow}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white">
-      <div className="container mx-auto px-4 py-12">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-            🔬 分子甜味预测
-          </h1>
-          <p className="text-gray-300 text-lg">
-            基于 3846 个分子训练的集成模型 (F1=0.82, AUC=0.97)
-          </p>
-        </motion.div>
+    <div className="w-full h-full flex flex-col overflow-hidden">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 py-8 space-y-12">
 
-        {/* Input Mode Tabs */}
-        <div className="flex justify-center mb-8 space-x-4">
-          {[
-            { id: 'smiles', label: '📝 输入 SMILES', icon: '📝' },
-            { id: 'draw', label: '✏️ 画分子结构', icon: '✏️' },
-            { id: 'file', label: '📁 上传文件', icon: '📁' },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setInputMode(mode.id as InputMode)}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                inputMode === mode.id
-                  ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg scale-105'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Input Area */}
-        <motion.div
-          key={inputMode}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="bg-gray-800 rounded-xl p-8 shadow-2xl mb-8"
-        >
-          {inputMode === 'smiles' && <SmilesInput onPredict={handlePredict} loading={loading} />}
-          {inputMode === 'draw' && <JsmeEditor onPredict={handlePredict} loading={loading} />}
-          {inputMode === 'file' && <FileUpload onPredict={handlePredict} loading={loading} />}
-        </motion.div>
-
-        {/* Error Message */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-8"
+          {/* Back to landing */}
+          <button
+            onClick={() => setView('landing')}
+            className="text-xs text-slate-500 hover:text-slate-700 uppercase tracking-[0.15em] font-semibold"
           >
-            <p className="text-red-200">❌ {error}</p>
-          </motion.div>
-        )}
+            ← Back
+          </button>
 
-        {/* Prediction Result */}
-        {prediction && <PredictionResult data={prediction} />}
+          {/* === Section 1: Input === */}
+          <section>
+            <div className="flex items-baseline gap-3 mb-4 border-b border-slate-200/70 pb-2">
+              <span className="text-[11px] uppercase tracking-[0.15em] text-slate-400 font-semibold">
+                Step 01
+              </span>
+              <h2 className="text-base font-semibold text-slate-800">
+                Provide a molecular structure
+              </h2>
+            </div>
 
-        {/* Model Info Footer */}
-        <div className="mt-12 text-center text-gray-400 text-sm">
-          <p>
-            模型训练集: 881 Sweet / 2965 NonSweet | 特征维度: 1407 (ECFP4 + MACCS + RDKit2D)
-          </p>
-          <p className="mt-2">
-            验证集性能: Accuracy 90.6% | F1 82.1% | ROC-AUC 96.8%
-          </p>
+            {/* Tabs */}
+            <div className="flex gap-6 mb-5">
+              {[
+                { id: 'smiles', label: 'SMILES Input' },
+                { id: 'draw', label: 'Draw Structure' },
+              ].map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => setInputMode(mode.id as InputMode)}
+                  className={`pb-2 font-medium text-sm transition-all border-b-2 ${
+                    inputMode === mode.id
+                      ? 'text-blue-600 border-blue-600'
+                      : 'text-slate-500 border-transparent hover:text-slate-700'
+                  }`}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+
+            <motion.div
+              key={inputMode}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {inputMode === 'smiles' && <SmilesInput onPredict={handlePredict} loading={loading} />}
+              {inputMode === 'draw' && <JsmeEditor onPredict={handlePredict} loading={loading} />}
+            </motion.div>
+          </section>
+
+          {/* Error */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="border-l-2 border-red-500 pl-4 py-2"
+            >
+              <p className="text-red-700 text-sm font-medium">Error: {error}</p>
+            </motion.div>
+          )}
+
+          {/* === Section 2: Visualization === */}
+          {prediction && (
+            <>
+              <section>
+                <div className="flex items-baseline gap-3 mb-4 border-b border-slate-200/70 pb-2">
+                  <span className="text-[11px] uppercase tracking-[0.15em] text-slate-400 font-semibold">
+                    Step 02
+                  </span>
+                  <h2 className="text-base font-semibold text-slate-800">
+                    Structure & physicochemical properties
+                  </h2>
+                </div>
+                <MoleculeVisualization
+                  smilesCanonical={prediction.smiles_canonical}
+                  properties={prediction.properties}
+                />
+              </section>
+
+              {/* === Section 3: Result === */}
+              <section>
+                <div className="flex items-baseline gap-3 mb-4 border-b border-slate-200/70 pb-2">
+                  <span className="text-[11px] uppercase tracking-[0.15em] text-slate-400 font-semibold">
+                    Step 03
+                  </span>
+                  <h2 className="text-base font-semibold text-slate-800">
+                    Prediction & feature attribution
+                  </h2>
+                </div>
+                <PredictionResult data={prediction} />
+              </section>
+            </>
+          )}
+
+          {/* === Footer: Model meta — inline, not a card === */}
+          <section className="pt-6 border-t border-slate-200/70">
+            <div className="flex flex-wrap items-end gap-x-10 gap-y-3 text-sm">
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Training Set</p>
+                <p className="text-slate-800 font-medium">3,846 mols</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Features</p>
+                <p className="text-slate-800 font-medium">1,407 dims</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Test F1</p>
+                <p className="text-slate-800 font-medium">0.837</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Test AUC</p>
+                <p className="text-slate-800 font-medium">0.976</p>
+              </div>
+              <p className="text-xs text-slate-400 ml-auto">
+                ECFP4 + MACCS + RDKit 2D · RF + XGBoost ensemble
+              </p>
+            </div>
+          </section>
         </div>
       </div>
     </div>

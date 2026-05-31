@@ -1,0 +1,179 @@
+{
+  "mode": "dual",
+  "timestamp": "2026-05-18T16:50:52.457541",
+  "base_url": "http://127.0.0.1:5001",
+  "summary": {
+    "total_questions": 10,
+    "success_count": 10,
+    "error_count": 0,
+    "success_rate": 1.0,
+    "avg_keyword_hit": 0.6117,
+    "avg_reference_coverage": 0.195,
+    "ref_count_pass_rate": 0.9,
+    "citation_rate": 1.0,
+    "avg_response_time": 61.344516324996945,
+    "total_time": 613.4
+  },
+  "details": [
+    {
+      "question_id": "dual_001",
+      "success": true,
+      "keyword_hit_rate": 0.75,
+      "reference_coverage": 0.75,
+      "reference_count": 20,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 71.13,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 20
+      }
+    },
+    {
+      "question_id": "dual_002",
+      "success": true,
+      "keyword_hit_rate": 0.5,
+      "reference_coverage": 0.0,
+      "reference_count": 20,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 58.38,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 20
+      }
+    },
+    {
+      "question_id": "dual_003",
+      "success": true,
+      "keyword_hit_rate": 0.667,
+      "reference_coverage": 0.0,
+      "reference_count": 9,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 54.06,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 9
+      }
+    },
+    {
+      "question_id": "dual_004",
+      "success": true,
+      "keyword_hit_rate": 0.2,
+      "reference_coverage": 0.2,
+      "reference_count": 10,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 56.15,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 10
+      }
+    },
+    {
+      "question_id": "dual_005",
+      "success": true,
+      "keyword_hit_rate": 0.5,
+      "reference_coverage": 0.0,
+      "reference_count": 9,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 61.44,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 9
+      }
+    },
+    {
+      "question_id": "dual_006",
+      "success": true,
+      "keyword_hit_rate": 0.75,
+      "reference_coverage": 0.5,
+      "reference_count": 20,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 59.68,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 20
+      }
+    },
+    {
+      "question_id": "dual_007",
+      "success": true,
+      "keyword_hit_rate": 0.75,
+      "reference_coverage": 0.0,
+      "reference_count": 7,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 69.66,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 7
+      }
+    },
+    {
+      "question_id": "dual_008",
+      "success": true,
+      "keyword_hit_rate": 0.5,
+      "reference_coverage": 0.25,
+      "reference_count": 15,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 62.28,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 15
+      }
+    },
+    {
+      "question_id": "dual_009",
+      "success": true,
+      "keyword_hit_rate": 1.0,
+      "reference_coverage": 0.0,
+      "reference_count": 3,
+      "reference_count_pass": false,
+      "has_citations": true,
+      "response_time": 57.06,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 3
+      }
+    },
+    {
+      "question_id": "dual_010",
+      "success": true,
+      "keyword_hit_rate": 0.5,
+      "reference_coverage": 0.25,
+      "reference_count": 11,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 63.59,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 11
+      }
+    }
+  ]
+}

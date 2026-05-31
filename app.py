@@ -4,6 +4,13 @@ SweetSeek - Flask Backend
 AI-powered research Q&A system
 """
 
+# macOS ARM64: PyTorch (MPS) and SHAP/sklearn each ship their own libomp.dylib.
+# Loading SHAP inside the same process as PyTorch causes a SIGSEGV unless we
+# allow OpenMP duplicates. Must run before any numpy/torch/sklearn import.
+import os as _os
+_os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+_os.environ.setdefault("OMP_NUM_THREADS", "1")
+
 try:
     __import__('pysqlite3')
     import sys

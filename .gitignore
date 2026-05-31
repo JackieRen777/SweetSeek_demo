@@ -130,3 +130,9 @@ data/models/
 
 # Excel workbooks containing molecule-level CTD-derived data (CC BY-NC-ND 4.0)
 reports/*.xlsx
+
+# Runtime PID files
+*.pid
+
+# Personal idea pool (not part of the codebase)
+inspirations/

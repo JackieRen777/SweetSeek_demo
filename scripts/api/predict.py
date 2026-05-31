@@ -30,8 +30,8 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import shap
 from rdkit import Chem, RDLogger
+from rdkit.Chem import Descriptors
 
 # Reuse Day 1 standardization + Day 3 featurization
 from scripts.data.standardize import standardize
@@ -51,7 +51,7 @@ class SweetnessPredictor:
     """Ensemble sweetness predictor with SHAP explanations."""
 
     def __init__(self):
-        """Load models, preprocessor, feature names, and SHAP explainer."""
+        """Load models, preprocessor, and feature names. SHAP explainer is loaded lazily."""
         with open(MODEL_DIR / "rf.pkl", "rb") as f:
             self.rf_model = pickle.load(f)["model"]
         with open(MODEL_DIR / "xgb.pkl", "rb") as f:
@@ -61,8 +61,19 @@ class SweetnessPredictor:
         self.feature_names = json.loads((FEAT_DIR / "feature_names.json").read_text(encoding="utf-8"))
         self.feature_meta = json.loads((FEAT_DIR / "feature_meta.json").read_text(encoding="utf-8"))
 
-        # SHAP explainer (RF only, XGBoost 3.2.0 has compatibility issues)
-        self.shap_explainer = shap.TreeExplainer(self.rf_model, feature_perturbation="tree_path_dependent")
+        # Defer SHAP TreeExplainer init to first predict() call.
+        # Reason: importing shap and constructing TreeExplainer at Flask startup
+        # has caused SIGSEGV crashes on macOS ARM64 (multithreading conflict).
+        self._shap_explainer = None
+
+    @property
+    def shap_explainer(self):
+        if self._shap_explainer is None:
+            import shap
+            self._shap_explainer = shap.TreeExplainer(
+                self.rf_model, feature_perturbation="tree_path_dependent"
+            )
+        return self._shap_explainer
 
     def _featurize_one(self, smiles_canonical: str) -> np.ndarray | None:
         """Compute 1407-dim feature vector for a single molecule."""
@@ -127,20 +138,41 @@ class SweetnessPredictor:
         proba_ens = (proba_rf + proba_xgb) / 2.0
         is_sweet = int(proba_ens >= THRESHOLD)
 
-        # Step 5: SHAP explanation (RF only)
-        shap_vals = self.shap_explainer.shap_values(X)
-        if isinstance(shap_vals, list):
-            shap_vals = shap_vals[1]  # class 1 (Sweet)
-        elif shap_vals.ndim == 3:
-            shap_vals = shap_vals[:, :, 1]
-        shap_vals = shap_vals.flatten()  # (1, 1407) -> (1407,)
+        # Step 5: SHAP explanation (RF only) — best effort
+        shap_top5 = []
+        try:
+            shap_vals = self.shap_explainer.shap_values(X)
+            if isinstance(shap_vals, list):
+                shap_vals = shap_vals[1]  # class 1 (Sweet)
+            elif shap_vals.ndim == 3:
+                shap_vals = shap_vals[:, :, 1]
+            shap_vals = shap_vals.flatten()  # (1, 1407) -> (1407,)
 
-        # Top-5 SHAP features by absolute value
-        top_idx = np.argsort(-np.abs(shap_vals))[:5]
-        shap_top5 = [
-            {"feature": self.feature_names[int(i)], "shap": float(shap_vals[int(i)])}
-            for i in top_idx
-        ]
+            top_idx = np.argsort(-np.abs(shap_vals))[:5]
+            shap_top5 = [
+                {"feature": self.feature_names[int(i)], "shap": float(shap_vals[int(i)])}
+                for i in top_idx
+            ]
+        except Exception as e:
+            print(f"[SweetnessPredictor] SHAP failed: {e}", file=sys.stderr)
+
+        # Step 6: physicochemical properties for visualization
+        properties = {}
+        try:
+            mol = Chem.MolFromSmiles(smiles_canonical)
+            if mol is not None:
+                properties = {
+                    "mw": round(float(Descriptors.MolWt(mol)), 2),
+                    "logp": round(float(Descriptors.MolLogP(mol)), 2),
+                    "tpsa": round(float(Descriptors.TPSA(mol)), 2),
+                    "hba": int(Descriptors.NumHAcceptors(mol)),
+                    "hbd": int(Descriptors.NumHDonors(mol)),
+                    "rot_bonds": int(Descriptors.NumRotatableBonds(mol)),
+                    "aromatic_rings": int(Descriptors.NumAromaticRings(mol)),
+                    "heavy_atoms": int(Descriptors.HeavyAtomCount(mol)),
+                }
+        except Exception as e:
+            print(f"[SweetnessPredictor] descriptor calc failed: {e}", file=sys.stderr)
 
         return {
             "smiles": smiles,
@@ -148,6 +180,7 @@ class SweetnessPredictor:
             "is_sweet_pred": is_sweet,
             "sweet_prob": float(proba_ens),
             "shap_top5": shap_top5,
+            "properties": properties,
             "status": "ok",
         }
 
