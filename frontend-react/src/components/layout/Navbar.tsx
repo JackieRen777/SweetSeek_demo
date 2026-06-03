@@ -78,13 +78,20 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
 
           {/* FCN Logo */}
           <div className="hidden md:flex items-center gap-3">
+            <a
+              href="https://www.x-mol.com/groups/hujun_xie"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+            >
+              <img
+                src="/FCN_logo.png"
+                alt="FCN Logo"
+                className="h-10 w-auto md:h-12 lg:h-14 object-contain"
+              />
+            </a>
             <img
-              src="/logo_fcn.png"
-              alt="FCN Logo"
-              className="h-10 w-auto md:h-12 lg:h-14 object-contain"
-            />
-            <img
-              src="/logo_fcn_team.jpg"
+              src="/FFHI_logo.jpg"
               alt="食品风味与健康创新团队"
               className="h-[47px] w-auto md:h-[56px] lg:h-[66px] object-contain"
             />
