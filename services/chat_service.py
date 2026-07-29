@@ -12,6 +12,7 @@ from config import config, sweet_rag_config, dual_rag_config, RAGConfig
 from path_utils import normalize_for_storage
 from services.llm_client import DeepSeekLLMClient
 from services.sweetness_prediction_service import get_sweetness_prediction_service
+from services.encapsulation_references import serialize_encapsulation_references
 
 class ChatService:
     def __init__(
@@ -205,27 +206,10 @@ class ChatService:
             yield f"data: {json.dumps({'type': 'status', 'message': f'去重后找到 {unique_count} 篇唯一文献'}, ensure_ascii=False)}\n\n"
             
             # 发送参考文献
-            references_for_frontend = []
-            import math
-            for ref in references:
-                item = {
-                    'ref_id': ref['ref_id'],
-                    'title': ref.get('title', ref.get('filename', 'Unknown')),
-                    'journal': ref.get('journal', 'Unknown'),
-                    'year': ref.get('year', 'N/A'),
-                    'authors': ref.get('authors', []),
-                    'doi': ref.get('doi', 'Not Available'),
-                    'filename': ref.get('filename', '')
-                }
-                # 安全处理 score
-                try:
-                    score_val = float(ref.get('final_score', ref.get('score', 0)) or 0)
-                    if not math.isfinite(score_val):
-                        score_val = 0.0
-                except (ValueError, TypeError):
-                    score_val = 0.0
-                item['score'] = score_val
-                references_for_frontend.append(item)
+            if self.mode == "encapsulation":
+                references_for_frontend = serialize_encapsulation_references(references, unique_papers_dict)
+            else:
+                references_for_frontend = self._format_references_for_frontend(references)
 
             yield f"data: {json.dumps({'type': 'references', 'references': references_for_frontend}, ensure_ascii=False)}\n\n"
             yield f"data: {json.dumps({'type': 'retrieval_stats', 'stats': retrieval['stats'], 'warning': retrieval['warning']}, ensure_ascii=False)}\n\n"
@@ -849,6 +833,9 @@ class ChatService:
                     'title': paper_metadata.get('title', 'Unknown Title'),
                     'authors': paper_metadata.get('authors', []),
                     'doi': paper_metadata.get('doi', 'Not Available'),
+                    'volume': paper_metadata.get('volume', ''),
+                    'issue': paper_metadata.get('issue', ''),
+                    'pages': paper_metadata.get('pages', paper_metadata.get('page', '')),
                     'filename': paper_info['filename'],
                     'file_path': paper_info['file_path'],
                     'score': paper_info['max_score'],
@@ -959,7 +946,10 @@ class ChatService:
         tail_parts: List[str] = []
         if references and not re.search(r"\[ref_\d+", answer or ""):
             fallback_refs = ", ".join(f"[{ref['ref_id']}]" for ref in references[:4])
-            tail_parts.append(f"\n\n【证据标注补充】该回答主要基于以下文献：{fallback_refs}。")
+            tail_parts.append(f"\n\n相关证据：{fallback_refs}。")
+
+        if self.mode == "encapsulation":
+            return "".join(tail_parts)
 
         ext = self._build_extended_reference_block(references)
         if ext and "延伸文献" not in (answer or ""):

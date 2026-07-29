@@ -136,3 +136,11 @@ reports/*.xlsx
 
 # Personal idea pool (not part of the codebase)
 inspirations/
+
+# Encapsulation runtime knowledge base and local rollback snapshots
+.codex-backups/
+Encapsulation_related_paper/papers/
+Encapsulation_related_paper/metadata.json
+Encapsulation_related_paper/metadata.json.*
+storage_encapsulation/
+storage_encapsulation.bak_*/

@@ -18,7 +18,7 @@ try:
 except ImportError:
     pass
 
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
 import time
@@ -152,6 +152,7 @@ dual_protein_docs_count_cache = 0
 dual_protein_dim_fix_lock = threading.Lock()
 dual_protein_last_dim_fix_ts = 0.0
 main_rag_initializing = False
+rag_load_lock = threading.Lock()
 conversations = []
 
 services = build_services()
@@ -176,6 +177,52 @@ dual_protein_chat_service = ChatService(
     mode="dual",
 )
 
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+ENCAPSULATION_DATA_DIR = os.getenv(
+    "ENCAPSULATION_DATA_DIR",
+    os.path.join(PROJECT_ROOT, "Encapsulation_related_paper", "papers"),
+)
+ENCAPSULATION_PERSIST_DIR = os.getenv(
+    "ENCAPSULATION_PERSIST_DIR",
+    os.path.join(PROJECT_ROOT, "storage_encapsulation"),
+)
+ENCAPSULATION_METADATA_PATH = os.getenv(
+    "ENCAPSULATION_METADATA_PATH",
+    os.path.join(PROJECT_ROOT, "Encapsulation_related_paper", "metadata.json"),
+)
+
+# Encapsulation（包埋）独立知识域：与现有 Sweetness/Dual-Protein 索引隔离。
+encapsulation_system_ready = False
+encapsulation_initializing = False
+encapsulation_rag = PersistentRAGSystem(
+    data_dir=ENCAPSULATION_DATA_DIR,
+    persist_dir=ENCAPSULATION_PERSIST_DIR,
+    metadata_path=ENCAPSULATION_METADATA_PATH,
+)
+encapsulation_chat_service = ChatService(
+    rag_system=encapsulation_rag,
+    query_expander=DualProteinQueryExpander(),
+    evidence_ranker=evidence_ranker,
+    llm_client=llm_client,
+    mode="encapsulation",
+)
+
+def initialize_encapsulation_rag():
+    global encapsulation_system_ready, encapsulation_initializing
+    if encapsulation_initializing:
+        return encapsulation_system_ready
+    encapsulation_initializing = True
+    try:
+        with rag_load_lock:
+            encapsulation_system_ready = bool(encapsulation_rag.load_or_create_index())
+        return encapsulation_system_ready
+    except Exception as exc:
+        app_logger.error(f"Encapsulation 初始化失败: {exc}")
+        encapsulation_system_ready = False
+        return False
+    finally:
+        encapsulation_initializing = False
+
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
     global system_ready, main_rag_initializing
@@ -191,7 +238,8 @@ def initialize_rag_system():
             app_logger.warning(f"元数据路径迁移跳过: {e}")
 
         # 加载或创建索引（自动使用持久化）
-        success = rag_system.load_or_create_index()
+        with rag_load_lock:
+            success = rag_system.load_or_create_index()
 
         if success:
             system_ready = True
@@ -225,7 +273,8 @@ def initialize_dual_protein_rag():
         except Exception as e:
             app_logger.warning(f"双蛋白元数据路径迁移跳过: {e}")
 
-        success = dual_protein_rag.load_or_create_index()
+        with rag_load_lock:
+            success = dual_protein_rag.load_or_create_index()
         if success:
             dual_protein_system_ready = True
             stats = dual_protein_rag.get_stats()
@@ -624,6 +673,66 @@ def api_dual_protein_health():
         'persist_dir': stats.get('persist_dir', './storage_dual_protein'),
     })
 
+@app.route('/api/encapsulation/health', methods=['GET'])
+@app.route('/api/embedding/health', methods=['GET'])
+@handle_api_errors
+def api_encapsulation_health():
+    stats = encapsulation_rag.get_stats()
+    try:
+        count = len(encapsulation_rag.metadata_storage.get_all_metadata())
+    except Exception:
+        count = 0
+    return jsonify({'success': True, 'system_ready': encapsulation_system_ready, 'initializing': encapsulation_initializing,
+                    'documents_count': count, 'index_exists': stats.get('index_exists', False),
+                    'persist_dir': stats.get('persist_dir', ENCAPSULATION_PERSIST_DIR),
+                    'last_error': encapsulation_rag.last_error})
+
+@app.route('/api/encapsulation/prewarm', methods=['POST'])
+@app.route('/api/embedding/prewarm', methods=['POST'])
+@handle_api_errors
+def api_encapsulation_prewarm():
+    if encapsulation_system_ready or encapsulation_initializing:
+        return jsonify({'success': True, 'status': 'ready' if encapsulation_system_ready else 'initializing'})
+    threading.Thread(target=initialize_encapsulation_rag, daemon=True).start()
+    return jsonify({'success': True, 'status': 'warming'})
+
+@app.route('/api/encapsulation/ask_stream', methods=['POST'])
+@app.route('/api/embedding/ask_stream', methods=['POST'])
+@handle_api_errors
+def api_encapsulation_ask_stream():
+    from flask import Response, stream_with_context
+    if not encapsulation_system_ready:
+        initialize_encapsulation_rag()
+    if not encapsulation_system_ready:
+        return jsonify({'success': False, 'error': 'Encapsulation 知识库未初始化，请先上传 PDF 或稍后重试'}), 400
+    data = _get_json_dict(); question = data.get('question', '').strip()
+    if not question:
+        return jsonify({'success': False, 'error': '问题不能为空'}), 400
+    threshold, max_results = _parse_retrieval_params(data, float(os.getenv('EMBEDDING_RAG_SIMILARITY_THRESHOLD', '0.18')), int(os.getenv('EMBEDDING_RAG_MAX_RESULTS', '120')))
+    return Response(stream_with_context(encapsulation_chat_service.ask_stream(question, threshold, max_results)), mimetype='text/event-stream')
+
+@app.route('/api/encapsulation/documents', methods=['GET'])
+@app.route('/api/embedding/documents', methods=['GET'])
+@handle_api_errors
+def api_encapsulation_documents():
+    rows = []
+    for path, meta in encapsulation_rag.metadata_storage.get_all_metadata().items():
+        rows.append({'id': path, 'filename': meta.get('filename', os.path.basename(path)), 'title': meta.get('title', ''),
+                     'authors': meta.get('authors', []), 'journal': meta.get('journal', ''), 'year': meta.get('year', 'N/A'),
+                     'doi': meta.get('doi', ''), 'status': 'indexed', 'path': path})
+    query = request.args.get('q', '').lower().strip()
+    if query: rows = [r for r in rows if query in ' '.join([r['filename'], r['title'], r['journal'], str(r['year'])]).lower()]
+    return jsonify({'success': True, 'documents': rows, 'total': len(rows), 'system_ready': encapsulation_system_ready})
+
+@app.route('/api/encapsulation/documents/upload', methods=['POST'])
+@app.route('/api/embedding/documents/upload', methods=['POST'])
+@handle_api_errors
+def api_encapsulation_upload():
+    return jsonify({
+        'success': False,
+        'error': '网页上传已禁用。请将 PDF 放入 Encapsulation_related_paper/papers 后运行离线索引维护脚本。',
+    }), 403
+
 @app.route('/api/search', methods=['POST'])
 @handle_api_errors
 @monitor_performance
@@ -942,7 +1051,7 @@ def serve_static(filename):
     return jsonify({'error': 'Static files not served by backend'}), 404
 
 # 自动初始化（针对 Gunicorn 等 WSGI 容器）
-if __name__ != '__main__':
+if __name__ != '__main__' and os.getenv('RAG_EAGER_INIT', '').strip().lower() in {'1', 'true', 'yes'}:
     def _background_init_main_rag():
         try:
             app_logger.info("检测到非主程序运行模式，后台初始化 RAG 系统...")
@@ -957,9 +1066,12 @@ if __name__ != '__main__':
         except Exception as e:
             app_logger.error(f"双蛋白自动初始化失败: {e}")
 
-    # 避免阻塞 gunicorn worker 启动，初始化放到后台线程执行
-    threading.Thread(target=_background_init_main_rag, daemon=True).start()
-    threading.Thread(target=_background_init_dual_protein_rag, daemon=True).start()
+    # 低内存生产机按需加载。显式启用时也串行初始化，避免多个大索引同时产生峰值。
+    def _background_init_all_rag():
+        _background_init_main_rag()
+        _background_init_dual_protein_rag()
+
+    threading.Thread(target=_background_init_all_rag, daemon=True).start()
 
 # ============================================================
 # ML 甜味预测 API

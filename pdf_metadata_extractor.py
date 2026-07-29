@@ -239,6 +239,31 @@ class PDFMetadataExtractor:
             year_matches = self.YEAR_PATTERN.findall(text)
             if year_matches:
                 metadata['year'] = year_matches[-1]
+
+            compact_text = re.sub(r'\s+', ' ', text)
+            volume_issue = re.search(
+                r'\b(?:vol(?:ume)?\.?\s*)?(\d{1,4})\s*\(\s*(\d{1,4})\s*\)',
+                compact_text,
+                flags=re.IGNORECASE,
+            )
+            if volume_issue:
+                metadata['volume'] = volume_issue.group(1)
+                metadata['issue'] = volume_issue.group(2)
+            else:
+                volume = re.search(r'\bvol(?:ume)?\.?\s*(\d{1,4})\b', compact_text, flags=re.IGNORECASE)
+                issue = re.search(r'\b(?:issue|no\.)\s*(\d{1,4})\b', compact_text, flags=re.IGNORECASE)
+                if volume:
+                    metadata['volume'] = volume.group(1)
+                if issue:
+                    metadata['issue'] = issue.group(1)
+
+            pages = re.search(
+                r'\b(?:pages?|pp\.?)[ :]+([A-Za-z]?\d{1,6}\s*[-–]\s*[A-Za-z]?\d{1,6})\b',
+                compact_text,
+                flags=re.IGNORECASE,
+            )
+            if pages:
+                metadata['pages'] = re.sub(r'\s+', '', pages.group(1)).replace('–', '-')
             
             # 提取标题（通常在第一页前几行，字体较大）
             lines = text.split('\n')
@@ -322,7 +347,6 @@ class PDFMetadataExtractor:
             '10.1038/s41598': 'Scientific Reports',
             '10.1038/ijo': 'International Journal of Obesity',
             '10.1017/s0029665': 'Proceedings of the Nutrition Society',
-            '10.1039/': 'Royal Society of Chemistry',
         }
         
         # 先检查特殊期刊
@@ -330,31 +354,12 @@ class PDFMetadataExtractor:
             if doi_lower.startswith(pattern):
                 return journal
         
-        # DOI前缀到出版商/期刊的映射（扩展版）
-        doi_publisher_map = {
-            '10.3390': 'MDPI',
-            '10.1038': 'Nature Publishing Group',
-            '10.1126': 'Science',
-            '10.1016': 'Elsevier',
-            '10.1371': 'PLOS',
-            '10.3389': 'Frontiers',
-            '10.1186': 'BMC',
-            '10.1002': 'Wiley',
-            '10.1021': 'ACS Publications',
-            '10.1093': 'Oxford University Press',
-            '10.1080': 'Taylor & Francis',
-            '10.1007': 'Springer',
-            '10.1111': 'Wiley',
-            '10.1177': 'SAGE Publications',
-            '10.1152': 'American Physiological Society',
-            '10.2337': 'American Diabetes Association',
-            '10.21203': 'Research Square',
-            '10.1017': 'Cambridge University Press',
-            '10.1039': 'Royal Society of Chemistry',
-        }
+        # DOI 注册前缀通常只能识别出版社，不能作为期刊名。这里只保留
+        # 能从 DOI 后缀可靠识别具体期刊的规则；其余交给 Crossref 补全。
+        doi_journal_prefixes = ('10.3390', '10.1007')
         
         # 检查DOI前缀
-        for prefix, publisher in doi_publisher_map.items():
+        for prefix in doi_journal_prefixes:
             if doi_lower.startswith(prefix):
                 # 如果是MDPI，尝试从DOI中提取具体期刊
                 if prefix == '10.3390':
@@ -388,7 +393,7 @@ class PDFMetadataExtractor:
                         if code in doi_lower:
                             return journal
                 
-                return publisher
+                return None
         
         return None
     

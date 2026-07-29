@@ -18,11 +18,12 @@ const SweetTasteEquation = lazy(() => import('./features/equation/components/Swe
 const DatabaseInterface = lazy(() => import('./features/database/DatabaseInterface'));
 const ReferencesList = lazy(() => import('./features/references/components/ReferencesList'));
 const DualProteinChatInterface = lazy(() => import('./features/dual-protein/components/DualProteinChatInterface'));
+const EncapsulationChatInterface = lazy(() => import('./features/encapsulation/components/EncapsulationChatInterface'));
 const MLPredictSection = lazy(() => import('./features/ml-predict/MLPredictSection'));
 
 const SCREEN_COUNT = 4; // Reduced from 5 to 4
 
-type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'ml-predict' | null;
+type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | null;
 
 // URL Mapping
 const PATH_MAP: Record<string, FeatureType> = {
@@ -32,6 +33,8 @@ const PATH_MAP: Record<string, FeatureType> = {
   '/database': 'database',
   '/references': 'references',
   '/dual-protein': 'dual-protein',
+  '/encapsulation': 'encapsulation',
+  '/embedding': 'encapsulation',
   '/ml-predict': 'ml-predict'
 };
 
@@ -41,11 +44,18 @@ const REVERSE_PATH_MAP: Record<string, string> = {
   'database': '/database',
   'references': '/references',
   'dual-protein': '/dual-protein',
+  'encapsulation': '/encapsulation',
   'ml-predict': '/ml-predict'
 };
 
+const featureFromPath = (pathname: string): FeatureType => {
+  const path = pathname.toLowerCase();
+  const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
+  return PATH_MAP[cleanPath] || (cleanPath === '/qa' ? 'qa' : null);
+};
+
 function App() {
-  const [activeFeature, setActiveFeature] = useState<FeatureType>(null);
+  const [activeFeature, setActiveFeature] = useState<FeatureType>(() => featureFromPath(window.location.pathname));
   const controls = useAnimation();
   
   // Use custom threshold scroll hook
@@ -58,25 +68,7 @@ function App() {
 
   // --- URL Routing Logic ---
 
-  // 1. Initial Load: Check URL and set activeFeature
-  useEffect(() => {
-    const path = window.location.pathname.toLowerCase();
-    // Handle potential trailing slashes
-    const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
-    
-    // Support both old and new URL patterns for backward compatibility if needed
-    // But mainly map /professionalq&a
-    let feature = PATH_MAP[cleanPath];
-    if (!feature && cleanPath === '/qa') feature = 'qa'; // Fallback support
-    
-    if (feature) {
-      setActiveFeature(feature);
-    } else if (cleanPath === '/') {
-        setActiveFeature(null);
-    }
-  }, []);
-
-  // 2. Sync URL when activeFeature changes
+  // Sync URL when activeFeature changes
   useEffect(() => {
     if (activeFeature) {
       const path = REVERSE_PATH_MAP[activeFeature];
@@ -91,13 +83,10 @@ function App() {
     }
   }, [activeFeature]);
 
-  // 3. Handle Browser Back/Forward buttons
+  // Handle Browser Back/Forward buttons
   useEffect(() => {
     const handlePopState = () => {
-       const path = window.location.pathname.toLowerCase();
-       const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
-       const feature = PATH_MAP[cleanPath];
-       setActiveFeature(feature || null);
+       setActiveFeature(featureFromPath(window.location.pathname));
     };
     
     window.addEventListener('popstate', handlePopState);
@@ -134,6 +123,7 @@ function App() {
       else if (index === 4) { setActiveFeature('references'); return; }
       else if (index === 5) { setActiveFeature('dual-protein'); return; }
       else if (index === 6) { setActiveFeature('ml-predict'); return; }
+      else if (index === 7) { setActiveFeature('encapsulation'); return; }
 
       // Also scroll to that section in the background
       navigateTo(index);
@@ -245,14 +235,15 @@ function App() {
                     </Suspense>
                   </div>
                 ) : (
-                  <div className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 pb-4 md:pb-8 overflow-hidden">
-                    <div className="w-full h-full bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden relative">
+                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'encapsulation' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
+                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'encapsulation' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
                         {activeFeature === 'qa' && <ChatInterface />}
                         {activeFeature === 'equation' && <SweetTasteEquation />}
                         {activeFeature === 'database' && <DatabaseInterface />}
                         {activeFeature === 'references' && <ReferencesList />}
                         {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
+                        {activeFeature === 'encapsulation' && <EncapsulationChatInterface />}
                       </Suspense>
                     </div>
                   </div>

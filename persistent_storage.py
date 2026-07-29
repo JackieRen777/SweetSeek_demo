@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 import os
 import shutil
+import threading
 from pathlib import Path
 import re
 from datetime import datetime
@@ -43,11 +44,32 @@ except Exception:
 logging.basicConfig(level=logging.INFO)
 
 
+_SHARED_EMBEDDING_LOCK = threading.Lock()
+_SHARED_EMBEDDINGS: Dict[Tuple[str, str], Tuple[Any, int]] = {}
+_PROJECT_ROOT = Path(__file__).resolve().parent
+
+
+def _project_path(value: str) -> str:
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = _PROJECT_ROOT / path
+    return str(path.resolve())
+
+
 class PersistentRAGSystem:
-    def __init__(self, data_dir: str = "./food_research_data/datasets", persist_dir: str = "./storage", metadata_path: str = "./chroma_db_v3/metadata.json"):
-        self.data_dir = data_dir
-        self.persist_dir = persist_dir
-        self.metadata_storage = MetadataStorage(storage_path=metadata_path)
+    def __init__(
+        self,
+        data_dir: str = "./food_research_data/datasets",
+        persist_dir: str = "./storage",
+        metadata_path: str = "./chroma_db_v3/metadata.json",
+        allow_auto_build: Optional[bool] = None,
+    ):
+        self.data_dir = _project_path(data_dir)
+        self.persist_dir = _project_path(persist_dir)
+        self.metadata_storage = MetadataStorage(storage_path=_project_path(metadata_path))
+        if allow_auto_build is None:
+            allow_auto_build = os.getenv("RAG_ALLOW_AUTO_BUILD", "").strip().lower() in {"1", "true", "yes"}
+        self.allow_auto_build = allow_auto_build
         self.index: Optional[VectorStoreIndex] = None
         self.query_engine = None
         self.models_configured = False
@@ -193,6 +215,17 @@ class PersistentRAGSystem:
         except Exception:
             model_path = "BAAI/bge-small-zh-v1.5"
             embed_source = "modelscope"
+        model_key = (embed_source, os.path.abspath(model_path) if os.path.isdir(model_path) else model_path)
+        with _SHARED_EMBEDDING_LOCK:
+            shared = _SHARED_EMBEDDINGS.get(model_key)
+            if shared is not None:
+                emb, self.embedding_dim = shared
+                Settings.embed_model = emb
+                self.embedding_mode = "real"
+                self.models_configured = True
+                logging.info("复用进程内共享嵌入模型: %s", model_path)
+                return
+
         required_weights = ("model.safetensors", "pytorch_model.bin")
         is_local_dir = os.path.isdir(model_path)
         has_weights = any(os.path.exists(os.path.join(model_path, name)) for name in required_weights) if is_local_dir else True
@@ -206,41 +239,55 @@ class PersistentRAGSystem:
         try:
             from sentence_transformers import SentenceTransformer
             from llama_index.core.embeddings import BaseEmbedding as _BaseEmb
-            if embed_source == "modelscope" and not os.path.isdir(model_path):
-                try:
-                    from modelscope import snapshot_download
-                    cache_root = str(Path(__file__).resolve().parent / "models" / "modelscope_cache")
-                    os.makedirs(cache_root, exist_ok=True)
-                    model_path = snapshot_download(model_path, cache_dir=cache_root)
-                    logging.info(f"通过 ModelScope 下载并使用模型目录: {model_path}")
-                except Exception as ms_e:
-                    logging.warning(f"ModelScope 下载失败，将尝试按原路径/模型名加载: {ms_e}")
+            with _SHARED_EMBEDDING_LOCK:
+                shared = _SHARED_EMBEDDINGS.get(model_key)
+                if shared is not None:
+                    emb, self.embedding_dim = shared
+                else:
+                    if embed_source == "modelscope" and not os.path.isdir(model_path):
+                        try:
+                            from modelscope import snapshot_download
+                            cache_root = str(Path(__file__).resolve().parent / "models" / "modelscope_cache")
+                            os.makedirs(cache_root, exist_ok=True)
+                            model_path = snapshot_download(model_path, cache_dir=cache_root)
+                            logging.info(f"通过 ModelScope 下载并使用模型目录: {model_path}")
+                        except Exception as ms_e:
+                            logging.warning(f"ModelScope 下载失败，将尝试按原路径/模型名加载: {ms_e}")
 
-            st_model = SentenceTransformer(model_path)
-            logging.info(f"成功加载嵌入模型: {model_path}")
-            try:
-                model_dim = int(st_model.get_sentence_embedding_dimension())
-                if model_dim > 0:
-                    self.embedding_dim = model_dim
-                    logging.info(f"检测到真实嵌入维度: {self.embedding_dim}")
-            except Exception:
-                pass
+                    st_model = SentenceTransformer(model_path)
+                    logging.info(f"成功加载嵌入模型: {model_path}")
+                    try:
+                        model_dim = int(st_model.get_sentence_embedding_dimension())
+                        if model_dim > 0:
+                            self.embedding_dim = model_dim
+                            logging.info(f"检测到真实嵌入维度: {self.embedding_dim}")
+                    except Exception:
+                        pass
 
-            class _STEmbedding(_BaseEmb):
-                model_config = {"arbitrary_types_allowed": True}
+                    class _STEmbedding(_BaseEmb):
+                        model_config = {"arbitrary_types_allowed": True}
 
-                def _get_query_embedding(self, text: str) -> List[float]:
-                    vec = st_model.encode(text)
-                    return [float(x) for x in vec.tolist()] if hasattr(vec, 'tolist') else [float(x) for x in vec]
+                        def _get_query_embedding(self, text: str) -> List[float]:
+                            vec = st_model.encode(text, show_progress_bar=False)
+                            return [float(x) for x in vec.tolist()] if hasattr(vec, 'tolist') else [float(x) for x in vec]
 
-                def _get_text_embedding(self, text: str) -> List[float]:
-                    vec = st_model.encode(text)
-                    return [float(x) for x in vec.tolist()] if hasattr(vec, 'tolist') else [float(x) for x in vec]
+                        def _get_text_embedding(self, text: str) -> List[float]:
+                            vec = st_model.encode(text, show_progress_bar=False)
+                            return [float(x) for x in vec.tolist()] if hasattr(vec, 'tolist') else [float(x) for x in vec]
 
-                async def _aget_query_embedding(self, text: str) -> List[float]:
-                    return self._get_query_embedding(text)
+                        def _get_text_embeddings(self, texts: List[str]) -> List[List[float]]:
+                            vectors = st_model.encode(texts, batch_size=32, show_progress_bar=False)
+                            rows = vectors.tolist() if hasattr(vectors, 'tolist') else vectors
+                            return [[float(x) for x in row] for row in rows]
 
-            emb = _STEmbedding()
+                        async def _aget_query_embedding(self, text: str) -> List[float]:
+                            return self._get_query_embedding(text)
+
+                        async def _aget_text_embeddings(self, texts: List[str]) -> List[List[float]]:
+                            return self._get_text_embeddings(texts)
+
+                    emb = _STEmbedding()
+                    _SHARED_EMBEDDINGS[model_key] = (emb, self.embedding_dim)
             Settings.embed_model = emb
             self.embedding_mode = "real"
             logging.info(f"已配置真实嵌入模型")
@@ -256,7 +303,16 @@ class PersistentRAGSystem:
         """尝试加载已存在索引，失败则构建新索引。"""
         # reset last error on each attempt
         self.last_error = None
-        if os.path.exists(self.persist_dir):
+        required_index_files = (
+            "default__vector_store.json",
+            "docstore.json",
+            "index_store.json",
+        )
+        index_complete = os.path.isdir(self.persist_dir) and all(
+            os.path.isfile(os.path.join(self.persist_dir, filename))
+            for filename in required_index_files
+        )
+        if index_complete:
             logging.info("检测到持久化索引，尝试加载...")
             try:
                 self._configure_models()
@@ -285,11 +341,18 @@ class PersistentRAGSystem:
                 logging.info("索引加载成功")
                 return True
             except Exception as e:
-                logging.warning(f"加载索引失败：{e}，将尝试重建")
                 self.last_error = f"加载持久化索引失败: {e}"
+                if not self.allow_auto_build:
+                    logging.error("%s；自动重建已禁用", self.last_error)
+                    return False
+                logging.warning("%s，将尝试重建", self.last_error)
                 return self._build_new_index()
 
-        logging.info("未检测到持久化索引，开始构建新索引")
+        self.last_error = f"索引目录不存在或不完整: {self.persist_dir}"
+        if not self.allow_auto_build:
+            logging.error("%s；自动构建已禁用，请运行显式索引维护命令", self.last_error)
+            return False
+        logging.info("%s，开始构建新索引", self.last_error)
         return self._build_new_index()
 
     def _build_new_index(self) -> bool:
