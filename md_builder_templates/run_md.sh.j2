@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INPUT_DIR="${SCRIPT_DIR}/inputs"
+WORK_DIR="${SCRIPT_DIR}/work"
+MD_DIR="${WORK_DIR}/md"
+ANALYSE_DIR="${WORK_DIR}/analyse"
+mkdir -p "$WORK_DIR" "$MD_DIR" "$ANALYSE_DIR"
+
+for command in pdb4amber tleap cpptraj parmchk2; do
+  command -v "$command" >/dev/null || { echo "Required command not found: $command" >&2; exit 1; }
+done
+if command -v pmemd.cuda >/dev/null; then PMEMD=pmemd.cuda
+elif command -v pmemd >/dev/null; then PMEMD=pmemd
+elif command -v sander >/dev/null; then PMEMD=sander
+else echo "No AMBER MD engine found (pmemd.cuda, pmemd, or sander)" >&2; exit 1
+fi
+
+filter_chains() {
+  local source="$1" destination="$2" selected="$3"
+  if [ -z "$selected" ]; then cp "$source" "$destination"; return; fi
+  awk -v selected="$selected" '
+    BEGIN { n=split(selected, values, ","); for (i=1; i<=n; i++) keep[values[i]]=1 }
+    /^(ATOM  |HETATM)/ { chain=substr($0,22,1); if (chain==" ") chain="_"; if (keep[chain]) print; next }
+    /^TER/ { print; next }
+    /^END/ { print }
+  ' "$source" > "$destination"
+}
+
+cd "$WORK_DIR"
+{% if system_type == "protein_protein" and input_mode == "two_partners" %}
+filter_chains "${INPUT_DIR}/{{ pdb_files[0] }}" partner1_raw.pdb "{{ partner1_csv }}"
+filter_chains "${INPUT_DIR}/{{ pdb_files[1] }}" partner2_raw.pdb "{{ partner2_csv }}"
+pdb4amber -i partner1_raw.pdb -o partner1_clean.pdb -y -d --add-missing-atoms
+pdb4amber -i partner2_raw.pdb -o partner2_clean.pdb -y -d --add-missing-atoms
+{% else %}
+filter_chains "${INPUT_DIR}/{{ pdb_files[0] }}" receptor_raw.pdb "{{ all_selected_chains }}"
+pdb4amber -i receptor_raw.pdb -o receptor_clean.pdb -y -d --add-missing-atoms
+{% endif %}
+{% if system_type == "protein_ligand" %}
+{% if charge_method == "existing" %}
+cp "${INPUT_DIR}/{{ mol2_file }}" ligand.mol2
+{% else %}
+bash "${SCRIPT_DIR}/prepare_lig.sh" "${INPUT_DIR}/{{ mol2_file }}" "${WORK_DIR}/ligand.mol2"
+{% endif %}
+parmchk2 -i ligand.mol2 -f mol2 -o ligand.frcmod -a Y
+{% endif %}
+
+tleap -f "${SCRIPT_DIR}/leap.in"
+test -s com_wat.prmtop && test -s com_wat.inpcrd
+cp com_wat.prmtop com_wat.inpcrd "$MD_DIR/"
+
+cd "$MD_DIR"
+"$PMEMD" -O -i "${SCRIPT_DIR}/md/min1.in" -p com_wat.prmtop -c com_wat.inpcrd -ref com_wat.inpcrd -r min1.rst -o min1.out
+"$PMEMD" -O -i "${SCRIPT_DIR}/md/min2.in" -p com_wat.prmtop -c min1.rst -r min2.rst -o min2.out
+"$PMEMD" -O -i "${SCRIPT_DIR}/md/heat.in" -p com_wat.prmtop -c min2.rst -ref min2.rst -r heat.rst -o heat.out -x heat.nc
+"$PMEMD" -O -i "${SCRIPT_DIR}/md/equil.in" -p com_wat.prmtop -c heat.rst -ref heat.rst -r equil.rst -o equil.out -x equil.nc
+
+previous=equil.rst
+for round in $(seq 1 {{ production_rounds }}); do
+  tag=$(printf "prod_%03d" "$round")
+  "$PMEMD" -O -i "${SCRIPT_DIR}/md/prod.in" -p com_wat.prmtop -c "$previous" -r "${tag}.rst" -o "${tag}.out" -x "${tag}.nc"
+  previous="${tag}.rst"
+done
+
+cp "${SCRIPT_DIR}/analyse/analyse.sh" "$ANALYSE_DIR/"
+cd "$ANALYSE_DIR"
+bash analyse.sh
+echo "Workflow complete: ${WORK_DIR}"

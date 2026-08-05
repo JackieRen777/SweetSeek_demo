@@ -1,0 +1,10 @@
+NPT equilibration at {{ temperature_k }} K and {{ pressure_bar }} bar
+&cntrl
+ imin=0, irest=1, ntx=5, ntb=2, ntp=1, barostat=2,
+ cut={{ cutoff_a }}, ntc=2, ntf=2,
+ ntt=3, gamma_ln=1.0, ig=-1,
+ temp0={{ temperature_k }}, pres0={{ pressure_bar }},
+ nstlim={{ equil_steps }}, dt={{ dt_ps }},
+ ntpr={{ output_steps }}, ntwx={{ output_steps }}, ntwr={{ output_steps }}, ioutfm=1,
+ ntr=1, restraint_wt=1.0, restraintmask='@CA,C,N,O',
+/

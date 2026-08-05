@@ -101,6 +101,13 @@ def validate_config():
 
 app = Flask(__name__)
 
+from services.md_builder_api import InMemoryUploadRequest
+app.request_class = InMemoryUploadRequest
+
+@app.errorhandler(413)
+def request_too_large(_error):
+    return jsonify({"success": False, "error": "Request exceeds the 20 MB upload limit"}), 413
+
 def _parse_csv_env(value: str) -> list[str]:
     return [item.strip() for item in (value or "").split(",") if item.strip()]
 
@@ -161,6 +168,9 @@ evidence_ranker = services.evidence_ranker
 llm_client = services.llm_client
 compound_service = services.compound_service
 chat_service = services.chat_service
+
+from services.md_builder_api import create_md_builder_blueprint
+app.register_blueprint(create_md_builder_blueprint(lambda: llm_client))
 
 # 双蛋白 RAG 系统（独立实例）
 from persistent_storage import PersistentRAGSystem

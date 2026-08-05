@@ -1,0 +1,29 @@
+source {{ protein_ff_leap }}
+source {{ water_leap }}
+{% if system_type == "protein_ligand" %}source leaprc.gaff2
+{% endif %}
+{% if system_type == "protein_protein" and input_mode == "two_partners" %}
+partner1 = loadpdb partner1_clean.pdb
+partner2 = loadpdb partner2_clean.pdb
+com = combine { partner1 partner2 }
+{% else %}
+protein = loadpdb receptor_clean.pdb
+{% if system_type == "protein_ligand" %}
+loadamberparams ligand.frcmod
+ligand = loadmol2 ligand.mol2
+com = combine { protein ligand }
+{% else %}
+com = protein
+{% endif %}
+{% endif %}
+check com
+savePdb com com_dry.pdb
+solvateBox com {{ water_model }} {{ solvent_padding_a }}
+addIonsRand com Na+ 0
+addIonsRand com Cl- 0
+{% if salt_pairs > 0 %}addIonsRand com Na+ {{ salt_pairs }}
+addIonsRand com Cl- {{ salt_pairs }}
+{% endif %}
+savePdb com com_wat.pdb
+saveAmberParm com com_wat.prmtop com_wat.inpcrd
+quit

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+MD_DIR="$(cd "${SCRIPT_DIR}/../md" && pwd)"
+cd "$SCRIPT_DIR"
+shopt -s nullglob
+trajectories=("${MD_DIR}"/prod_*.nc)
+{% raw %}[ ${#trajectories[@]} -gt 0 ] || { echo "No production trajectories found" >&2; exit 1; }{% endraw %}
+
+cpptraj -p "${MD_DIR}/com_wat.prmtop" <<EOF
+trajin ${MD_DIR}/prod_*.nc
+autoimage
+strip :WAT,Na+,Cl-
+rms first @C,CA,N out rmsd.dat
+atomicfluct byres !@H= out rmsf.dat
+radgyr !@H= out rg.dat
+surf !@H= out sasa.dat
+run
+quit
+EOF
+
+python3 - <<'PYEOF'
+import csv
+from pathlib import Path
+
+for source in ("rmsd.dat", "rmsf.dat", "rg.dat", "sasa.dat"):
+    path = Path(source)
+    if not path.exists():
+        continue
+    rows = []
+    for line in path.read_text().splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        rows.append(line.split())
+    with Path(source).with_suffix(".csv").open("w", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerows(rows)
+PYEOF

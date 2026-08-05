@@ -20,10 +20,11 @@ const ReferencesList = lazy(() => import('./features/references/components/Refer
 const DualProteinChatInterface = lazy(() => import('./features/dual-protein/components/DualProteinChatInterface'));
 const EncapsulationChatInterface = lazy(() => import('./features/encapsulation/components/EncapsulationChatInterface'));
 const MLPredictSection = lazy(() => import('./features/ml-predict/MLPredictSection'));
+const AmberMDBuilder = lazy(() => import('./features/md-builder/AmberMDBuilder'));
 
 const SCREEN_COUNT = 4; // Reduced from 5 to 4
 
-type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | null;
+type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | 'md-builder' | null;
 
 // URL Mapping
 const PATH_MAP: Record<string, FeatureType> = {
@@ -35,7 +36,8 @@ const PATH_MAP: Record<string, FeatureType> = {
   '/dual-protein': 'dual-protein',
   '/encapsulation': 'encapsulation',
   '/embedding': 'encapsulation',
-  '/ml-predict': 'ml-predict'
+  '/ml-predict': 'ml-predict',
+  '/amber-md-builder': 'md-builder',
 };
 
 const REVERSE_PATH_MAP: Record<string, string> = {
@@ -45,7 +47,8 @@ const REVERSE_PATH_MAP: Record<string, string> = {
   'references': '/references',
   'dual-protein': '/dual-protein',
   'encapsulation': '/encapsulation',
-  'ml-predict': '/ml-predict'
+  'ml-predict': '/ml-predict',
+  'md-builder': '/amber-md-builder',
 };
 
 const featureFromPath = (pathname: string): FeatureType => {
@@ -124,6 +127,7 @@ function App() {
       else if (index === 5) { setActiveFeature('dual-protein'); return; }
       else if (index === 6) { setActiveFeature('ml-predict'); return; }
       else if (index === 7) { setActiveFeature('encapsulation'); return; }
+      else if (index === 8) { setActiveFeature('md-builder'); return; }
 
       // Also scroll to that section in the background
       navigateTo(index);
@@ -235,8 +239,8 @@ function App() {
                     </Suspense>
                   </div>
                 ) : (
-                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'encapsulation' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
-                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'encapsulation' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
+                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
+                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
                         {activeFeature === 'qa' && <ChatInterface />}
                         {activeFeature === 'equation' && <SweetTasteEquation />}
@@ -244,6 +248,7 @@ function App() {
                         {activeFeature === 'references' && <ReferencesList />}
                         {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
                         {activeFeature === 'encapsulation' && <EncapsulationChatInterface />}
+                        {activeFeature === 'md-builder' && <AmberMDBuilder />}
                       </Suspense>
                     </div>
                   </div>

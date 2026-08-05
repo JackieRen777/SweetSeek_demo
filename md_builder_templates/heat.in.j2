@@ -1,0 +1,12 @@
+NVT heating to {{ temperature_k }} K
+&cntrl
+ imin=0, irest=0, ntx=1, ntb=1, ntp=0,
+ cut={{ cutoff_a }}, ntc=2, ntf=2,
+ ntt=3, gamma_ln=1.0, ig=-1,
+ tempi=0.0, temp0={{ temperature_k }},
+ nstlim={{ heat_steps }}, dt={{ dt_ps }},
+ ntpr={{ output_steps }}, ntwx={{ output_steps }}, ntwr={{ output_steps }}, ioutfm=1,
+ ntr=1, restraint_wt=5.0, restraintmask='@CA,C,N,O', nmropt=1,
+/
+&wt TYPE='TEMP0', istep1=0, istep2={{ heat_steps }}, value1=0.0, value2={{ temperature_k }}, /
+&wt TYPE='END', /
