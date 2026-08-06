@@ -3,7 +3,7 @@
 .mdp-banner.error { color: #92400e; background: #fffbeb; border-color: #fcd34d; }
 .mdp-banner.success { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
 .mdp-banner button { margin-left: auto; background: none; border: 0; color: inherit; padding: 2px; }
-.mdp-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 3fr) minmax(0, 3fr); overflow: hidden; border: 1px solid #e2e8f0; border-radius: 6px; }
+.mdp-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 2.5fr) minmax(0, 2.5fr) minmax(0, 5fr); overflow: hidden; border: 1px solid #e2e8f0; border-radius: 6px; }
 .mdp-main, .mdp-files-panel { min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
 .mdp-main { padding: 20px 24px 28px; }
 .mdp-files-panel { padding: 20px; background: #fff; border-left: 1px solid #e2e8f0; }
