@@ -64,11 +64,12 @@ class DeepSeekLLMClient:
                     "type": "function",
                     "function": {
                         "name": function_name,
-                        "description": "Extract structured molecular-dynamics parameters",
+                        "description": "Return structured molecular-dynamics guidance",
                         "parameters": schema,
                     },
                 }],
                 tool_choice={"type": "function", "function": {"name": function_name}},
+                max_tokens=1400,
                 stream=False,
             )
             call = response.choices[0].message.tool_calls[0]

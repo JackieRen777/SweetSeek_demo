@@ -201,3 +201,64 @@ def test_explicit_parameter_values_are_not_lost_by_llm_extraction():
         "ligand_net_charge": -1,
         "charge_method": "resp",
     }
+
+
+def test_expert_chat_auto_applies_setup_values_but_preserves_locked_fields():
+    class ExpertClient:
+        def structured_chat(self, messages, **kwargs):
+            assert kwargs["function_name"] == "answer_md_expert"
+            assert "current_parameters" in messages[-1]["content"]
+            return {
+                "answer": "The requested production protocol is internally consistent.",
+                "intent": "setup",
+                "confidence": "high",
+                "auto_apply": True,
+                "parameter_updates": {
+                    "simulation_time_ns": 80, "temperature_k": 280, "salt_molar": 0.15,
+                    "heating_ps": 100, "charge_method": "existing",
+                },
+                "diagnostic_checks": [],
+            }
+
+    app = Flask(__name__)
+    app.register_blueprint(create_md_builder_blueprint(lambda: ExpertClient()))
+    response = app.test_client().post("/api/md-builder/chat", json={
+        "message": "Set up 100 ns at 310 K with 0.15 M NaCl",
+        "parameters": {"simulation_time_ns": 50, "temperature_k": 315, "salt_molar": 0},
+        "locked_fields": ["temperature_k"],
+        "structures": [],
+        "history": [],
+    })
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["auto_apply"] is True
+    assert data["parameter_updates"] == {"simulation_time_ns": 100.0, "salt_molar": 0.15}
+    assert data["confidence"] == "high"
+
+
+def test_expert_chat_never_auto_applies_troubleshooting_advice():
+    class ExpertClient:
+        def structured_chat(self, _messages, **_kwargs):
+            return {
+                "answer": "Check whether this is a periodic-boundary imaging artifact before changing the force field.",
+                "intent": "setup",
+                "confidence": "medium",
+                "auto_apply": True,
+                "parameter_updates": {"solvent_padding_a": 16, "timestep_fs": 1},
+                "diagnostic_checks": ["Run cpptraj autoimage and inspect the imaged trajectory."],
+            }
+
+    app = Flask(__name__)
+    app.register_blueprint(create_md_builder_blueprint(lambda: ExpertClient()))
+    response = app.test_client().post("/api/md-builder/chat", json={
+        "message": "My ligand escaped from the binding site after 10 ns. What failed?",
+        "parameters": {},
+        "locked_fields": [],
+        "structures": [],
+    })
+    data = response.get_json()
+    assert response.status_code == 200
+    assert data["intent"] == "troubleshooting"
+    assert data["auto_apply"] is False
+    assert data["parameter_updates"] == {"solvent_padding_a": 16, "timestep_fs": 1}
+    assert "autoimage" in data["diagnostic_checks"][0]

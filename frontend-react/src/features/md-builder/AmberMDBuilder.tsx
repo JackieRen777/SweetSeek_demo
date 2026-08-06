@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import {
-  AlertTriangle, Check, ChevronDown, Download, FileArchive, FileCode2,
-  Loader2, Plus, RefreshCw, Send, Upload, X,
+  AlertTriangle, Bot, Check, ChevronDown, Download, FileArchive, FileCode2,
+  Loader2, Plus, RefreshCw, Send, Upload, WandSparkles, X,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './amber-md-builder.css';
 
 type SystemChoice = 'auto' | 'single_protein' | 'protein_protein' | 'protein_ligand';
-type Tab = 'setup' | 'parameters' | 'files';
+type Tab = 'setup' | 'files' | 'expert';
 type ChainGroup = 'partner1' | 'partner2' | 'excluded';
 
 interface ChainInfo { id: string; residues: number; name: string }
@@ -30,6 +32,14 @@ interface StructureEntry {
   pdb_id?: string;
   unit?: 'asymmetric' | 'assembly';
   assembly_id?: number;
+}
+
+interface ExpertMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  confidence?: 'low' | 'medium' | 'high';
+  checks?: string[];
 }
 
 interface Parameters {
@@ -104,15 +114,19 @@ export default function AmberMDBuilder() {
   const [chainGroups, setChainGroups] = useState<Record<string, ChainGroup>>({});
   const [parameters, setParameters] = useState<Parameters>(DEFAULT_PARAMETERS);
   const [lockedFields, setLockedFields] = useState<Set<string>>(new Set());
-  const [prompt, setPrompt] = useState('');
   const [pdbId, setPdbId] = useState('');
   const [unit, setUnit] = useState<'asymmetric' | 'assembly'>('asymmetric');
   const [assemblyId, setAssemblyId] = useState(1);
-  const [busy, setBusy] = useState<'inspect' | 'extract' | 'generate' | null>(null);
+  const [busy, setBusy] = useState<'inspect' | 'generate' | null>(null);
+  const [chatBusy, setChatBusy] = useState(false);
+  const [expertInput, setExpertInput] = useState('');
+  const [expertMessages, setExpertMessages] = useState<ExpertMessage[]>([]);
+  const [suggestedUpdates, setSuggestedUpdates] = useState<Partial<Parameters> | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [download, setDownload] = useState<{ url: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
   const setup = useMemo(() => resolvedSetup(systemChoice, structures), [systemChoice, structures]);
   const complexChains = setup.inputMode === 'single_complex' ? setup.pdbs[0]?.inspection.chains ?? [] : [];
   const canUseExistingCharges = setup.mol2s[0]?.inspection.has_charges === true;
@@ -120,6 +134,10 @@ export default function AmberMDBuilder() {
   useEffect(() => () => {
     if (download) URL.revokeObjectURL(download.url);
   }, [download]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ block: 'end' });
+  }, [expertMessages, chatBusy]);
 
   const scrollPanel = (event: WheelEvent<HTMLElement>) => {
     const panel = event.currentTarget;
@@ -197,39 +215,66 @@ export default function AmberMDBuilder() {
     finally { setBusy(null); }
   };
 
-  const extractParameters = async () => {
-    if (!prompt.trim()) return;
-    setBusy('extract'); setError(''); setNotice('');
+  const normalizeUpdates = (value: unknown) => {
+    if (!value || typeof value !== 'object') return {} as Partial<Parameters>;
+    const updates = Object.fromEntries(Object.entries(value).filter(([key, item]) =>
+      PARAMETER_KEYS.has(key as keyof Parameters) && !lockedFields.has(key) && item !== null,
+    )) as Partial<Parameters>;
+    if (updates.preset && !updates.protein_force_field && !updates.water_model) {
+      updates.protein_force_field = updates.preset === 'standard' ? 'ff19SB' : 'ff14SB';
+      updates.water_model = updates.preset === 'standard' ? 'OPCBOX' : 'TIP3PBOX';
+    }
+    return updates;
+  };
+
+  const applyExpertUpdates = (updates: Partial<Parameters>, lockApplied: boolean) => {
+    const changed = (Object.keys(updates) as (keyof Parameters)[]).filter(key => parameters[key] !== updates[key]);
+    if (!changed.length) return;
+    setParameters(previous => ({ ...previous, ...updates }));
+    if (lockApplied) {
+      setLockedFields(previous => new Set([...previous, ...changed]));
+    }
+    setSuggestedUpdates(null);
+    setNotice(`${changed.length} ${changed.length === 1 ? 'parameter' : 'parameters'} updated: ${changed.map(key => PARAMETER_LABELS[key] || key.replaceAll('_', ' ')).join(', ')}.`);
+  };
+
+  const sendExpertMessage = async (message = expertInput) => {
+    const question = message.trim();
+    if (!question || chatBusy) return;
+    const userMessage: ExpertMessage = { id: `user-${Date.now()}`, role: 'user', content: question };
+    const conversation = [...expertMessages, userMessage];
+    setExpertMessages(conversation);
+    setExpertInput(''); setSuggestedUpdates(null); setChatBusy(true); setError('');
     try {
-      const response = await fetch('/api/md-builder/extract', {
+      const response = await fetch('/api/md-builder/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: prompt, parameters, locked_fields: [...lockedFields],
+          message: question,
+          history: expertMessages.slice(-10).map(item => ({ role: item.role, content: item.content })),
+          parameters,
+          locked_fields: [...lockedFields],
           structures: structures.map(item => item.inspection),
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Parameter extraction failed.');
-      const suggestions = data.parameters && typeof data.parameters === 'object'
-        ? Object.fromEntries(Object.entries(data.parameters).filter(([key, value]) =>
-            PARAMETER_KEYS.has(key as keyof Parameters) && !lockedFields.has(key) && value !== null,
-          )) as Partial<Parameters>
-        : {};
-      const changed = (Object.keys(suggestions) as (keyof Parameters)[])
-        .filter(key => parameters[key] !== suggestions[key]);
-      setParameters(previous => ({ ...previous, ...suggestions }));
-      setTab('parameters');
-      const applied = changed.map(key => PARAMETER_LABELS[key] || key.replaceAll('_', ' '));
-      const missing = Array.isArray(data.missing_info) ? data.missing_info : [];
-      if (applied.length) {
-        setNotice(`${applied.length} ${applied.length === 1 ? 'preference' : 'preferences'} applied: ${applied.join(', ')}.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}`);
-      } else if (missing.length) {
-        setNotice(`No parameter changes were found. Still needed: ${missing.join(', ')}.`);
-      } else {
-        setNotice('No parameter changes were found. Try including values such as duration, temperature, or salt concentration.');
-      }
-    } catch (caught) { setError(caught instanceof Error ? caught.message : 'Parameter extraction failed.'); }
-    finally { setBusy(null); }
+      if (!response.ok) throw new Error(data.error || 'MD Expert could not answer this question.');
+      const updates = normalizeUpdates(data.parameter_updates);
+      setExpertMessages(previous => [...previous, {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: data.answer,
+        confidence: data.confidence,
+        checks: Array.isArray(data.diagnostic_checks) ? data.diagnostic_checks : [],
+      }]);
+      if (data.auto_apply) applyExpertUpdates(updates, false);
+      else if (Object.keys(updates).length) setSuggestedUpdates(updates);
+    } catch (caught) {
+      setExpertMessages(previous => [...previous, {
+        id: `assistant-error-${Date.now()}`,
+        role: 'assistant',
+        content: caught instanceof Error ? caught.message : 'MD Expert is unavailable.',
+      }]);
+    } finally { setChatBusy(false); }
   };
 
   const validationMessage = () => {
@@ -307,12 +352,11 @@ export default function AmberMDBuilder() {
         </div>
         <label>Trajectory interval (ps)<input type="number" value={parameters.trajectory_interval_ps} onChange={event => updateParameter('trajectory_interval_ps', Number(event.target.value))} /></label>
       </details>
-      <button className="mdp-generate" onClick={generate} disabled={busy !== null}>{busy === 'generate' ? <Loader2 className="mdp-spin" size={17} /> : <FileArchive size={17} />} Generate project</button>
     </div>
   );
 
   return <div className="mdp-shell" aria-label="AMBER MD Builder">
-    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['setup', 'parameters', 'files'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
+    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['setup', 'files', 'expert'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
     {(error || notice) && <div className={`mdp-banner ${error ? 'error' : 'success'}`}>{error ? <AlertTriangle size={16} /> : <Check size={16} />}<span>{error || notice}</span><button onClick={() => { setError(''); setNotice(''); }}><X size={15} /></button></div>}
     <div className="mdp-workspace">
       <main className={`mdp-main overflow-y-auto ${tab !== 'setup' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
@@ -332,17 +376,9 @@ export default function AmberMDBuilder() {
           {complexChains.length > 1 && <div className="mdp-chain-table"><div className="mdp-chain-header"><span>Chain</span><span>Residues</span><span>Assignment</span></div>{complexChains.map(chain => <div className="mdp-chain-row" key={chain.id}><strong>{chain.id === '_' ? 'Blank' : chain.id}</strong><span>{chain.residues}</span><select aria-label={`Assign chain ${chain.id}`} value={chainGroups[chain.id] || 'excluded'} onChange={event => setChainGroups(previous => ({ ...previous, [chain.id]: event.target.value as ChainGroup }))}><option value="partner1">Partner 1</option><option value="partner2">Partner 2</option><option value="excluded">Excluded</option></select></div>)}</div>}
         </section>
 
-        <section className="mdp-section mdp-request">
-          <div className="mdp-request-label"><span>Describe your simulation</span><small>AI suggestions never overwrite fields you edited.</small></div>
-          <textarea value={prompt} placeholder="Example: Run a 100 ns simulation at 310 K with 0.15 M NaCl." onChange={event => setPrompt(event.target.value)} />
-          <div className="mdp-request-actions">
-            <span>Include duration, temperature, salt, pressure, or ligand charge preferences.</span>
-            <button onClick={extractParameters} disabled={busy !== null || !prompt.trim()}>{busy === 'extract' ? <Loader2 className="mdp-spin" size={16} /> : <Send size={16} />} Apply to parameters</button>
-          </div>
-        </section>
+        <section className="mdp-section mdp-parameter-section">{parameterPanel}</section>
       </main>
 
-      <aside className={`mdp-sidebar overflow-y-auto ${tab !== 'parameters' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>{parameterPanel}</aside>
       <section className={`mdp-files-panel overflow-y-auto ${tab !== 'files' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
         <div className="mdp-section-heading"><div><span>04</span><h2>Generate & download</h2></div></div>
         <div className="mdp-protocol-summary"><strong>{parameters.preset === 'standard' ? 'Standard soluble-protein protocol' : 'Compatibility protocol'}</strong><span>{parameters.protein_force_field} · {parameters.water_model.replace('BOX', '')} · {parameters.simulation_time_ns} ns NPT</span></div>
@@ -350,8 +386,26 @@ export default function AmberMDBuilder() {
         {download ? <div className="mdp-file-actions">
           <a className="mdp-download" href={download.url} download={download.name}><Download size={17} /> Download {download.name}</a>
           <button className="mdp-regenerate" onClick={generate} disabled={busy !== null}>{busy === 'generate' ? <Loader2 className="mdp-spin" size={16} /> : <RefreshCw size={16} />} {busy === 'generate' ? 'Regenerating project' : 'Regenerate project'}</button>
-        </div> : <div className="mdp-empty-files"><FileArchive size={28} /><p>Review your setup and generate the project to enable download.</p></div>}
+        </div> : <div className="mdp-generate-ready"><div className="mdp-empty-files"><FileArchive size={28} /><p>Review the setup, then generate a downloadable AMBER project.</p></div><button className="mdp-generate" onClick={generate} disabled={busy !== null}>{busy === 'generate' ? <Loader2 className="mdp-spin" size={17} /> : <FileArchive size={17} />} Generate project</button></div>}
       </section>
+
+      <aside className={`mdp-expert-panel ${tab !== 'expert' ? 'mdp-mobile-hidden' : ''}`}>
+        <div className="mdp-expert-heading"><div><Bot size={18} /><div><h2>MD Expert</h2><span>DeepSeek</span></div></div><span className="mdp-expert-context">{structures.length} structures</span></div>
+        <div className="mdp-expert-messages overflow-y-auto">
+          {!expertMessages.length && <div className="mdp-expert-empty"><WandSparkles size={24} /><div className="mdp-quick-prompts">
+            {['Set up 100 ns at 310 K with 0.15 M NaCl', 'My ligand left the binding site', 'How do I diagnose a SHAKE failure?', 'Why did the energy become NaN?'].map(item => <button key={item} onClick={() => setExpertInput(item)}>{item}</button>)}
+          </div></div>}
+          {expertMessages.map(message => <article key={message.id} className={`mdp-chat-message ${message.role}`}>
+            <div className="mdp-chat-meta"><span>{message.role === 'user' ? 'You' : 'MD Expert'}</span>{message.confidence && <small>{message.confidence} confidence</small>}</div>
+            <div className="mdp-chat-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown></div>
+            {!!message.checks?.length && <div className="mdp-diagnostic-checks"><strong>Check next</strong>{message.checks.map(item => <div key={item}><Check size={13} />{item}</div>)}</div>}
+          </article>)}
+          {chatBusy && <div className="mdp-expert-thinking"><Loader2 className="mdp-spin" size={16} /> Reviewing the setup and likely failure modes...</div>}
+          <div ref={chatEndRef} />
+        </div>
+        {suggestedUpdates && <div className="mdp-suggested-updates"><div><strong>Suggested parameter changes</strong><span>{Object.entries(suggestedUpdates).map(([key, value]) => `${PARAMETER_LABELS[key as keyof Parameters] || key}: ${value}`).join(' · ')}</span></div><button onClick={() => applyExpertUpdates(suggestedUpdates, true)}>Apply changes</button></div>}
+        <div className="mdp-expert-composer"><textarea aria-label="Ask MD Expert" value={expertInput} maxLength={12000} placeholder="Ask about setup, logs, instability, unbinding, or AMBER input files..." onChange={event => setExpertInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void sendExpertMessage(); } }} /><button aria-label="Send to MD Expert" title="Send message" onClick={() => void sendExpertMessage()} disabled={chatBusy || !expertInput.trim()}>{chatBusy ? <Loader2 className="mdp-spin" size={17} /> : <Send size={17} />}</button></div>
+      </aside>
     </div>
   </div>;
 }

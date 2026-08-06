@@ -62,11 +62,41 @@ def _extraction_schema() -> dict:
             "temperature_k": {"type": "number"},
             "pressure_bar": {"type": "number"},
             "preset": {"type": "string", "enum": ["standard", "compatibility"]},
+            "protein_force_field": {"type": "string", "enum": ["ff19SB", "ff14SB"]},
+            "water_model": {"type": "string", "enum": ["OPCBOX", "TIP3PBOX"]},
+            "solvent_padding_a": {"type": "number"},
+            "cutoff_a": {"type": "number"},
             "salt_molar": {"type": "number"},
+            "timestep_fs": {"type": "number"},
+            "heating_ps": {"type": "number"},
+            "equilibration_ps": {"type": "number"},
+            "trajectory_interval_ps": {"type": "number"},
             "charge_method": {"type": "string", "enum": ["am1bcc", "resp", "existing"]},
             "ligand_net_charge": {"type": "integer"},
             "ligand_multiplicity": {"type": "integer"},
         },
+        "additionalProperties": False,
+    }
+
+
+def _expert_schema() -> dict:
+    parameter_properties = dict(_extraction_schema()["properties"])
+    parameter_properties.pop("system_type", None)
+    return {
+        "type": "object",
+        "properties": {
+            "answer": {"type": "string"},
+            "intent": {"type": "string", "enum": ["setup", "troubleshooting", "general"]},
+            "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+            "auto_apply": {"type": "boolean"},
+            "parameter_updates": {
+                "type": "object",
+                "properties": parameter_properties,
+                "additionalProperties": False,
+            },
+            "diagnostic_checks": {"type": "array", "items": {"type": "string"}, "maxItems": 6},
+        },
+        "required": ["answer", "intent", "confidence", "auto_apply", "parameter_updates", "diagnostic_checks"],
         "additionalProperties": False,
     }
 
@@ -84,9 +114,24 @@ def _extract_explicit_values(text: str) -> dict:
         match = re.search(pattern, text, flags=re.IGNORECASE)
         if match:
             values[key] = float(match.group(1))
+    advanced_patterns = {
+        "solvent_padding_a": r"(?:padding|buffer|solvent\s+shell)\D{0,16}(\d+(?:\.\d+)?)\s*(?:a|angstroms?|å)",
+        "cutoff_a": r"(?:cutoff|nonbonded\s+cutoff)\D{0,12}(\d+(?:\.\d+)?)\s*(?:a|angstroms?|å)",
+        "timestep_fs": r"(?:time\s*step|timestep|dt)\D{0,12}(\d+(?:\.\d+)?)\s*fs\b",
+        "heating_ps": r"(?:heat(?:ing)?)\D{0,16}(\d+(?:\.\d+)?)\s*ps\b",
+        "equilibration_ps": r"(?:equilibrat(?:e|ion|ing))\D{0,16}(\d+(?:\.\d+)?)\s*ps\b",
+        "trajectory_interval_ps": r"(?:trajectory|output|write|save|ntwx)\D{0,20}(\d+(?:\.\d+)?)\s*ps\b",
+    }
+    for key, pattern in advanced_patterns.items():
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match:
+            values[key] = float(match.group(1))
     charge = re.search(r"\b(?:net\s+)?charge\s*(?:of|=|is|:)?\s*([+-]?\d+)\b", text, flags=re.IGNORECASE)
     if charge:
         values["ligand_net_charge"] = int(charge.group(1))
+    multiplicity = re.search(r"\bmultiplicity\s*(?:of|=|is|:)?\s*(\d+)\b", text, flags=re.IGNORECASE)
+    if multiplicity:
+        values["ligand_multiplicity"] = int(multiplicity.group(1))
     lowered = text.lower()
     if "am1-bcc" in lowered or "am1bcc" in lowered:
         values["charge_method"] = "am1bcc"
@@ -94,7 +139,66 @@ def _extract_explicit_values(text: str) -> dict:
         values["charge_method"] = "resp"
     elif "existing charge" in lowered or "keep charge" in lowered:
         values["charge_method"] = "existing"
+    if "ff19sb" in lowered:
+        values["protein_force_field"] = "ff19SB"
+    elif "ff14sb" in lowered:
+        values["protein_force_field"] = "ff14SB"
+    if re.search(r"\bopc(?:box)?\b", lowered):
+        values["water_model"] = "OPCBOX"
+    elif re.search(r"\btip3p(?:box)?\b", lowered):
+        values["water_model"] = "TIP3PBOX"
+    if re.search(r"\bstandard\s+preset\b", lowered):
+        values["preset"] = "standard"
+    elif re.search(r"\bcompatibility\s+preset\b", lowered):
+        values["preset"] = "compatibility"
     return values
+
+
+def _explicit_parameter_keys(text: str) -> set[str]:
+    lowered = text.lower()
+    evidence = {
+        "project_name": r"\bproject\s+name\b",
+        "simulation_time_ns": r"\b(?:ns|nanoseconds?|production\s+(?:time|length)|duration)\b",
+        "temperature_k": r"\b(?:temperature|temp|kelvin)\b|\d\s*k\b",
+        "pressure_bar": r"\b(?:pressure|bar|atm)\b",
+        "preset": r"\b(?:standard|compatibility)\s+preset\b",
+        "protein_force_field": r"\b(?:ff19sb|ff14sb|force\s*field)\b",
+        "water_model": r"\b(?:opc(?:box)?|tip3p(?:box)?|water\s+model)\b",
+        "solvent_padding_a": r"\b(?:padding|buffer|solvent\s+shell)\b",
+        "cutoff_a": r"\b(?:cutoff|nonbonded\s+cutoff)\b",
+        "salt_molar": r"\b(?:salt|nacl|molar)\b|\d\s*m\b",
+        "timestep_fs": r"\b(?:time\s*step|timestep|dt|fs)\b",
+        "heating_ps": r"\bheat(?:ing)?\b",
+        "equilibration_ps": r"\bequilibrat(?:e|ion|ing)\b",
+        "trajectory_interval_ps": r"\b(?:trajectory|output|write|save|ntwx)\b",
+        "charge_method": r"\b(?:am1-?bcc|resp|existing\s+charges?|keep\s+charges?)\b",
+        "ligand_net_charge": r"\b(?:ligand\s+)?(?:net\s+)?charge\b",
+        "ligand_multiplicity": r"\b(?:multiplicity|spin\s+state)\b",
+    }
+    return {key for key, pattern in evidence.items() if re.search(pattern, lowered, flags=re.IGNORECASE)}
+
+
+def _is_troubleshooting(text: str) -> bool:
+    return bool(re.search(
+        r"\b(?:error|failed?|failure|crash(?:ed)?|nan|shake|blow(?:n|ing)?\s+up|unstable|"
+        r"drift(?:ed|ing)?|escaped?|left\s+the\s+(?:site|box)|unbound|dissociat(?:ed|ion))\b|"
+        r"跑出|跑飞|失败|报错|崩溃|爆炸|不稳定|解离|漂移",
+        text,
+        flags=re.IGNORECASE,
+    ))
+
+
+def _clean_history(value) -> list[dict]:
+    if not isinstance(value, list):
+        return []
+    cleaned = []
+    for item in value[-10:]:
+        if not isinstance(item, dict) or item.get("role") not in {"user", "assistant"}:
+            continue
+        content = str(item.get("content", "")).strip()[:6000]
+        if content:
+            cleaned.append({"role": item["role"], "content": content})
+    return cleaned
 
 
 def create_md_builder_blueprint(llm_client_getter: Callable):
@@ -165,6 +269,87 @@ def create_md_builder_blueprint(llm_client_getter: Callable):
             "missing_info": missing,
             "needs_clarification": bool(missing),
             "summary": "More information is required." if missing else "Parameters extracted. Review them before generation.",
+        })
+
+    @blueprint.post("/chat")
+    def expert_chat():
+        data = request.get_json(silent=True) or {}
+        question = str(data.get("message", "")).strip()
+        if len(question) < 3:
+            return _error("Enter a simulation setup or troubleshooting question")
+        if len(question) > 12000:
+            return _error("The message exceeds the 12,000 character limit")
+        client = llm_client_getter()
+        if client is None:
+            return _error("The language model service is not configured", 503)
+
+        current = data.get("parameters") if isinstance(data.get("parameters"), dict) else {}
+        structures = data.get("structures") if isinstance(data.get("structures"), list) else []
+        locked = {str(item) for item in data.get("locked_fields", []) if isinstance(item, str)}
+        history = _clean_history(data.get("history"))
+        system_prompt = (
+            "You are an expert AMBER molecular-dynamics consultant for standard soluble single-protein, "
+            "protein-protein, and protein-small-molecule systems. Respond in the user's language while "
+            "preserving exact AMBER keywords and concise code snippets. For setup requests, extract only "
+            "explicitly requested parameters. For setup intent, answer in at most 120 words and do not write "
+            "complete AMBER input files or execution scripts; the Builder templates are the source of truth. "
+            "Set auto_apply=true only when the user directly asks to set, "
+            "configure, or generate a simulation with those conditions. For troubleshooting, set "
+            "auto_apply=false, rank plausible causes, state what evidence distinguishes them, and provide "
+            "actionable tleap, pmemd/sander, cpptraj, or input-file changes. Never assume apparent ligand "
+            "escape is real before checking periodic-boundary imaging with cpptraj autoimage. Check preparation, "
+            "protonation, ligand charge/GAFF parameters, minimization, heating, equilibration, restraints, box "
+            "size, timestep, SHAKE, thermostat/barostat, and trajectory imaging as relevant. Keep troubleshooting "
+            "answers under 450 words. The generated workflow uses two-stage minimization, 200 ps restrained heating, "
+            "1 ns staged equilibration, and Monte Carlo barostat settings unless the user explicitly changes them. "
+            "Its heating restraint is 5 kcal/mol/A^2 on protein backbone atoms @CA,C,N,O; equilibration uses 1 "
+            "kcal/mol/A^2 on the same mask; the ligand is not restrained by default. Do not state a current value "
+            "unless it is present in the supplied parameters or generated_protocol context. "
+            "Do not invent log "
+            "messages or claim certainty without evidence. Flag unsupported metal, covalent, membrane, nucleic-acid, "
+            "glycosylated, or other special chemistry instead of giving a routine-protein recipe."
+        )
+        context = {
+            "question": question,
+            "current_parameters": current,
+            "locked_fields": sorted(locked),
+            "structure_metadata": structures,
+            "generated_protocol": {
+                "minimization": "two stages",
+                "heating": "restrained NVT; default 200 ps; protein backbone restraint 5 kcal/mol/A^2",
+                "equilibration": "NPT; default 1000 ps; protein backbone restraint 1 kcal/mol/A^2",
+                "production": "NPT; Langevin thermostat; Monte Carlo barostat; SHAKE; 2 fs default timestep",
+                "ligand_restraints": "none by default",
+            },
+        }
+        messages = [{"role": "system", "content": system_prompt}, *history, {
+            "role": "user", "content": json.dumps(context, ensure_ascii=False),
+        }]
+        try:
+            result = client.structured_chat(messages, schema=_expert_schema(), function_name="answer_md_expert")
+        except Exception as exc:
+            return _error(f"MD Expert is unavailable: {exc}", 502)
+
+        intent = result.get("intent") if result.get("intent") in {"setup", "troubleshooting", "general"} else "general"
+        if _is_troubleshooting(question):
+            intent = "troubleshooting"
+        raw_updates = result.get("parameter_updates") if isinstance(result.get("parameter_updates"), dict) else {}
+        allowed = set(_expert_schema()["properties"]["parameter_updates"]["properties"])
+        updates = {key: value for key, value in raw_updates.items() if key in allowed and key not in locked and value is not None}
+        auto_apply = bool(result.get("auto_apply")) and intent == "setup"
+        if auto_apply:
+            explicit_keys = _explicit_parameter_keys(question)
+            updates = {key: value for key, value in updates.items() if key in explicit_keys}
+            updates = {**updates, **{key: value for key, value in _extract_explicit_values(question).items() if key not in locked}}
+        checks = result.get("diagnostic_checks") if isinstance(result.get("diagnostic_checks"), list) else []
+        return jsonify({
+            "success": True,
+            "answer": (str(result.get("answer", "")).strip() or "I could not form a reliable answer from the available context.")[:6000],
+            "intent": intent,
+            "confidence": result.get("confidence") if result.get("confidence") in {"low", "medium", "high"} else "low",
+            "auto_apply": auto_apply,
+            "parameter_updates": updates,
+            "diagnostic_checks": [str(item)[:500] for item in checks[:6] if str(item).strip()],
         })
 
     @blueprint.post("/generate")
