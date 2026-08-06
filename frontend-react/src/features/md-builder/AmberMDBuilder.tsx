@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import {
   AlertTriangle, Bot, Check, ChevronDown, Download, FileArchive, FileCode2,
-  Loader2, Plus, RefreshCw, Send, Upload, WandSparkles, X,
+  Loader2, RefreshCw, Send, Upload, WandSparkles, X,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './amber-md-builder.css';
 
-type SystemChoice = 'auto' | 'single_protein' | 'protein_protein' | 'protein_ligand';
+type SystemChoice = 'single_protein' | 'protein_protein' | 'protein_ligand';
 type Tab = 'setup' | 'files' | 'expert';
 type ChainGroup = 'partner1' | 'partner2' | 'excluded';
 
@@ -94,13 +94,7 @@ const GENERATED_FILES = [
 function resolvedSetup(choice: SystemChoice, structures: StructureEntry[]) {
   const pdbs = structures.filter(item => item.inspection.format === 'pdb');
   const mol2s = structures.filter(item => item.inspection.format === 'mol2');
-  let system = choice;
-  if (choice === 'auto') {
-    if (pdbs.length === 1 && mol2s.length === 1) system = 'protein_ligand';
-    else if (pdbs.length === 2) system = 'protein_protein';
-    else if (pdbs.length === 1 && pdbs[0].inspection.chains.length > 1) system = 'protein_protein';
-    else system = 'single_protein';
-  }
+  const system = choice;
   const inputMode = system === 'protein_protein'
     ? (pdbs.length === 2 ? 'two_partners' : 'single_complex')
     : 'single_structure';
@@ -109,14 +103,11 @@ function resolvedSetup(choice: SystemChoice, structures: StructureEntry[]) {
 
 export default function AmberMDBuilder() {
   const [tab, setTab] = useState<Tab>('setup');
-  const [systemChoice, setSystemChoice] = useState<SystemChoice>('auto');
+  const [systemChoice, setSystemChoice] = useState<SystemChoice>('single_protein');
   const [structures, setStructures] = useState<StructureEntry[]>([]);
   const [chainGroups, setChainGroups] = useState<Record<string, ChainGroup>>({});
   const [parameters, setParameters] = useState<Parameters>(DEFAULT_PARAMETERS);
   const [lockedFields, setLockedFields] = useState<Set<string>>(new Set());
-  const [pdbId, setPdbId] = useState('');
-  const [unit, setUnit] = useState<'asymmetric' | 'assembly'>('asymmetric');
-  const [assemblyId, setAssemblyId] = useState(1);
   const [busy, setBusy] = useState<'inspect' | 'generate' | null>(null);
   const [chatBusy, setChatBusy] = useState(false);
   const [expertInput, setExpertInput] = useState('');
@@ -126,6 +117,9 @@ export default function AmberMDBuilder() {
   const [notice, setNotice] = useState('');
   const [download, setDownload] = useState<{ url: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const partner1InputRef = useRef<HTMLInputElement>(null);
+  const partner2InputRef = useRef<HTMLInputElement>(null);
+  const ligandInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const setup = useMemo(() => resolvedSetup(systemChoice, structures), [systemChoice, structures]);
   const complexChains = setup.inputMode === 'single_complex' ? setup.pdbs[0]?.inspection.chains ?? [] : [];
@@ -196,23 +190,6 @@ export default function AmberMDBuilder() {
       setNotice('Structures inspected. Review the detected system and chains.');
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'Inspection failed.'); }
     finally { setBusy(null); if (fileInputRef.current) fileInputRef.current.value = ''; }
-  };
-
-  const inspectPdbId = async () => {
-    if (!pdbId.trim()) return;
-    setBusy('inspect'); setError(''); setNotice('');
-    try {
-      const response = await fetch('/api/md-builder/inspect-pdb-id', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pdb_id: pdbId, unit, assembly_id: assemblyId }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Could not retrieve this PDB entry.');
-      addEntries([{ ...data.source, inspection: data.structures[0] }]);
-      setPdbId('');
-      setNotice('RCSB structure inspected. Review the detected system and chains.');
-    } catch (caught) { setError(caught instanceof Error ? caught.message : 'RCSB request failed.'); }
-    finally { setBusy(null); }
   };
 
   const normalizeUpdates = (value: unknown) => {
@@ -397,15 +374,28 @@ export default function AmberMDBuilder() {
       <main className={`mdp-main overflow-y-auto ${tab !== 'setup' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
         <section className="mdp-section">
           <div className="mdp-section-heading"><div><span>01</span><h2>Select system</h2></div><span className="mdp-detected">Detected: {String(setup.system).replaceAll('_', ' ')}</span></div>
-          <div className="mdp-segments">{([['auto', 'Auto'], ['single_protein', 'Single protein'], ['protein_protein', 'Protein-protein'], ['protein_ligand', 'Protein-ligand']] as [SystemChoice, string][]).map(([value, label]) => <button key={value} className={systemChoice === value ? 'active' : ''} onClick={() => setSystemChoice(value)}>{label}</button>)}</div>
+          <div className="mdp-segments">{([['single_protein', 'Single protein'], ['protein_protein', 'Protein-protein'], ['protein_ligand', 'Protein-ligand']] as [SystemChoice, string][]).map(([value, label]) => <button key={value} className={systemChoice === value ? 'active' : ''} onClick={() => setSystemChoice(value)}>{label}</button>)}</div>
         </section>
 
         <section className="mdp-section">
           <div className="mdp-section-heading"><div><span>02</span><h2>Provide structures</h2></div><span>{structures.length}/3 inputs</span></div>
           <div className="mdp-input-actions">
-            <button className="mdp-upload" onClick={() => fileInputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload PDB or MOL2</strong><small>Files stay in memory for this request only</small></span></button>
-            <input ref={fileInputRef} type="file" multiple accept=".pdb,.ent,.mol2" hidden onChange={event => inspectFiles(event.target.files)} />
-            <div className="mdp-pdb-entry"><div className="mdp-pdb-line"><input value={pdbId} maxLength={4} placeholder="PDB ID" onChange={event => setPdbId(event.target.value.toUpperCase())} /><button onClick={inspectPdbId} disabled={busy !== null || pdbId.length !== 4}>{busy === 'inspect' ? <Loader2 className="mdp-spin" size={16} /> : <Plus size={16} />} Add</button></div><div className="mdp-unit-row"><select value={unit} onChange={event => setUnit(event.target.value as typeof unit)}><option value="asymmetric">Asymmetric unit</option><option value="assembly">Biological assembly</option></select>{unit === 'assembly' && <input aria-label="Assembly ID" type="number" min="1" max="99" value={assemblyId} onChange={event => setAssemblyId(Number(event.target.value))} />}</div></div>
+            {systemChoice === 'single_protein' && <>
+              <button className="mdp-upload" onClick={() => fileInputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload PDB</strong><small>Files stay in memory for this request only</small></span></button>
+              <input ref={fileInputRef} type="file" multiple accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
+            </>}
+            {systemChoice === 'protein_protein' && <div className="mdp-upload-pair">
+              <button className="mdp-upload" onClick={() => partner1InputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload receptor protein</strong><small>PDB file</small></span></button>
+              <input ref={partner1InputRef} type="file" accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
+              <button className="mdp-upload" onClick={() => partner2InputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload ligand protein</strong><small>PDB file</small></span></button>
+              <input ref={partner2InputRef} type="file" accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
+            </div>}
+            {systemChoice === 'protein_ligand' && <div className="mdp-upload-pair">
+              <button className="mdp-upload" onClick={() => partner1InputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload receptor protein</strong><small>PDB file</small></span></button>
+              <input ref={partner1InputRef} type="file" accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
+              <button className="mdp-upload" onClick={() => ligandInputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload ligand molecule</strong><small>MOL2 file</small></span></button>
+              <input ref={ligandInputRef} type="file" accept=".mol2" hidden onChange={event => inspectFiles(event.target.files)} />
+            </div>}
           </div>
           <div className="mdp-structure-list">{structures.map((item, index) => <div className="mdp-structure-row" key={`${item.filename}-${index}`}><FileCode2 size={18} /><div><strong>{item.filename}</strong><span>{item.inspection.format.toUpperCase()} · {item.inspection.atoms.toLocaleString()} atoms · {item.inspection.chains.length || 1} {item.inspection.format === 'pdb' ? 'chains' : 'molecule'}</span>{item.inspection.warnings.map(warning => <small key={warning}>{warning}</small>)}</div><button title="Remove structure" onClick={() => setStructures(previous => previous.filter((_, row) => row !== index))}><X size={16} /></button></div>)}</div>
           {complexChains.length > 1 && <div className="mdp-chain-table"><div className="mdp-chain-header"><span>Chain</span><span>Residues</span><span>Assignment</span></div>{complexChains.map(chain => <div className="mdp-chain-row" key={chain.id}><strong>{chain.id === '_' ? 'Blank' : chain.id}</strong><span>{chain.residues}</span><select aria-label={`Assign chain ${chain.id}`} value={chainGroups[chain.id] || 'excluded'} onChange={event => setChainGroups(previous => ({ ...previous, [chain.id]: event.target.value as ChainGroup }))}><option value="partner1">Partner 1</option><option value="partner2">Partner 2</option><option value="excluded">Excluded</option></select></div>)}</div>}
