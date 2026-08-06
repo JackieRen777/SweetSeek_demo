@@ -1,0 +1,179 @@
+{
+  "mode": "sweet",
+  "timestamp": "2026-05-18T15:32:50.088839",
+  "base_url": "http://127.0.0.1:5001",
+  "summary": {
+    "total_questions": 10,
+    "success_count": 10,
+    "error_count": 0,
+    "success_rate": 1.0,
+    "avg_keyword_hit": 0.6417,
+    "avg_reference_coverage": 0.1499,
+    "ref_count_pass_rate": 1.0,
+    "citation_rate": 1.0,
+    "avg_response_time": 26.7941171169281,
+    "total_time": 267.9
+  },
+  "details": [
+    {
+      "question_id": "sweet_001",
+      "success": true,
+      "keyword_hit_rate": 0.667,
+      "reference_coverage": 0.0,
+      "reference_count": 15,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 25.84,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 15
+      }
+    },
+    {
+      "question_id": "sweet_002",
+      "success": true,
+      "keyword_hit_rate": 0.667,
+      "reference_coverage": 0.333,
+      "reference_count": 15,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 19.22,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 15
+      }
+    },
+    {
+      "question_id": "sweet_003",
+      "success": true,
+      "keyword_hit_rate": 1.0,
+      "reference_coverage": 0.333,
+      "reference_count": 15,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 26.31,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 15
+      }
+    },
+    {
+      "question_id": "sweet_004",
+      "success": true,
+      "keyword_hit_rate": 0.667,
+      "reference_coverage": 0.0,
+      "reference_count": 24,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 25.94,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 24
+      }
+    },
+    {
+      "question_id": "sweet_005",
+      "success": true,
+      "keyword_hit_rate": 0.75,
+      "reference_coverage": 0.25,
+      "reference_count": 24,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 26.01,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 24
+      }
+    },
+    {
+      "question_id": "sweet_006",
+      "success": true,
+      "keyword_hit_rate": 1.0,
+      "reference_coverage": 0.0,
+      "reference_count": 24,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 36.15,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 24
+      }
+    },
+    {
+      "question_id": "sweet_007",
+      "success": true,
+      "keyword_hit_rate": 0.333,
+      "reference_coverage": 0.0,
+      "reference_count": 15,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 24.68,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 15
+      }
+    },
+    {
+      "question_id": "sweet_008",
+      "success": true,
+      "keyword_hit_rate": 0.333,
+      "reference_coverage": 0.333,
+      "reference_count": 24,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 27.6,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 24
+      }
+    },
+    {
+      "question_id": "sweet_009",
+      "success": true,
+      "keyword_hit_rate": 1.0,
+      "reference_coverage": 0.25,
+      "reference_count": 24,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 24.06,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 24
+      }
+    },
+    {
+      "question_id": "sweet_010",
+      "success": true,
+      "keyword_hit_rate": 0.0,
+      "reference_coverage": 0.0,
+      "reference_count": 24,
+      "reference_count_pass": true,
+      "has_citations": true,
+      "response_time": 32.14,
+      "evidence_distribution": {
+        "strong": 0,
+        "moderate": 0,
+        "weak": 0,
+        "unknown": 24
+      }
+    }
+  ]
+}

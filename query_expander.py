@@ -132,6 +132,75 @@ class SweetnessQueryExpander:
         return []
 
 
+class DualProteinQueryExpander:
+    """双蛋白互作领域查询扩展器"""
+
+    def __init__(self):
+        self.term_synonyms = {
+            "卵白蛋白": ["ovalbumin", "OVA", "egg white albumin", "albumin"],
+            "溶菌酶": ["lysozyme", "LYS", "egg white lysozyme"],
+            "乳清蛋白": ["whey protein", "beta-lactoglobulin", "β-lactoglobulin", "WPI"],
+            "酪蛋白": ["casein", "sodium caseinate", "SC"],
+            "大豆蛋白": ["soy protein", "soy protein isolate", "SPI"],
+            "藜麦蛋白": ["quinoa protein", "quinoa", "Chenopodium quinoa"],
+            "玉米醇溶蛋白": ["zein", "corn protein"],
+            "乳铁蛋白": ["lactoferrin", "LF"],
+            "卵转铁蛋白": ["ovotransferrin", "OTF"],
+            "表没食子儿茶素没食子酸酯": ["EGCG", "epigallocatechin gallate"],
+            "姜黄素": ["curcumin"],
+        }
+
+        self.concept_expansion = {
+            "蛋白互作": ["protein-protein interaction", "PPI", "heteroprotein", "complex"],
+            "结合机制": ["binding mechanism", "interaction mechanism", "molecular mechanism", "driving force"],
+            "共聚集": ["co-aggregation", "aggregation", "self-assembly", "assembly"],
+            "共沉淀": ["coacervation", "complex coacervation", "phase separation"],
+            "静电作用": ["electrostatic interaction", "charge interaction", "zeta potential"],
+            "疏水作用": ["hydrophobic interaction", "hydrophobicity"],
+            "氢键": ["hydrogen bond", "h-bond"],
+            "二硫键": ["disulfide bond", "S-S bond"],
+            "结构表征": ["CD", "FTIR", "fluorescence", "DLS", "TEM", "SEM"],
+            "乳液稳定": ["emulsion stability", "foaming", "gelation", "rheology"],
+            "消化特性": ["digestibility", "in vitro digestion", "bioaccessibility"],
+            "离子效应": ["ionic strength", "salt effect", "Mg2+", "Ca2+", "NaCl"],
+            "pH效应": ["pH", "acidic", "alkaline", "isoelectric point", "pI"],
+        }
+        self.reverse_index = self._build_reverse_index()
+
+    def _build_reverse_index(self):
+        reverse = {}
+        for standard_term, synonyms in self.term_synonyms.items():
+            reverse[standard_term.lower()] = standard_term
+            for syn in synonyms:
+                reverse[syn.lower()] = standard_term
+        for standard_term, related in self.concept_expansion.items():
+            reverse[standard_term.lower()] = standard_term
+            for rel in related:
+                reverse[rel.lower()] = standard_term
+        return reverse
+
+    def expand_query(self, query: str) -> dict:
+        query_lower = query.lower()
+        expanded_terms = set()
+        matched_concepts = set()
+        for term, standard in self.reverse_index.items():
+            if term in query_lower:
+                matched_concepts.add(standard)
+        for concept in matched_concepts:
+            if concept in self.term_synonyms:
+                expanded_terms.update(self.term_synonyms[concept])
+            if concept in self.concept_expansion:
+                expanded_terms.update(self.concept_expansion[concept])
+        all_terms = [query] + list(expanded_terms)
+        search_query = " OR ".join(all_terms[:14])
+        return {
+            'original': query,
+            'matched_concepts': list(matched_concepts),
+            'expanded_terms': list(expanded_terms),
+            'search_query': search_query
+        }
+
+
 # 使用示例
 if __name__ == "__main__":
     expander = SweetnessQueryExpander()

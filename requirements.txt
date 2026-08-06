@@ -31,6 +31,7 @@ watchdog==4.0.0
 sentence-transformers>=5.2.3
 transformers>=5.2.0
 torch>=2.10.0
+modelscope>=1.26.0
 
 # 数据处理
 numpy>=1.26.4

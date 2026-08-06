@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+INPUT="${1:?Input MOL2 is required}"
+OUTPUT="${2:?Output MOL2 is required}"
+WORK_DIR="$(dirname "$OUTPUT")"
+cd "$WORK_DIR"
+{% if charge_method == "am1bcc" %}
+command -v antechamber >/dev/null || { echo "antechamber is required" >&2; exit 1; }
+antechamber -i "$INPUT" -fi mol2 -o "$OUTPUT" -fo mol2 -c bcc -nc {{ ligand_net_charge }} -m {{ ligand_multiplicity }} -s 2
+{% else %}
+for command in antechamber g16 respgen resp; do
+  command -v "$command" >/dev/null || { echo "$command is required for RESP preparation" >&2; exit 1; }
+done
+antechamber -i "$INPUT" -fi mol2 -o ligand.gjf -fo gcrt -gv 1 -ge ligand.gesp -nc {{ ligand_net_charge }} -m {{ ligand_multiplicity }}
+g16 ligand.gjf ligand.log
+grep -q "Normal termination" ligand.log || { echo "Gaussian did not terminate normally" >&2; exit 1; }
+antechamber -i ligand.log -fi gout -o ligand_resp.mol2 -fo mol2 -c resp -nc {{ ligand_net_charge }} -m {{ ligand_multiplicity }} -s 2
+mv ligand_resp.mol2 "$OUTPUT"
+{% endif %}
+test -s "$OUTPUT"

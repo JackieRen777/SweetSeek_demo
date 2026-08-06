@@ -109,3 +109,38 @@ autostart.log
 .venv/
 .archive/
 .trae/
+
+# runtime / index / datasets
+storage_dual_protein/
+faiss_db/
+chroma_db_v3/
+models/modelscope_cache/
+Dual_Protein_related_paper/papers/
+food_research_data/datasets/
+*.pdf
+*.pdf.pdf
+
+# ML pipeline data (third-party raw, derived files; redownload via data/raw/README.md)
+data/raw/
+data/interim/
+data/processed/
+data/features/
+data/models/
+!data/raw/README.md
+
+# Excel workbooks containing molecule-level CTD-derived data (CC BY-NC-ND 4.0)
+reports/*.xlsx
+
+# Runtime PID files
+*.pid
+
+# Personal idea pool (not part of the codebase)
+inspirations/
+
+# Encapsulation runtime knowledge base and local rollback snapshots
+.codex-backups/
+Encapsulation_related_paper/papers/
+Encapsulation_related_paper/metadata.json
+Encapsulation_related_paper/metadata.json.*
+storage_encapsulation/
+storage_encapsulation.bak_*/

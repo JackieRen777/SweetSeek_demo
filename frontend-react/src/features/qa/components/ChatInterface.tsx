@@ -22,21 +22,45 @@ interface Message {
   isThinking?: boolean;
 }
 
-const ChatInterface: React.FC = () => {
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'Welcome to SweetSeek! Ask me anything about sweetness.' }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [activeReferences, setActiveReferences] = useState<Reference[]>([]);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false); // For mobile drawer
-  const [error, setError] = useState<string | null>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  const drawerRef = useRef<HTMLDivElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const isAtBottomRef = useRef(true);
+const ChatInterface: React.FC = () => {
+    const [input, setInput] = useState('');
+    const [messages, setMessages] = useState<Message[]>([
+        { role: 'assistant', content: 'Welcome to SweetSeek! Ask me anything about sweetness.' }
+    ]);
+    const [isTyping, setIsTyping] = useState(false);
+    const [activeReferences, setActiveReferences] = useState<Reference[]>([]);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false); // For mobile drawer
+    const [error, setError] = useState<string | null>(null);
+    const [retrievalWarning, setRetrievalWarning] = useState<string | null>(null);
+    const [systemReady, setSystemReady] = useState(false);
+    const [initializing, setInitializing] = useState(true);
+
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+    const drawerRef = useRef<HTMLDivElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const isAtBottomRef = useRef(true);
+
+    // 初始化系统，类似 DualProteinChatInterface
+    useEffect(() => {
+        let cancelled = false;
+        const tryInit = async () => {
+            while (!cancelled) {
+                try {
+                    const res = await fetch('/api/init', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) {
+                        if (!cancelled) { setSystemReady(true); setInitializing(false); }
+                        return;
+                    }
+                } catch { /* 网络错误重试 */ }
+                if (!cancelled) await new Promise(r => setTimeout(r, 3000));
+            }
+        };
+        tryInit();
+        return () => { cancelled = true; };
+    }, []);
 
   // Handle scroll to detect if user is at bottom
   const handleScroll = () => {
@@ -68,55 +92,61 @@ const ChatInterface: React.FC = () => {
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
 
-    const userMsg: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setIsTyping(true);
-    setError(null);
-    scrollToBottom(); // Force scroll on send
-    
-    // Add empty assistant message to start streaming into
-    setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: '', 
-        thinking: [], 
-        isThinking: true 
-    }]);
+    const handleSend = async () => {
+        if (!input.trim() || !systemReady || initializing) return;
 
-    abortControllerRef.current = new AbortController();
+        const userMsg: Message = { role: 'user', content: input };
+        setMessages(prev => [...prev, userMsg]);
+        setInput('');
+        setIsTyping(true);
+        setError(null);
+        setRetrievalWarning(null);
+        scrollToBottom(); // Force scroll on send
 
-    try {
-        const response = await fetch('/api/ask_stream', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ question: input }),
-            signal: abortControllerRef.current.signal,
-        });
+        // Add empty assistant message to start streaming into
+        setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: '',
+            thinking: [],
+            isThinking: true
+        }]);
 
-        if (!response.ok) {
-            let errorMessage = response.statusText;
-            try {
-                const errorData = await response.json();
-                if (errorData.error) {
-                    errorMessage = errorData.error;
+        abortControllerRef.current = new AbortController();
+
+        try {
+            const response = await fetch('/api/ask_stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question: input,
+                    similarity_threshold: 0.3,
+                    max_results: 200,
+                }),
+                signal: abortControllerRef.current.signal,
+            });
+
+            if (!response.ok) {
+                let errorMessage = response.statusText;
+                try {
+                    const errorData = await response.json();
+                    if (errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                } catch (e) {
+                    // Ignore JSON parse error, use statusText
                 }
-            } catch (e) {
-                // Ignore JSON parse error, use statusText
-            }
-            
-            if (errorMessage.includes("系统未初始化") || errorMessage.includes("System not initialized")) {
-                throw new Error("System is initializing, please try again in a moment...");
-            }
-            throw new Error(errorMessage);
-        }
 
-        const reader = response.body?.getReader();
-        if (!reader) throw new Error("No response body");
+                if (errorMessage.includes("系统未初始化") || errorMessage.includes("System not initialized")) {
+                    throw new Error("系统正在初始化，请稍后重试...");
+                }
+                throw new Error(errorMessage);
+            }
+
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error("No response body");
 
         const decoder = new TextDecoder();
         let buffer = '';
@@ -209,6 +239,9 @@ const ChatInterface: React.FC = () => {
                   break;
               case 'references':
                   setActiveReferences(data.references);
+                  break;
+              case 'retrieval_stats':
+                  setRetrievalWarning(data.warning || null);
                   break;
               case 'answer_start':
                   lastMsg.isThinking = false; // Ensure thinking stops
@@ -339,11 +372,17 @@ const ChatInterface: React.FC = () => {
           </div>
           <div className="text-center mt-2 flex justify-center items-center gap-2">
             <span className="text-[10px] text-slate-400">Powered by DeepSeek-R1, Designed by FCN lab</span>
-            {error && (
-                <span className="text-[10px] text-red-500 flex items-center gap-1">
+            {retrievalWarning && (
+                <span className="text-[10px] text-amber-600 flex items-center gap-1">
                     <AlertCircle size={10} />
-                    {error}
+                    {retrievalWarning}
                 </span>
+            )}
+            {error && (
+              <span className="text-[10px] text-red-500 flex items-center gap-1">
+                <AlertCircle size={10} />
+                {error}
+              </span>
             )}
           </div>
         </div>
@@ -352,137 +391,135 @@ const ChatInterface: React.FC = () => {
       {/* Right Column: References (Desktop) */}
       <div className="hidden md:flex w-[280px] flex-col glass-panel rounded-3xl overflow-hidden shadow-xl">
         <div className="p-4 border-b border-white/30 bg-white/60 backdrop-blur-md">
-             <div className="flex items-center gap-2 text-slate-700">
-                <BookOpen size={18} className="text-blue-600" />
-                <h3 className="font-medium text-sm">References</h3>
-                <span className="ml-auto bg-blue-100 text-blue-600 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                    {activeReferences.length}
-                </span>
-             </div>
+          <div className="flex items-center gap-2 text-slate-700">
+            <BookOpen size={18} className="text-blue-600" />
+            <h3 className="font-medium text-sm">References</h3>
+            <span className="ml-auto bg-blue-100 text-blue-600 text-[10px] px-2 py-0.5 rounded-full font-bold">
+              {activeReferences.length}
+            </span>
+          </div>
         </div>
         
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {activeReferences.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-4">
-                    <BookOpen size={32} className="mb-2 opacity-20" />
-                    <p className="text-xs">References will appear here when you ask a question.</p>
-                </div>
-            ) : (
-                activeReferences.map((ref) => (
-                    <ReferenceCard key={ref.ref_id} reference={ref} />
-                ))
-            )}
+          {activeReferences.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-4">
+              <BookOpen size={32} className="mb-2 opacity-20" />
+              <p className="text-xs">References will appear here when you ask a question.</p>
+            </div>
+          ) : (
+            activeReferences.map((ref) => (
+              <ReferenceCard key={ref.ref_id} reference={ref} />
+            ))
+          )}
         </div>
       </div>
       </div>
 
-      {/* Mobile Drawer for References */}
-      <div className="md:hidden">
-          {/* Handle/Trigger */}
-          {activeReferences.length > 0 && !isDrawerOpen && (
-              <button 
-                onClick={() => setIsDrawerOpen(true)}
-                className="fixed bottom-0 left-0 right-0 h-12 bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] flex items-center justify-center z-50 text-slate-500 text-xs font-medium gap-2"
-              >
-                 <ChevronUp size={16} />
-                 <span>View {activeReferences.length} References</span>
-              </button>
-          )}
-
-          <AnimatePresence>
-            {isDrawerOpen && (
-                <>
-                    {/* Backdrop */}
-                    <motion.div 
-                        key="backdrop"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setIsDrawerOpen(false)}
-                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"
-                    />
-                    
-                    {/* Drawer */}
-                    <motion.div
-                        key="drawer"
-                        ref={drawerRef}
-                        initial={{ y: "100%" }}
-                        animate={{ y: 0 }}
-                        exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="fixed bottom-0 left-0 right-0 h-[50vh] bg-white rounded-t-3xl z-[70] flex flex-col shadow-2xl"
-                    >
-                        {/* Drag Handle */}
-                        <div className="w-full flex items-center justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing" onClick={() => setIsDrawerOpen(false)}>
-                            <div className="w-12 h-1 bg-slate-200 rounded-full" />
-                        </div>
-
-                        <div className="px-6 py-2 flex items-center justify-between border-b border-slate-100">
-                             <h3 className="font-bold text-slate-800">References</h3>
-                             <button onClick={() => setIsDrawerOpen(false)} className="p-1 hover:bg-slate-100 rounded-full">
-                                <ChevronDown size={20} className="text-slate-400" />
-                             </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
-                            {activeReferences.map((ref) => (
-                                <ReferenceCard key={ref.ref_id} reference={ref} />
-                            ))}
-                        </div>
-                    </motion.div>
-                </>
-            )}
-          </AnimatePresence>
-      </div>
-    </div>
-  );
-};
-
-const ReferenceCard: React.FC<{ reference: Reference }> = ({ reference }) => {
-    // Handle authors (could be string or array)
-    const authorText = Array.isArray(reference.authors) 
-        ? reference.authors.join(', ') 
-        : reference.author || 'Unknown Author';
-
-    return (
-        <motion.div 
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all cursor-default overflow-hidden"
-        >
-            <div className="flex items-start gap-3">
-                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md mt-0.5 shrink-0 font-mono">
-                    {reference.ref_id}
-                </span>
-                <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:line-clamp-none transition-all duration-200 font-sans tracking-tight">
-                        {reference.title}
-                    </h4>
-                    
-                    {/* Metadata - Expand on Hover */}
-                    <div className="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-300 overflow-hidden">
-                        <div className="pt-3 mt-2 border-t border-slate-50 text-xs text-slate-600 space-y-1.5 leading-relaxed font-medium">
-                            <p className="line-clamp-2"><span className="text-slate-400 font-normal">Author:</span> {authorText}</p>
-                            <p><span className="text-slate-400 font-normal">Journal:</span> {reference.journal} <span className="text-slate-300">|</span> {reference.year}</p>
-                            {reference.doi && reference.doi !== 'Not Available' && (
-                                <a 
-                                    href={`https://doi.org/${reference.doi}?utm_source=sweetseek`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 hover:underline mt-2 w-max transition-colors font-semibold"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <ExternalLink size={12} />
-                                    <span>DOI: {reference.doi}</span>
-                                </a>
+                    {/* Mobile Drawer for References */}
+                    <div className="md:hidden">
+                            {/* Handle/Trigger */}
+                            {activeReferences.length > 0 && !isDrawerOpen && (
+                                    <button 
+                                        onClick={() => setIsDrawerOpen(true)}
+                                        className="fixed bottom-0 left-0 right-0 h-12 bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] flex items-center justify-center z-50 text-slate-500 text-xs font-medium gap-2"
+                                    >
+                                         <ChevronUp size={16} />
+                                         <span>View {activeReferences.length} References</span>
+                                    </button>
                             )}
-                        </div>
+
+                            <AnimatePresence>
+                                {isDrawerOpen && (
+                                        <>
+                                                {/* Backdrop */}
+                                                <motion.div 
+                                                        key="backdrop"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
+                                                        onClick={() => setIsDrawerOpen(false)}
+                                                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"
+                                                />
+                    
+                                                {/* Drawer */}
+                                                <motion.div
+                                                        key="drawer"
+                                                        ref={drawerRef}
+                                                        initial={{ y: "100%" }}
+                                                        animate={{ y: 0 }}
+                                                        exit={{ y: "100%" }}
+                                                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                                        className="fixed bottom-0 left-0 right-0 h-[50vh] bg-white rounded-t-3xl z-[70] flex flex-col shadow-2xl"
+                                                >
+                                                        {/* Drag Handle */}
+                                                        <div className="w-full flex items-center justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing" onClick={() => setIsDrawerOpen(false)}>
+                                                                <div className="w-12 h-1 bg-slate-200 rounded-full" />
+                                                        </div>
+
+                                                        <div className="px-6 py-2 flex items-center justify-between border-b border-slate-100">
+                                                                 <h3 className="font-bold text-slate-800">References</h3>
+                                                                 <button onClick={() => setIsDrawerOpen(false)} className="p-1 hover:bg-slate-100 rounded-full">
+                                                                        <ChevronDown size={20} className="text-slate-400" />
+                                                                 </button>
+                                                        </div>
+
+                                                        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+                                                                {activeReferences.map((ref) => (
+                                                                        <ReferenceCard key={ref.ref_id} reference={ref} />
+                                                                ))}
+                                                        </div>
+                                                </motion.div>
+                                        </>
+                                )}
+                            </AnimatePresence>
                     </div>
                 </div>
+            );
+};
+
+// Reference Card Component
+const ReferenceCard: React.FC<{ reference: Reference }> = ({ reference }) => {
+  const authorText = Array.isArray(reference.authors) 
+    ? reference.authors.join(', ') 
+    : reference.author || 'Unknown Author';
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all cursor-default overflow-hidden"
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md mt-0.5 shrink-0 font-mono">
+          {reference.ref_id}
+        </span>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:line-clamp-none transition-all duration-200 font-sans tracking-tight">
+            {reference.title}
+          </h4>
+          <div className="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-300 overflow-hidden">
+            <div className="pt-3 mt-2 border-t border-slate-50 text-xs text-slate-600 space-y-1.5 leading-relaxed font-medium">
+              <p className="line-clamp-2"><span className="text-slate-400 font-normal">Author:</span> {authorText}</p>
+              <p><span className="text-slate-400 font-normal">Journal:</span> {reference.journal} <span className="text-slate-300">|</span> {reference.year}</p>
+              {reference.doi && reference.doi !== 'Not Available' && (
+                <a 
+                  href={`https://doi.org/${reference.doi}?utm_source=sweetseek`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 hover:underline mt-2 w-max transition-colors font-semibold"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink size={12} />
+                  <span>DOI: {reference.doi}</span>
+                </a>
+              )}
             </div>
-        </motion.div>
-    );
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 export default ChatInterface;

@@ -7,7 +7,9 @@ from typing import List, Set
 
 from llama_index.core import SimpleDirectoryReader
 
+from config import config
 from metadata_storage import MetadataStorage
+from path_utils import normalize_for_storage, to_absolute
 from pdf_metadata_extractor import PDFMetadataExtractor
 from persistent_storage import rag_system
 
@@ -16,8 +18,8 @@ class IncrementalIndexer:
     """增量索引管理器"""
     
     def __init__(self, 
-                 data_dir: str = "./sweet_related_paper",
-                 tracking_file: str = "./chroma_db/indexed_files.json"):
+                 data_dir: str = config.DATA_DIR,
+                 tracking_file: str = os.path.join(config.PERSIST_DIR, "indexed_files.json")):
         self.data_dir = data_dir
         self.tracking_file = tracking_file
         self.indexed_files = self._load_tracking()
@@ -25,21 +27,24 @@ class IncrementalIndexer:
         self.metadata_storage = MetadataStorage()
     
     def _load_tracking(self) -> Set[str]:
-        """加载已索引文件列表"""
+        """加载已索引文件列表（存储为相对路径，加载时转为绝对路径）"""
         if os.path.exists(self.tracking_file):
             try:
                 with open(self.tracking_file, 'r', encoding='utf-8') as f:
-                    return set(json.load(f))
+                    stored = json.load(f)
+                # 兼容旧格式（绝对路径）和新格式（相对路径）
+                return set(to_absolute(p) for p in stored)
             except Exception as e:
                 print(f"加载跟踪文件失败: {e}")
                 return set()
         return set()
-    
+
     def _save_tracking(self):
-        """保存已索引文件列表"""
+        """保存已索引文件列表（存储为相对路径）"""
         os.makedirs(os.path.dirname(self.tracking_file), exist_ok=True)
+        relative_files = sorted(normalize_for_storage(f) for f in self.indexed_files)
         with open(self.tracking_file, 'w', encoding='utf-8') as f:
-            json.dump(list(self.indexed_files), f, indent=2, ensure_ascii=False)
+            json.dump(relative_files, f, indent=2, ensure_ascii=False)
     
     def get_all_files(self) -> List[str]:
         """获取所有支持的文件"""

@@ -15,7 +15,7 @@ All text content is wrapped in a container with the following constraints to ens
 ## 2. Typography Specifications
 
 ### 2.1 Section Titles (H1 / H2)
-Used for main section headers (e.g., "Welcome to Sweetseek", "Professional Q&A").
+Used for main section headers (e.g., "Welcome to Sweetseek", "Sweetness Q&A").
 
 | Property | Value | CSS Class (Tailwind) |
 | :--- | :--- | :--- |

@@ -70,14 +70,9 @@ class CompoundService:
                     if col in self._df.columns:
                         self._df[col] = pd.to_numeric(self._df[col], errors='coerce').fillna(0)
                 
-                # 数据清洗：去重 (优先保留CID存在的)
+                # 数据清洗：去重（按 CID 去重，避免重复行污染统计与检索）
                 if 'cid' in self._df.columns:
-                    # initial_len = len(self._df)
-                    # Don't drop duplicates if they might be isomers with same CID but different names
-                    # Or keep them if names are different
-                    # For now, let's keep all rows to ensure Glucose is loaded even if it shares CID with something else (unlikely for pure Glucose)
-                    # self._df = self._df.drop_duplicates(subset=['cid'], keep='first')
-                    pass 
+                    self._df = self._df.drop_duplicates(subset=['cid'], keep='first')
                 
                 # 如果没有ID列，创建一个
                 if 'id' not in self._df.columns:

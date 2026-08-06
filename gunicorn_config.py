@@ -2,7 +2,8 @@
 import multiprocessing
 
 bind = "127.0.0.1:5001"
-workers = 2  # 根据服务器CPU核心数调整: 2 * cores + 1
+# 双 RAG 系统初始化开销较大且使用进程内状态，固定 1 worker 可避免跨 worker 初始化状态不一致导致的间歇失败。
+workers = 1
 worker_class = "gevent"  # 使用 gevent 支持异步 (SSE流式输出需要)
 timeout = 300
 keepalive = 5

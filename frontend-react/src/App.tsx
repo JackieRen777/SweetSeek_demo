@@ -17,28 +17,48 @@ const ChatInterface = lazy(() => import('./features/qa/components/ChatInterface'
 const SweetTasteEquation = lazy(() => import('./features/equation/components/SweetTasteEquation'));
 const DatabaseInterface = lazy(() => import('./features/database/DatabaseInterface'));
 const ReferencesList = lazy(() => import('./features/references/components/ReferencesList'));
+const DualProteinChatInterface = lazy(() => import('./features/dual-protein/components/DualProteinChatInterface'));
+const EncapsulationChatInterface = lazy(() => import('./features/encapsulation/components/EncapsulationChatInterface'));
+const MLPredictSection = lazy(() => import('./features/ml-predict/MLPredictSection'));
+const AmberMDBuilder = lazy(() => import('./features/md-builder/AmberMDBuilder'));
 
 const SCREEN_COUNT = 4; // Reduced from 5 to 4
 
-type FeatureType = 'qa' | 'equation' | 'database' | 'references' | null;
+type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | 'md-builder' | null;
 
 // URL Mapping
 const PATH_MAP: Record<string, FeatureType> = {
-  '/professionalq&a': 'qa', // URL is usually lowercase
+  '/sweetseek': 'qa', // URL is usually lowercase
+  '/professionalq&a': 'qa', // Legacy support
   '/equation': 'equation',
   '/database': 'database',
-  '/references': 'references'
+  '/references': 'references',
+  '/dual-protein': 'dual-protein',
+  '/encapsulation': 'encapsulation',
+  '/embedding': 'encapsulation',
+  '/ml-predict': 'ml-predict',
+  '/amber-md-builder': 'md-builder',
 };
 
 const REVERSE_PATH_MAP: Record<string, string> = {
-  'qa': '/professionalQ&A', // Displayed URL
+  'qa': '/sweetseek', // Displayed URL
   'equation': '/equation',
   'database': '/database',
-  'references': '/references'
+  'references': '/references',
+  'dual-protein': '/dual-protein',
+  'encapsulation': '/encapsulation',
+  'ml-predict': '/ml-predict',
+  'md-builder': '/amber-md-builder',
+};
+
+const featureFromPath = (pathname: string): FeatureType => {
+  const path = pathname.toLowerCase();
+  const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
+  return PATH_MAP[cleanPath] || (cleanPath === '/qa' ? 'qa' : null);
 };
 
 function App() {
-  const [activeFeature, setActiveFeature] = useState<FeatureType>(null);
+  const [activeFeature, setActiveFeature] = useState<FeatureType>(() => featureFromPath(window.location.pathname));
   const controls = useAnimation();
   
   // Use custom threshold scroll hook
@@ -51,25 +71,7 @@ function App() {
 
   // --- URL Routing Logic ---
 
-  // 1. Initial Load: Check URL and set activeFeature
-  useEffect(() => {
-    const path = window.location.pathname.toLowerCase();
-    // Handle potential trailing slashes
-    const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
-    
-    // Support both old and new URL patterns for backward compatibility if needed
-    // But mainly map /professionalq&a
-    let feature = PATH_MAP[cleanPath];
-    if (!feature && cleanPath === '/qa') feature = 'qa'; // Fallback support
-    
-    if (feature) {
-      setActiveFeature(feature);
-    } else if (cleanPath === '/') {
-        setActiveFeature(null);
-    }
-  }, []);
-
-  // 2. Sync URL when activeFeature changes
+  // Sync URL when activeFeature changes
   useEffect(() => {
     if (activeFeature) {
       const path = REVERSE_PATH_MAP[activeFeature];
@@ -84,13 +86,10 @@ function App() {
     }
   }, [activeFeature]);
 
-  // 3. Handle Browser Back/Forward buttons
+  // Handle Browser Back/Forward buttons
   useEffect(() => {
     const handlePopState = () => {
-       const path = window.location.pathname.toLowerCase();
-       const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
-       const feature = PATH_MAP[cleanPath];
-       setActiveFeature(feature || null);
+       setActiveFeature(featureFromPath(window.location.pathname));
     };
     
     window.addEventListener('popstate', handlePopState);
@@ -124,12 +123,12 @@ function App() {
       if (index === 1) setActiveFeature('qa');
       else if (index === 2) setActiveFeature('equation');
       else if (index === 3) setActiveFeature('database');
-      else if (index === 4) {
-        // References is no longer a scroll section, open directly
-        setActiveFeature('references');
-        return; 
-      }
-      
+      else if (index === 4) { setActiveFeature('references'); return; }
+      else if (index === 5) { setActiveFeature('dual-protein'); return; }
+      else if (index === 6) { setActiveFeature('ml-predict'); return; }
+      else if (index === 7) { setActiveFeature('encapsulation'); return; }
+      else if (index === 8) { setActiveFeature('md-builder'); return; }
+
       // Also scroll to that section in the background
       navigateTo(index);
   };
@@ -187,7 +186,7 @@ function App() {
             </ErrorBoundary>
           </div>
 
-          {/* Section 2: Professional Q&A */}
+          {/* Section 2: SweetSeek */}
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
             <ErrorBoundary name="QASection">
               <QA onTryNow={() => handleOpenFeature('qa')} />
@@ -226,19 +225,34 @@ function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-xl"
+              className={`fixed inset-0 z-[100] ${
+                activeFeature === 'ml-predict'
+                  ? 'bg-white'
+                  : 'bg-white/95 backdrop-blur-xl'
+              }`}
             >
               <div className="w-full h-full overflow-hidden relative flex flex-col pt-[120px]">
-                <div className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 pb-4 md:pb-8 overflow-hidden">
-                  <div className="w-full h-full bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden relative">
+                {activeFeature === 'ml-predict' ? (
+                  <div className="flex-1 w-full overflow-hidden">
                     <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
-                      {activeFeature === 'qa' && <ChatInterface />}
-                      {activeFeature === 'equation' && <SweetTasteEquation />}
-                      {activeFeature === 'database' && <DatabaseInterface />}
-                      {activeFeature === 'references' && <ReferencesList />}
+                      <MLPredictSection onClose={() => setActiveFeature(null)} />
                     </Suspense>
                   </div>
-                </div>
+                ) : (
+                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
+                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
+                      <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
+                        {activeFeature === 'qa' && <ChatInterface />}
+                        {activeFeature === 'equation' && <SweetTasteEquation />}
+                        {activeFeature === 'database' && <DatabaseInterface />}
+                        {activeFeature === 'references' && <ReferencesList />}
+                        {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
+                        {activeFeature === 'encapsulation' && <EncapsulationChatInterface />}
+                        {activeFeature === 'md-builder' && <AmberMDBuilder />}
+                      </Suspense>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

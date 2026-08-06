@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -19,10 +20,13 @@
     "framer-motion": "^12.34.3",
     "katex": "^0.16.33",
     "lucide-react": "^0.575.0",
+    "pdfjs-dist": "5.4.624",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-katex": "^3.1.0",
+    "react-markdown": "^10.1.0",
     "recharts": "^3.7.0",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.5.0",
     "three": "^0.183.1",
     "xlsx": "^0.18.5"

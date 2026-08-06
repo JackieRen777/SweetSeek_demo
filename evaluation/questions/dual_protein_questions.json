@@ -1,0 +1,82 @@
+[
+  {
+    "id": "dual_001",
+    "question": "大豆蛋白和乳清蛋白的凝胶特性有什么区别？",
+    "difficulty": "medium",
+    "expected_keywords": ["凝胶", "gel", "大豆", "乳清"],
+    "expected_references_min": 5,
+    "category": "功能特性"
+  },
+  {
+    "id": "dual_002",
+    "question": "藜麦蛋白和大豆蛋白复合体系的乳化性能如何？",
+    "difficulty": "medium",
+    "expected_keywords": ["乳化", "emulsion", "藜麦", "quinoa"],
+    "expected_references_min": 5,
+    "category": "功能特性"
+  },
+  {
+    "id": "dual_003",
+    "question": "植物蛋白和动物蛋白的氨基酸互补效应？",
+    "difficulty": "medium",
+    "expected_keywords": ["氨基酸", "互补", "amino acid"],
+    "expected_references_min": 5,
+    "category": "营养互补"
+  },
+  {
+    "id": "dual_004",
+    "question": "双蛋白体系中蛋白质-蛋白质相互作用的驱动力是什么？",
+    "difficulty": "hard",
+    "expected_keywords": ["相互作用", "interaction", "驱动力", "静电", "疏水"],
+    "expected_references_min": 5,
+    "category": "机制研究"
+  },
+  {
+    "id": "dual_005",
+    "question": "热处理对大豆-乳清混合蛋白结构的影响？",
+    "difficulty": "medium",
+    "expected_keywords": ["热处理", "heating", "结构", "变性"],
+    "expected_references_min": 5,
+    "category": "加工影响"
+  },
+  {
+    "id": "dual_006",
+    "question": "pH对双蛋白体系稳定性的影响机制？",
+    "difficulty": "hard",
+    "expected_keywords": ["pH", "稳定性", "stability", "等电点"],
+    "expected_references_min": 5,
+    "category": "机制研究"
+  },
+  {
+    "id": "dual_007",
+    "question": "藜麦蛋白的提取工艺和功能特性？",
+    "difficulty": "easy",
+    "expected_keywords": ["藜麦", "quinoa", "提取", "功能"],
+    "expected_references_min": 4,
+    "category": "基础知识"
+  },
+  {
+    "id": "dual_008",
+    "question": "双蛋白纳米颗粒在食品递送系统中的应用？",
+    "difficulty": "hard",
+    "expected_keywords": ["纳米", "nanoparticle", "递送", "delivery"],
+    "expected_references_min": 4,
+    "category": "应用研究"
+  },
+  {
+    "id": "dual_009",
+    "question": "大豆分离蛋白的功能改性方法有哪些？",
+    "difficulty": "medium",
+    "expected_keywords": ["改性", "modification", "SPI", "大豆分离蛋白"],
+    "expected_references_min": 5,
+    "category": "工艺方法"
+  },
+  {
+    "id": "dual_010",
+    "question": "酶法交联对双蛋白凝胶网络结构的影响？",
+    "difficulty": "hard",
+    "expected_keywords": ["酶", "交联", "crosslink", "transglutaminase"],
+    "expected_references_min": 4,
+    "category": "加工影响"
+  }
+]

@@ -128,14 +128,14 @@
 
 ## 运维与部署
 
-### deploy.sh
+### scripts/maintenance/deploy/deploy.sh
 - 职责：本地提交→推送→服务器拉取→重启→健康检查的一体化脚本（单次 SSH 连接）。
 - 输入：可选提交信息；SSH 密码；服务器 `.env` 配置。
 - 输出：服务重启结果与日志摘要。
 - 关键依赖：git/ssh/netstat/nohup。
 - 对系统贡献：将部署流程标准化，减少“拉代码但未生效”的风险。
 
-### restart-server.sh
+### scripts/maintenance/restart-server.sh
 - 职责：仅重启服务并轮询端口检查。
 - 输入：SSH 密码。
 - 输出：端口监听状态与日志。
@@ -146,4 +146,3 @@
 - 输入：HTTP 请求。
 - 输出：代理到后端 5001。
 - 对系统贡献：生产环境入口与连接管理策略。
-

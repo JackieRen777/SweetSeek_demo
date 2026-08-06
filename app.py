@@ -4,6 +4,13 @@ SweetSeek - Flask Backend
 AI-powered research Q&A system
 """
 
+# macOS ARM64: PyTorch (MPS) and SHAP/sklearn each ship their own libomp.dylib.
+# Loading SHAP inside the same process as PyTorch causes a SIGSEGV unless we
+# allow OpenMP duplicates. Must run before any numpy/torch/sklearn import.
+import os as _os
+_os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+_os.environ.setdefault("OMP_NUM_THREADS", "1")
+
 try:
     __import__('pysqlite3')
     import sys
@@ -11,18 +18,19 @@ try:
 except ImportError:
     pass
 
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
 import time
 from datetime import datetime
 from persistent_storage import rag_system
-from query_expander import SweetnessQueryExpander
+from query_expander import SweetnessQueryExpander, DualProteinQueryExpander
 from evidence_ranker import EvidenceRanker
 import logging
 from functools import wraps
 import traceback
 import sys
+import threading
 from config import config
 from logger import setup_logger
 from services.dependencies import build_services
@@ -92,10 +100,66 @@ def validate_config():
     app_logger.info("✅ 配置验证通过")
 
 app = Flask(__name__)
-CORS(app)
+
+from services.md_builder_api import InMemoryUploadRequest
+app.request_class = InMemoryUploadRequest
+
+@app.errorhandler(413)
+def request_too_large(_error):
+    return jsonify({"success": False, "error": "Request exceeds the 20 MB upload limit"}), 413
+
+def _parse_csv_env(value: str) -> list[str]:
+    return [item.strip() for item in (value or "").split(",") if item.strip()]
+
+_cors_allow_all = os.getenv("CORS_ALLOW_ALL", "false").lower() == "true"
+if _cors_allow_all:
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+else:
+    default_origins = ",".join([
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://sweetseek.top",
+        "https://www.sweetseek.top",
+    ])
+    allowed_origins = _parse_csv_env(os.getenv("CORS_ALLOWED_ORIGINS", default_origins))
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
+
+
+def _get_json_dict() -> dict:
+    """Safely parse JSON body and always return a dict."""
+    data = request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}
+
+def _parse_retrieval_params(data: dict, default_threshold: float, default_max_results: int) -> tuple[float, int]:
+    similarity_threshold = data.get('similarity_threshold', default_threshold)
+    try:
+        similarity_threshold = float(similarity_threshold)
+        if not (0 <= similarity_threshold <= 1):
+            raise ValueError
+    except (ValueError, TypeError):
+        similarity_threshold = default_threshold
+
+    max_results = data.get('max_results', default_max_results)
+    try:
+        max_results = int(max_results)
+        if max_results < 1:
+            raise ValueError
+        if max_results > 200:
+            max_results = 200
+    except (ValueError, TypeError):
+        max_results = default_max_results
+
+    return similarity_threshold, max_results
 
 # 全局变量
 system_ready = False
+dual_protein_system_ready = False
+dual_protein_initializing = False
+dual_protein_docs_count_cache = 0
+dual_protein_dim_fix_lock = threading.Lock()
+dual_protein_last_dim_fix_ts = 0.0
+main_rag_initializing = False
+rag_load_lock = threading.Lock()
 conversations = []
 
 services = build_services()
@@ -105,16 +169,88 @@ llm_client = services.llm_client
 compound_service = services.compound_service
 chat_service = services.chat_service
 
+from services.md_builder_api import create_md_builder_blueprint
+app.register_blueprint(create_md_builder_blueprint(lambda: llm_client))
+
+# 双蛋白 RAG 系统（独立实例）
+from persistent_storage import PersistentRAGSystem
+from services.chat_service import ChatService
+dual_protein_rag = PersistentRAGSystem(
+    data_dir="./Dual_Protein_related_paper/papers",
+    persist_dir="./storage_dual_protein"
+)
+dual_protein_chat_service = ChatService(
+    rag_system=dual_protein_rag,
+    query_expander=DualProteinQueryExpander(),
+    evidence_ranker=evidence_ranker,
+    llm_client=llm_client,
+    mode="dual",
+)
+
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+ENCAPSULATION_DATA_DIR = os.getenv(
+    "ENCAPSULATION_DATA_DIR",
+    os.path.join(PROJECT_ROOT, "Encapsulation_related_paper", "papers"),
+)
+ENCAPSULATION_PERSIST_DIR = os.getenv(
+    "ENCAPSULATION_PERSIST_DIR",
+    os.path.join(PROJECT_ROOT, "storage_encapsulation"),
+)
+ENCAPSULATION_METADATA_PATH = os.getenv(
+    "ENCAPSULATION_METADATA_PATH",
+    os.path.join(PROJECT_ROOT, "Encapsulation_related_paper", "metadata.json"),
+)
+
+# Encapsulation（包埋）独立知识域：与现有 Sweetness/Dual-Protein 索引隔离。
+encapsulation_system_ready = False
+encapsulation_initializing = False
+encapsulation_rag = PersistentRAGSystem(
+    data_dir=ENCAPSULATION_DATA_DIR,
+    persist_dir=ENCAPSULATION_PERSIST_DIR,
+    metadata_path=ENCAPSULATION_METADATA_PATH,
+)
+encapsulation_chat_service = ChatService(
+    rag_system=encapsulation_rag,
+    query_expander=DualProteinQueryExpander(),
+    evidence_ranker=evidence_ranker,
+    llm_client=llm_client,
+    mode="encapsulation",
+)
+
+def initialize_encapsulation_rag():
+    global encapsulation_system_ready, encapsulation_initializing
+    if encapsulation_initializing:
+        return encapsulation_system_ready
+    encapsulation_initializing = True
+    try:
+        with rag_load_lock:
+            encapsulation_system_ready = bool(encapsulation_rag.load_or_create_index())
+        return encapsulation_system_ready
+    except Exception as exc:
+        app_logger.error(f"Encapsulation 初始化失败: {exc}")
+        encapsulation_system_ready = False
+        return False
+    finally:
+        encapsulation_initializing = False
+
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
-    global system_ready
-    
+    global system_ready, main_rag_initializing
+
     try:
+        main_rag_initializing = True
         print("[系统] 初始化RAG系统...")
-        
+
+        # 启动时自动迁移元数据路径（绝对→相对）
+        try:
+            rag_system.metadata_storage.migrate_to_relative_paths()
+        except Exception as e:
+            app_logger.warning(f"元数据路径迁移跳过: {e}")
+
         # 加载或创建索引（自动使用持久化）
-        success = rag_system.load_or_create_index()
-        
+        with rag_load_lock:
+            success = rag_system.load_or_create_index()
+
         if success:
             system_ready = True
             stats = rag_system.get_stats()
@@ -123,9 +259,99 @@ def initialize_rag_system():
             return True
         else:
             return False
-        
+
     except Exception as e:
         print(f"[失败] 系统初始化失败: {str(e)}")
+        return False
+    finally:
+        main_rag_initializing = False
+
+def initialize_dual_protein_rag():
+    """初始化双蛋白RAG系统"""
+    global dual_protein_system_ready, dual_protein_initializing, dual_protein_docs_count_cache
+    if dual_protein_initializing:
+        # 并发请求到达时，等待正在进行的初始化完成，避免直接返回失败。
+        wait_deadline = time.time() + 120
+        while dual_protein_initializing and time.time() < wait_deadline:
+            time.sleep(0.2)
+        return dual_protein_system_ready
+    dual_protein_initializing = True
+    try:
+        # 启动时自动迁移元数据路径（绝对→相对）
+        try:
+            dual_protein_rag.metadata_storage.migrate_to_relative_paths()
+        except Exception as e:
+            app_logger.warning(f"双蛋白元数据路径迁移跳过: {e}")
+
+        with rag_load_lock:
+            success = dual_protein_rag.load_or_create_index()
+        if success:
+            dual_protein_system_ready = True
+            stats = dual_protein_rag.get_stats()
+            dual_protein_docs_count_cache = stats.get('total_documents', 0)
+            print("[成功] 双蛋白系统初始化完成")
+        else:
+            dual_protein_system_ready = False
+        return success
+    except Exception as e:
+        print(f"[失败] 双蛋白系统初始化失败: {str(e)}")
+        dual_protein_system_ready = False
+        return False
+    finally:
+        dual_protein_initializing = False
+
+def _ensure_dual_protein_dim_consistent() -> bool:
+    """确保 dual-protein 索引与当前 embedding 维度一致。"""
+    global dual_protein_system_ready, dual_protein_last_dim_fix_ts
+
+    def _is_mismatch() -> bool:
+        dims = dual_protein_rag._collect_index_embedding_dims() if hasattr(dual_protein_rag, "_collect_index_embedding_dims") else set()
+        model_dim = int(getattr(dual_protein_rag, "embedding_dim", 0) or 0)
+        return (len(dims) > 1) or (len(dims) == 1 and model_dim and next(iter(dims)) != model_dim)
+
+    try:
+        success = initialize_dual_protein_rag() if not dual_protein_system_ready else True
+        if not success:
+            return False
+
+        if not _is_mismatch():
+            return True
+
+        # 同一 worker 内串行执行维度修复；并发请求等待修复完成再复检。
+        if not dual_protein_dim_fix_lock.acquire(blocking=False):
+            wait_deadline = time.time() + 180
+            while time.time() < wait_deadline:
+                if initialize_dual_protein_rag() and not _is_mismatch():
+                    return True
+                time.sleep(1)
+            return False
+
+        try:
+            # 双重检查，避免重复重建。
+            if not _is_mismatch():
+                return True
+
+            now = time.time()
+            if now - dual_protein_last_dim_fix_ts < 30:
+                app_logger.warning("dual-protein 维度修复处于冷却窗口，等待初始化后重试")
+                return initialize_dual_protein_rag() and not _is_mismatch()
+
+            dual_protein_last_dim_fix_ts = now
+            dims = dual_protein_rag._collect_index_embedding_dims() if hasattr(dual_protein_rag, "_collect_index_embedding_dims") else set()
+            model_dim = int(getattr(dual_protein_rag, "embedding_dim", 0) or 0)
+            app_logger.warning(f"检测到 dual-protein 维度不一致，执行自动重建: dims={sorted(dims)}, model_dim={model_dim}")
+            rebuilt = dual_protein_rag.rebuild_index()
+            if not rebuilt:
+                app_logger.error("dual-protein 自动重建失败")
+                return False
+            dual_protein_system_ready = False
+            return initialize_dual_protein_rag() and not _is_mismatch()
+        finally:
+            dual_protein_dim_fix_lock.release()
+
+        return True
+    except Exception as e:
+        app_logger.error(f"dual-protein 维度一致性检查失败: {e}")
         return False
 
 # 路由
@@ -204,7 +430,7 @@ def api_render_structure():
 def api_search_compounds():
     """搜索化合物"""
     if request.method == 'POST':
-        data = request.json
+        data = _get_json_dict()
         query = data.get('query', '').strip()
         limit = data.get('limit', 5)
     else:
@@ -292,16 +518,20 @@ def api_init():
     
     success = initialize_rag_system()
     stats = rag_system.get_stats() if success else {}
-    
+
     if success:
         app_logger.info(f"系统初始化成功，文档数: {stats.get('total_documents', 0)}")
     else:
         app_logger.error("系统初始化失败")
-    
+
+    # 返回详细错误信息以便前端和调用方可见
+    error_msg = getattr(rag_system, 'last_error', None)
+
     return jsonify({
         'success': success,
         'message': '系统初始化成功' if success else '系统初始化失败',
-        'documents_count': stats.get('total_documents', 0)
+        'documents_count': stats.get('total_documents', 0),
+        'error': error_msg
     })
 
 @app.route('/api/ask', methods=['POST'])
@@ -317,26 +547,13 @@ def api_ask():
             'error': '系统未初始化，请先初始化系统'
         }), 400
     
-    data = request.json
+    data = _get_json_dict()
     question = data.get('question', '').strip()
-    similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
-    
-    try:
-        similarity_threshold = float(similarity_threshold)
-        if not (0 <= similarity_threshold <= 1):
-            raise ValueError
-    except (ValueError, TypeError):
-        similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
-        
-    max_results = data.get('max_results', config.RAG_MAX_RESULTS)
-    try:
-        max_results = int(max_results)
-        if max_results < 1:
-            raise ValueError
-        if max_results > 200:
-            max_results = 200
-    except (ValueError, TypeError):
-        max_results = config.RAG_MAX_RESULTS
+    similarity_threshold, max_results = _parse_retrieval_params(
+        data,
+        config.RAG_SIMILARITY_THRESHOLD,
+        config.RAG_MAX_RESULTS,
+    )
     
     if not question:
         return jsonify({
@@ -346,6 +563,185 @@ def api_ask():
     
     result = chat_service.ask(question, similarity_threshold, max_results)
     return jsonify(result)
+
+@app.route('/api/dual-protein/init', methods=['POST'])
+@handle_api_errors
+@monitor_performance
+def api_dual_protein_init():
+    """初始化双蛋白系统"""
+    global dual_protein_system_ready, dual_protein_docs_count_cache
+    if not _ensure_dual_protein_dim_consistent():
+        return jsonify({
+            'success': False,
+            'message': '双蛋白系统初始化失败（索引维度不一致且自动修复失败）',
+            'documents_count': 0
+        }), 500
+    if dual_protein_system_ready:
+        return jsonify({
+            'success': True,
+            'message': '双蛋白系统已经初始化',
+            'documents_count': dual_protein_docs_count_cache
+        })
+    success = initialize_dual_protein_rag()
+    stats = dual_protein_rag.get_stats() if success else {}
+    if success:
+        dual_protein_docs_count_cache = stats.get('total_documents', 0)
+    return jsonify({
+        'success': success,
+        'message': '双蛋白系统初始化成功' if success else '双蛋白系统初始化失败',
+        'documents_count': dual_protein_docs_count_cache if success else 0
+    })
+
+@app.route('/api/dual-protein/prewarm', methods=['POST'])
+@handle_api_errors
+def api_dual_protein_prewarm():
+    """触发双蛋白系统后台预热（非阻塞）。"""
+    global dual_protein_system_ready, dual_protein_initializing
+    if dual_protein_system_ready:
+        return jsonify({'success': True, 'status': 'ready'})
+    if dual_protein_initializing:
+        return jsonify({'success': True, 'status': 'initializing'})
+
+    def _warm():
+        try:
+            _ensure_dual_protein_dim_consistent()
+        except Exception as e:
+            app_logger.warning(f"dual-protein 后台预热失败: {e}")
+
+    threading.Thread(target=_warm, daemon=True).start()
+    return jsonify({'success': True, 'status': 'warming'})
+
+@app.route('/api/dual-protein/ask', methods=['POST'])
+@handle_api_errors
+@monitor_performance
+def api_dual_protein_ask():
+    """处理双蛋白问答请求"""
+    if not _ensure_dual_protein_dim_consistent():
+        return jsonify({
+            'success': False,
+            'error': '双蛋白索引维度不一致，且自动修复失败',
+            'error_type': 'DimGuardFailed'
+        }), 500
+
+    if not dual_protein_system_ready:
+        return jsonify({
+            'success': False,
+            'error': '双蛋白系统未初始化，请先调用 /api/dual-protein/init'
+        }), 400
+
+    data = _get_json_dict()
+    question = data.get('question', '').strip()
+    if not question:
+        return jsonify({'success': False, 'error': '问题不能为空'}), 400
+
+    dual_default_threshold = float(os.getenv("DUAL_RAG_SIMILARITY_THRESHOLD", "0.18"))
+    dual_default_max_results = int(os.getenv("DUAL_RAG_MAX_RESULTS", "120"))
+    similarity_threshold, max_results = _parse_retrieval_params(
+        data,
+        dual_default_threshold,
+        dual_default_max_results,
+    )
+
+    try:
+        result = dual_protein_chat_service.ask(question, similarity_threshold, max_results)
+        return jsonify(result)
+    except Exception as e:
+        err = str(e)
+        if "not aligned" in err:
+            app_logger.warning("检测到 dual-protein 向量维度不一致，自动重建索引并重试一次")
+            success = dual_protein_rag.rebuild_index()
+            if success:
+                initialize_dual_protein_rag()
+                result = dual_protein_chat_service.ask(question, similarity_threshold, max_results)
+                return jsonify(result)
+            return jsonify({
+                'success': False,
+                'error': '检测到索引维度不一致，自动重建失败，请稍后重试',
+                'error_type': 'AutoRebuildFailed'
+            }), 500
+        raise
+
+@app.route('/api/dual-protein/health', methods=['GET'])
+@handle_api_errors
+def api_dual_protein_health():
+    """双蛋白系统健康检查"""
+    global dual_protein_docs_count_cache
+    stats = dual_protein_rag.get_stats() if dual_protein_system_ready else {}
+    if dual_protein_system_ready and dual_protein_docs_count_cache == 0:
+        dual_protein_docs_count_cache = stats.get('total_documents', 0)
+    try:
+        dual_metadata_count = len(dual_protein_rag.metadata_storage.get_all_metadata())
+    except Exception:
+        dual_metadata_count = 0
+    return jsonify({
+        'success': True,
+        'system_ready': dual_protein_system_ready,
+        'initializing': dual_protein_initializing,
+        'dual_protein_docs_count': dual_protein_docs_count_cache if dual_protein_system_ready else 0,
+        'dual_protein_metadata_count': dual_metadata_count,
+        'index_exists': stats.get('index_exists', False),
+        'persist_dir': stats.get('persist_dir', './storage_dual_protein'),
+    })
+
+@app.route('/api/encapsulation/health', methods=['GET'])
+@app.route('/api/embedding/health', methods=['GET'])
+@handle_api_errors
+def api_encapsulation_health():
+    stats = encapsulation_rag.get_stats()
+    try:
+        count = len(encapsulation_rag.metadata_storage.get_all_metadata())
+    except Exception:
+        count = 0
+    return jsonify({'success': True, 'system_ready': encapsulation_system_ready, 'initializing': encapsulation_initializing,
+                    'documents_count': count, 'index_exists': stats.get('index_exists', False),
+                    'persist_dir': stats.get('persist_dir', ENCAPSULATION_PERSIST_DIR),
+                    'last_error': encapsulation_rag.last_error})
+
+@app.route('/api/encapsulation/prewarm', methods=['POST'])
+@app.route('/api/embedding/prewarm', methods=['POST'])
+@handle_api_errors
+def api_encapsulation_prewarm():
+    if encapsulation_system_ready or encapsulation_initializing:
+        return jsonify({'success': True, 'status': 'ready' if encapsulation_system_ready else 'initializing'})
+    threading.Thread(target=initialize_encapsulation_rag, daemon=True).start()
+    return jsonify({'success': True, 'status': 'warming'})
+
+@app.route('/api/encapsulation/ask_stream', methods=['POST'])
+@app.route('/api/embedding/ask_stream', methods=['POST'])
+@handle_api_errors
+def api_encapsulation_ask_stream():
+    from flask import Response, stream_with_context
+    if not encapsulation_system_ready:
+        initialize_encapsulation_rag()
+    if not encapsulation_system_ready:
+        return jsonify({'success': False, 'error': 'Encapsulation 知识库未初始化，请先上传 PDF 或稍后重试'}), 400
+    data = _get_json_dict(); question = data.get('question', '').strip()
+    if not question:
+        return jsonify({'success': False, 'error': '问题不能为空'}), 400
+    threshold, max_results = _parse_retrieval_params(data, float(os.getenv('EMBEDDING_RAG_SIMILARITY_THRESHOLD', '0.18')), int(os.getenv('EMBEDDING_RAG_MAX_RESULTS', '120')))
+    return Response(stream_with_context(encapsulation_chat_service.ask_stream(question, threshold, max_results)), mimetype='text/event-stream')
+
+@app.route('/api/encapsulation/documents', methods=['GET'])
+@app.route('/api/embedding/documents', methods=['GET'])
+@handle_api_errors
+def api_encapsulation_documents():
+    rows = []
+    for path, meta in encapsulation_rag.metadata_storage.get_all_metadata().items():
+        rows.append({'id': path, 'filename': meta.get('filename', os.path.basename(path)), 'title': meta.get('title', ''),
+                     'authors': meta.get('authors', []), 'journal': meta.get('journal', ''), 'year': meta.get('year', 'N/A'),
+                     'doi': meta.get('doi', ''), 'status': 'indexed', 'path': path})
+    query = request.args.get('q', '').lower().strip()
+    if query: rows = [r for r in rows if query in ' '.join([r['filename'], r['title'], r['journal'], str(r['year'])]).lower()]
+    return jsonify({'success': True, 'documents': rows, 'total': len(rows), 'system_ready': encapsulation_system_ready})
+
+@app.route('/api/encapsulation/documents/upload', methods=['POST'])
+@app.route('/api/embedding/documents/upload', methods=['POST'])
+@handle_api_errors
+def api_encapsulation_upload():
+    return jsonify({
+        'success': False,
+        'error': '网页上传已禁用。请将 PDF 放入 Encapsulation_related_paper/papers 后运行离线索引维护脚本。',
+    }), 403
 
 @app.route('/api/search', methods=['POST'])
 @handle_api_errors
@@ -361,7 +757,7 @@ def api_search():
             'error': '系统未初始化'
         }), 400
     
-    data = request.json
+    data = _get_json_dict()
     query = data.get('query', '').strip()
     
     app_logger.info(f"收到搜索请求: {query}")
@@ -495,47 +891,80 @@ def api_health():
         'components': {}
     }
     
-    # 检查 RAG 系统
+    # 主甜味系统文档统计
     try:
         stats = rag_system.get_stats()
+        sweetness_docs_count = stats.get('total_documents', 0)
         health_status['components']['rag_system'] = {
             'status': 'healthy' if system_ready else 'unhealthy',
-            'documents': stats.get('total_documents', 0)
+            'documents': sweetness_docs_count
         }
+        health_status['sweetness_docs_count'] = sweetness_docs_count
     except Exception as e:
         health_status['components']['rag_system'] = {
             'status': 'unhealthy',
             'error': str(e)
         }
         health_status['status'] = 'degraded'
+        health_status['sweetness_docs_count'] = 0
     
     # 检查 DeepSeek API
     try:
         import persistent_storage
         if not hasattr(persistent_storage, 'deepseek_client') and hasattr(persistent_storage, "configure_llm"):
             persistent_storage.configure_llm()
-            
+
+        deepseek_client = getattr(persistent_storage, 'deepseek_client', None)
         health_status['components']['deepseek_api'] = {
-            'status': 'configured' if hasattr(persistent_storage, 'deepseek_client') else 'not_configured'
+            'status': 'configured' if deepseek_client is not None else 'not_configured'
         }
     except Exception as e:
         health_status['components']['deepseek_api'] = {
             'status': 'error',
             'error': str(e)
         }
+
+    # 检查 embedding 模式（真实模型/占位模式）
+    try:
+        embed_mode = getattr(rag_system, 'embedding_mode', 'unknown')
+        embed_dim = getattr(rag_system, 'embedding_dim', None)
+        embed_status = 'healthy'
+        if embed_mode == 'placeholder':
+            embed_status = 'degraded'
+            health_status['status'] = 'degraded'
+
+        health_status['components']['embedding_model'] = {
+            'status': embed_status,
+            'mode': embed_mode,
+            'dimension': embed_dim,
+        }
+    except Exception as e:
+        health_status['components']['embedding_model'] = {
+            'status': 'unhealthy',
+            'error': str(e)
+        }
     
-    # 检查元数据存储
+    # 主元数据存储统计（不是 dual-protein 文献数）
     try:
         metadata_count = len(rag_system.metadata_storage.get_all_metadata())
         health_status['components']['metadata_storage'] = {
             'status': 'healthy',
             'count': metadata_count
         }
+        health_status['main_metadata_count'] = metadata_count
     except Exception as e:
         health_status['components']['metadata_storage'] = {
             'status': 'unhealthy',
             'error': str(e)
         }
+        health_status['main_metadata_count'] = 0
+
+    # Dual-Protein 文档统计（独立于主甜味系统）
+    try:
+        dp_stats = dual_protein_rag.get_stats()
+        health_status['dual_protein_docs_count'] = dp_stats.get('total_documents', 0)
+    except Exception:
+        health_status['dual_protein_docs_count'] = 0
     
     status_code = 200 if health_status['status'] == 'healthy' else 503
     app_logger.debug(f"健康检查: {health_status['status']}")
@@ -557,25 +986,13 @@ def api_ask_stream():
             'error': '系统未初始化'
         }), 400
     
-    data = request.json
+    data = _get_json_dict()
     question = data.get('question', '').strip()
-    similarity_threshold = data.get('similarity_threshold', config.RAG_SIMILARITY_THRESHOLD)
-    try:
-        similarity_threshold = float(similarity_threshold)
-        if not (0 <= similarity_threshold <= 1):
-            raise ValueError
-    except (ValueError, TypeError):
-        similarity_threshold = config.RAG_SIMILARITY_THRESHOLD
-
-    max_results = data.get('max_results', config.RAG_MAX_RESULTS)
-    try:
-        max_results = int(max_results)
-        if max_results < 1:
-            raise ValueError
-        if max_results > 200:
-            max_results = 200
-    except (ValueError, TypeError):
-        max_results = config.RAG_MAX_RESULTS
+    similarity_threshold, max_results = _parse_retrieval_params(
+        data,
+        config.RAG_SIMILARITY_THRESHOLD,
+        config.RAG_MAX_RESULTS,
+    )
     
     if not question:
         return jsonify({
@@ -583,7 +1000,58 @@ def api_ask_stream():
             'error': '问题不能为空'
         }), 400
     
-    return Response(stream_with_context(chat_service.ask_stream(question, similarity_threshold, max_results)), mimetype='text/event-stream') 
+    return Response(stream_with_context(chat_service.ask_stream(question, similarity_threshold, max_results)), mimetype='text/event-stream')
+
+@app.route('/api/dual-protein/ask_stream', methods=['POST'])
+@handle_api_errors
+def api_dual_protein_ask_stream():
+    """双蛋白流式问答 API（Server-Sent Events）"""
+    from flask import Response, stream_with_context
+
+    if not _ensure_dual_protein_dim_consistent():
+        return jsonify({
+            'success': False,
+            'error': '双蛋白索引维度不一致，且自动修复失败',
+            'error_type': 'DimGuardFailed'
+        }), 500
+
+    if not dual_protein_system_ready:
+        return jsonify({
+            'success': False,
+            'error': '双蛋白系统未初始化，请先调用 /api/dual-protein/init'
+        }), 400
+
+    data = _get_json_dict()
+    question = data.get('question', '').strip()
+    if not question:
+        return jsonify({'success': False, 'error': '问题不能为空'}), 400
+
+    dual_default_threshold = float(os.getenv("DUAL_RAG_SIMILARITY_THRESHOLD", "0.18"))
+    dual_default_max_results = int(os.getenv("DUAL_RAG_MAX_RESULTS", "120"))
+    similarity_threshold, max_results = _parse_retrieval_params(
+        data,
+        dual_default_threshold,
+        dual_default_max_results,
+    )
+
+    def _safe_stream():
+        try:
+            yield from dual_protein_chat_service.ask_stream(question, similarity_threshold, max_results)
+        except Exception as e:
+            err = str(e)
+            if "not aligned" in err:
+                app_logger.warning("检测到 dual-protein 向量维度不一致，自动重建索引并重试一次（stream）")
+                success = dual_protein_rag.rebuild_index()
+                if success:
+                    initialize_dual_protein_rag()
+                    yield from dual_protein_chat_service.ask_stream(question, similarity_threshold, max_results)
+                    return
+            raise
+
+    return Response(
+        stream_with_context(_safe_stream()),
+        mimetype='text/event-stream'
+    )
 
 # 静态文件路由
 @app.route('/static/<path:filename>')
@@ -593,15 +1061,81 @@ def serve_static(filename):
     return jsonify({'error': 'Static files not served by backend'}), 404
 
 # 自动初始化（针对 Gunicorn 等 WSGI 容器）
-if __name__ != '__main__':
-    try:
-        app_logger.info("检测到非主程序运行模式，尝试初始化 RAG 系统...")
-        initialize_rag_system()
-    except Exception as e:
-        app_logger.error(f"自动初始化失败: {e}")
+if __name__ != '__main__' and os.getenv('RAG_EAGER_INIT', '').strip().lower() in {'1', 'true', 'yes'}:
+    def _background_init_main_rag():
+        try:
+            app_logger.info("检测到非主程序运行模式，后台初始化 RAG 系统...")
+            initialize_rag_system()
+        except Exception as e:
+            app_logger.error(f"自动初始化失败: {e}")
+
+    def _background_init_dual_protein_rag():
+        try:
+            app_logger.info("检测到非主程序运行模式，后台初始化双蛋白 RAG 系统...")
+            initialize_dual_protein_rag()
+        except Exception as e:
+            app_logger.error(f"双蛋白自动初始化失败: {e}")
+
+    # 低内存生产机按需加载。显式启用时也串行初始化，避免多个大索引同时产生峰值。
+    def _background_init_all_rag():
+        _background_init_main_rag()
+        _background_init_dual_protein_rag()
+
+    threading.Thread(target=_background_init_all_rag, daemon=True).start()
+
+# ============================================================
+# ML 甜味预测 API
+# ============================================================
+
+@app.route('/api/ml/predict', methods=['POST'])
+@handle_api_errors
+@monitor_performance
+def api_ml_predict():
+    """
+    甜味预测 API
+    输入: {"smiles": "CCO"} 或 {"smiles": ["CCO", "C1=CC=C(C=C1)O"]}
+    输出: 单个预测结果或列表
+    """
+    from services.sweetness_prediction_service import get_sweetness_prediction_service
+
+    data = _get_json_dict()
+    smiles_input = data.get('smiles', '')
+
+    if not smiles_input:
+        return jsonify({
+            'success': False,
+            'error': 'SMILES 不能为空'
+        }), 400
+
+    predictor = get_sweetness_prediction_service().predictor
+
+    # 支持单个或批量
+    if isinstance(smiles_input, str):
+        result = predictor.predict(smiles_input)
+        return jsonify({
+            'success': True,
+            'result': result
+        })
+    elif isinstance(smiles_input, list):
+        results = predictor.predict_batch(smiles_input)
+        return jsonify({
+            'success': True,
+            'results': results
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'error': 'smiles 参数必须是字符串或字符串列表'
+        }), 400
+
+@app.route('/predict')
+def predict_page():
+    """甜味预测页面"""
+    return render_template('predict.html')
 
 if __name__ == '__main__':
-    # 优先从环境变量读取端口，默认为 5001
+    # 固定默认端口 5001：与现有 gunicorn/nginx/部署脚本保持一致，降低本地与线上端口漂移风险。
+    # 允许通过 PORT 覆盖仅用于极少数临时调试场景；常规开发与部署保持 5001 不变。
     port = int(os.environ.get('PORT', config.PORT))
     
     print("SweetSeek 启动中...")

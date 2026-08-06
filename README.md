@@ -20,7 +20,6 @@
 SweetSeek/
 ├── app.py                          # Flask 主应用
 ├── persistent_storage.py           # RAG 系统核心（Chroma 向量数据库）
-├── persistent_storage_original.py  # 原始版本（JSON 存储，备用）
 ├── incremental_indexer.py          # 增量索引管理器
 ├── query_expander.py               # 查询扩展模块（同义词/术语扩展）
 ├── evidence_ranker.py              # 证据分级系统
@@ -82,7 +81,7 @@ DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 DEEPSEEK_MODEL=deepseek-chat
 
 # 嵌入模型配置（默认使用本地中文模型）
-EMBED_MODEL_TYPE=huggingface
+EMBED_MODEL_TYPE=modelscope
 EMBED_MODEL_NAME=BAAI/bge-small-zh-v1.5
 ```
 
@@ -223,9 +222,12 @@ PDF 元数据提取器，自动提取：
 
 ### 重建索引
 
-```python
-from persistent_storage import rag_system
-rag_system.rebuild_index()
+```bash
+# 推荐：低内存稳健重建（可调批次，默认 25）
+./scripts/maintenance/rebuild-index.sh
+
+# 或显式指定批次大小（例如 15）
+./scripts/maintenance/rebuild-index.sh 15
 ```
 
 ### 增量添加文档
@@ -249,10 +251,10 @@ A: 首次运行会下载中文嵌入模型（约 400MB）和构建索引，请�
 A: 通过上传页面上传，或直接将文件放入 `sweet_related_paper/papers/` 目录，系统会自动增量索引。
 
 **Q: 索引需要重建吗？**  
-A: 不需要！索引会自动保存在 `chroma_db/` 目录，重启后自动加载。
+A: 一般不需要。索引会自动保存在 `faiss_db/` 目录，重启后自动加载；仅在索引损坏或文档结构大变更时重建。
 
-**Q: 如何切换回原始版本？**  
-A: 将 `persistent_storage_original.py` 复制为 `persistent_storage.py` 即可。
+**Q: 如何回滚最近一次改动？**  
+A: 使用 Git 回滚到上一个稳定提交（建议先备份 `.env` 与数据目录）。
 
 **Q: 内存不足怎么办？**  
 A: 减少 `similarity_top_k` 参数（在 `app.py` 中），或使用更小的嵌入模型。
@@ -286,7 +288,7 @@ MIT License
 1. **修改代码并测试**
 2. **推送到 GitHub**
    ```bash
-   ./push.sh
+   ./scripts/maintenance/network/git_push.sh
    ```
    - 自动生成更新摘要
    - 可选添加自定义说明
@@ -294,7 +296,7 @@ MIT License
 
 3. **部署到服务器**
    ```bash
-   ./deploy.sh
+   ./scripts/maintenance/deploy/deploy.sh
    ```
    - 自动拉取代码
    - 检查环境配置
@@ -302,14 +304,20 @@ MIT License
 
 4. **快速重启服务**
    ```bash
-   ./restart-server.sh
+   ./scripts/maintenance/restart-server.sh
+   ```
+
+5. **本地一键重启（推荐本机开发）**
+   ```bash
+   ./scripts/maintenance/restart-local-5001.sh
    ```
 
 ### 可用脚本
 
-- `push.sh` - 智能推送（推荐）
-- `deploy.sh` - 部署到服务器
-- `restart-server.sh` - 快速重启
+- `scripts/maintenance/network/git_push.sh` - 智能推送（推荐）
+- `scripts/maintenance/deploy/deploy.sh` - 部署到服务器
+- `scripts/maintenance/restart-server.sh` - 快速重启
+- `scripts/maintenance/restart-local-5001.sh` - 本地一键重启（127.0.0.1:5001）
 
 ---
 
