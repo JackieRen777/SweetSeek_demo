@@ -53,7 +53,14 @@ class DeepSeekLLMClient:
         reasoning = "".join(reasoning_chunks) if reasoning_chunks else None
         return answer, reasoning
 
-    def structured_chat(self, messages: List[dict], *, schema: dict, function_name: str) -> dict:
+    def structured_chat(
+        self,
+        messages: List[dict],
+        *,
+        schema: dict,
+        function_name: str,
+        max_tokens: int = 900,
+    ) -> dict:
         """Return schema-constrained JSON with a compatibility fallback."""
         try:
             response = self._client.chat.completions.create(
@@ -69,7 +76,7 @@ class DeepSeekLLMClient:
                     },
                 }],
                 tool_choice={"type": "function", "function": {"name": function_name}},
-                max_tokens=1400,
+                max_tokens=max_tokens,
                 stream=False,
             )
             call = response.choices[0].message.tool_calls[0]
@@ -83,7 +90,7 @@ class DeepSeekLLMClient:
                 model=self._model,
                 messages=fallback_messages,
                 temperature=0,
-                max_tokens=1000,
+                max_tokens=min(max_tokens, 800),
                 response_format={"type": "json_object"},
                 stream=False,
             )

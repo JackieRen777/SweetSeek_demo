@@ -5,7 +5,7 @@ import io
 import re
 from typing import Callable
 
-from flask import Blueprint, Request as FlaskRequest, jsonify, request, send_file
+from flask import Blueprint, Request as FlaskRequest, Response, jsonify, request, send_file, stream_with_context
 from werkzeug.exceptions import RequestEntityTooLarge
 from pydantic import ValidationError
 
@@ -180,7 +180,7 @@ def _explicit_parameter_keys(text: str) -> set[str]:
 
 def _is_troubleshooting(text: str) -> bool:
     return bool(re.search(
-        r"\b(?:error|failed?|failure|crash(?:ed)?|nan|shake|blow(?:n|ing)?\s+up|unstable|"
+        r"\b(?:error|failed?|failure|crash(?:ed)?|nan|blow(?:n|ing)?\s+up|unstable|"
         r"drift(?:ed|ing)?|escaped?|left\s+the\s+(?:site|box)|unbound|dissociat(?:ed|ion))\b|"
         r"跑出|跑飞|失败|报错|崩溃|爆炸|不稳定|解离|漂移",
         text,
@@ -188,17 +188,31 @@ def _is_troubleshooting(text: str) -> bool:
     ))
 
 
-def _clean_history(value) -> list[dict]:
+def _clean_history(value, *, limit: int = 6, content_limit: int = 2400) -> list[dict]:
     if not isinstance(value, list):
         return []
     cleaned = []
-    for item in value[-10:]:
+    for item in value[-limit:]:
         if not isinstance(item, dict) or item.get("role") not in {"user", "assistant"}:
             continue
-        content = str(item.get("content", "")).strip()[:6000]
+        content = str(item.get("content", "")).strip()[:content_limit]
         if content:
             cleaned.append({"role": item["role"], "content": content})
     return cleaned
+
+
+def _expert_intent_hint(text: str) -> str:
+    if _is_troubleshooting(text):
+        return "troubleshooting"
+    lowered = text.lower()
+    question_form = bool(re.search(r"\b(?:what|why|how|when|which|difference)\b|什么|为什么|如何|怎么|区别", lowered))
+    setup_action = bool(re.search(
+        r"\b(?:set\s*up|configure|prepare|build|generate|simulate|run)\b|设置|配置|生成|准备.*模拟|运行.*模拟",
+        lowered,
+    ))
+    if setup_action or (_extract_explicit_values(text) and not question_form):
+        return "setup"
+    return "general"
 
 
 def create_md_builder_blueprint(llm_client_getter: Callable):
@@ -250,7 +264,12 @@ def create_md_builder_blueprint(llm_client_getter: Callable):
             },
         ]
         try:
-            proposed = client.structured_chat(messages, schema=_extraction_schema(), function_name="extract_md_parameters")
+            proposed = client.structured_chat(
+                messages,
+                schema=_extraction_schema(),
+                function_name="extract_md_parameters",
+                max_tokens=600,
+            )
         except Exception as exc:
             return _error(f"Parameter extraction failed: {exc}", 502)
         proposed = {**proposed, **_extract_explicit_values(text)}
@@ -326,7 +345,12 @@ def create_md_builder_blueprint(llm_client_getter: Callable):
             "role": "user", "content": json.dumps(context, ensure_ascii=False),
         }]
         try:
-            result = client.structured_chat(messages, schema=_expert_schema(), function_name="answer_md_expert")
+            result = client.structured_chat(
+                messages,
+                schema=_expert_schema(),
+                function_name="answer_md_expert",
+                max_tokens=900 if _is_troubleshooting(question) else 650,
+            )
         except Exception as exc:
             return _error(f"MD Expert is unavailable: {exc}", 502)
 
@@ -351,6 +375,52 @@ def create_md_builder_blueprint(llm_client_getter: Callable):
             "parameter_updates": updates,
             "diagnostic_checks": [str(item)[:500] for item in checks[:6] if str(item).strip()],
         })
+
+    @blueprint.post("/chat-stream")
+    def expert_chat_stream():
+        data = request.get_json(silent=True) or {}
+        question = str(data.get("message", "")).strip()
+        if len(question) < 3:
+            return _error("Enter a simulation setup or troubleshooting question")
+        if len(question) > 12000:
+            return _error("The message exceeds the 12,000 character limit")
+
+        # Structured setup and troubleshooting responses retain the existing safety path.
+        if _expert_intent_hint(question) != "general":
+            return expert_chat()
+
+        client = llm_client_getter()
+        if client is None:
+            return _error("The language model service is not configured", 503)
+        history = _clean_history(data.get("history"), limit=6, content_limit=1800)
+        messages = [{
+            "role": "system",
+            "content": (
+                "You are a concise AMBER molecular-dynamics expert. Answer the user's general question in the "
+                "user's language in at most 220 words. Preserve exact AMBER and cpptraj keywords and include a "
+                "short command or input snippet only when it adds practical value. Cover standard soluble protein, "
+                "protein-protein, and protein-small-molecule systems. Clearly flag membrane, metal, covalent, "
+                "nucleic-acid, glycosylated, or other special chemistry as requiring a specialized workflow."
+            ),
+        }, *history, {"role": "user", "content": question}]
+
+        def generate_events():
+            yield f"data: {json.dumps({'type': 'meta', 'intent': 'general'})}\n\n"
+            try:
+                for delta in client.stream_chat(messages, temperature=0.2, max_tokens=500):
+                    if delta.content:
+                        payload = {"type": "delta", "content": delta.content}
+                        yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'type': 'done', 'confidence': 'medium'})}\n\n"
+            except Exception as exc:
+                payload = {"type": "error", "error": f"MD Expert is unavailable: {exc}"}
+                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+        return Response(
+            stream_with_context(generate_events()),
+            mimetype="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
 
     @blueprint.post("/generate")
     def generate():

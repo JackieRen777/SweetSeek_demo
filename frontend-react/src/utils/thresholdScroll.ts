@@ -35,7 +35,7 @@ export const useThresholdScroll = ({
   const handleWheel = useCallback((e: WheelEvent) => {
     // 允许在非全屏滚动区域（如模态框内部）进行默认滚动
     // 通过检查事件目标的祖先元素是否有 .overflow-y-auto 或 .overflow-auto 类
-    let target = e.target as HTMLElement;
+    let target = e.target instanceof HTMLElement ? e.target : null;
     while (target && target !== document.body) {
         if (target.classList.contains('overflow-y-auto') || target.classList.contains('overflow-auto')) {
             // 如果该元素可以滚动（内容高度 > 视口高度），则不拦截
@@ -45,7 +45,7 @@ export const useThresholdScroll = ({
                 return; 
             }
         }
-        target = target.parentElement as HTMLElement;
+        target = target.parentElement;
     }
 
     // 阻止默认滚动行为，接管为翻页

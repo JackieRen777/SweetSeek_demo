@@ -17,7 +17,8 @@ from services.md_builder import (
     suggest_system,
 )
 from services.md_builder_api import create_md_builder_blueprint
-from services.md_builder_api import _extract_explicit_values
+from services.md_builder_api import _expert_intent_hint, _extract_explicit_values
+from services.llm_client import ChatDelta
 
 
 def pdb_bytes(chains=("A",), hetero=None):
@@ -262,3 +263,38 @@ def test_expert_chat_never_auto_applies_troubleshooting_advice():
     assert data["auto_apply"] is False
     assert data["parameter_updates"] == {"solvent_padding_a": 16, "timestep_fs": 1}
     assert "autoimage" in data["diagnostic_checks"][0]
+
+
+def test_general_expert_questions_stream_without_structured_parameter_extraction():
+    class GeneralClient:
+        def stream_chat(self, messages, **kwargs):
+            assert messages[-1]["content"] == "What is the difference between ff19SB and ff14SB?"
+            assert kwargs == {"temperature": 0.2, "max_tokens": 500}
+            yield ChatDelta(content="ff19SB refines ")
+            yield ChatDelta(content="backbone torsions.")
+
+        def structured_chat(self, *_args, **_kwargs):
+            raise AssertionError("General questions must use the streaming path")
+
+    app = Flask(__name__)
+    app.register_blueprint(create_md_builder_blueprint(lambda: GeneralClient()))
+    response = app.test_client().post("/api/md-builder/chat-stream", json={
+        "message": "What is the difference between ff19SB and ff14SB?",
+        "history": [],
+    })
+    body = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert response.mimetype == "text/event-stream"
+    assert '"type": "delta"' in body
+    assert "backbone torsions" in body
+    assert '"type": "done"' in body
+
+
+@pytest.mark.parametrize("question, expected", [
+    ("What does SHAKE do?", "general"),
+    ("Set up 100 ns at 310 K", "setup"),
+    ("100 ns at 310 K with ff19SB", "setup"),
+    ("My ligand escaped after 8 ns", "troubleshooting"),
+])
+def test_expert_intent_hint_selects_the_fast_path(question, expected):
+    assert _expert_intent_hint(question) == expected

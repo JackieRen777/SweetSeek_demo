@@ -6,9 +6,10 @@ Detects SMILES in user queries and augments RAG answers with ML predictions.
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from scripts.api.predict import SweetnessPredictor
+if TYPE_CHECKING:
+    from scripts.api.predict import SweetnessPredictor
 
 
 class SweetnessPredictionService:
@@ -27,6 +28,8 @@ class SweetnessPredictionService:
     @property
     def predictor(self) -> SweetnessPredictor:
         if self._predictor is None:
+            # RDKit and the prediction models are optional until a SMILES query arrives.
+            from scripts.api.predict import SweetnessPredictor
             self._predictor = SweetnessPredictor()
         return self._predictor
 

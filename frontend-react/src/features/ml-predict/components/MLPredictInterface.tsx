@@ -12,6 +12,7 @@ import SmilesInput from './SmilesInput';
 import JsmeEditor from './JsmeEditor';
 import PredictionResult from './PredictionResult';
 import MoleculeVisualization from './MoleculeVisualization';
+import RegressionResult from './RegressionResult';
 import MLPredictLanding from './MLPredictLanding';
 
 type InputMode = 'smiles' | 'draw';
@@ -33,6 +34,11 @@ interface PredictionData {
     aromatic_rings?: number;
     heavy_atoms?: number;
   };
+  regression?: {
+    log_sw: number;
+    relative_sweetness: number;
+    model_r2: number;
+  } | null;
   status: string;
 }
 
@@ -187,6 +193,22 @@ export default function MLPredictInterface() {
                 </div>
                 <PredictionResult data={prediction} />
               </section>
+
+              {/* === Section 4: Sweetness Intensity Regression === */}
+              <section>
+                <div className="flex items-baseline gap-3 mb-4 border-b border-slate-200/70 pb-2">
+                  <span className="text-[11px] uppercase tracking-[0.15em] text-slate-400 font-semibold">
+                    Step 04
+                  </span>
+                  <h2 className="text-base font-semibold text-slate-800">
+                    Sweetness intensity estimation
+                  </h2>
+                </div>
+                <RegressionResult
+                  data={prediction.regression || null}
+                  isSweet={prediction.is_sweet_pred === 1}
+                />
+              </section>
             </>
           )}
 
@@ -194,20 +216,16 @@ export default function MLPredictInterface() {
           <section className="pt-6 border-t border-slate-200/70">
             <div className="flex flex-wrap items-end gap-x-10 gap-y-3 text-sm">
               <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Training Set</p>
-                <p className="text-slate-800 font-medium">3,846 mols</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Classification</p>
+                <p className="text-slate-800 font-medium">3,846 mols · AUC 0.976</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Regression</p>
+                <p className="text-slate-800 font-medium">741 mols · R² 0.679</p>
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Features</p>
                 <p className="text-slate-800 font-medium">1,407 dims</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Test F1</p>
-                <p className="text-slate-800 font-medium">0.837</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-[0.15em] font-semibold mb-0.5">Test AUC</p>
-                <p className="text-slate-800 font-medium">0.976</p>
               </div>
               <p className="text-xs text-slate-400 ml-auto">
                 ECFP4 + MACCS + RDKit 2D · RF + XGBoost ensemble

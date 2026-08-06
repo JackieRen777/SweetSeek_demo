@@ -245,8 +245,9 @@ export default function AmberMDBuilder() {
     const conversation = [...expertMessages, userMessage];
     setExpertMessages(conversation);
     setExpertInput(''); setSuggestedUpdates(null); setChatBusy(true); setError('');
+    let streamingAssistantId: string | null = null;
     try {
-      const response = await fetch('/api/md-builder/chat', {
+      const response = await fetch('/api/md-builder/chat-stream', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: question,
@@ -256,24 +257,58 @@ export default function AmberMDBuilder() {
           structures: structures.map(item => item.inspection),
         }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'MD Expert could not answer this question.');
-      const updates = normalizeUpdates(data.parameter_updates);
-      setExpertMessages(previous => [...previous, {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: data.answer,
-        confidence: data.confidence,
-        checks: Array.isArray(data.diagnostic_checks) ? data.diagnostic_checks : [],
-      }]);
-      if (data.auto_apply) applyExpertUpdates(updates, false);
-      else if (Object.keys(updates).length) setSuggestedUpdates(updates);
+      const contentType = response.headers?.get?.('content-type') || '';
+      if (!contentType.includes('text/event-stream')) {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'MD Expert could not answer this question.');
+        const updates = normalizeUpdates(data.parameter_updates);
+        setExpertMessages(previous => [...previous, {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: data.answer,
+          confidence: data.confidence,
+          checks: Array.isArray(data.diagnostic_checks) ? data.diagnostic_checks : [],
+        }]);
+        if (data.auto_apply) applyExpertUpdates(updates, false);
+        else if (Object.keys(updates).length) setSuggestedUpdates(updates);
+        return;
+      }
+      if (!response.ok || !response.body) throw new Error('MD Expert could not start streaming.');
+
+      const assistantId = `assistant-${Date.now()}`;
+      streamingAssistantId = assistantId;
+      setExpertMessages(previous => [...previous, { id: assistantId, role: 'assistant', content: '' }]);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+        for (const event of events) {
+          const raw = event.split('\n').find(line => line.startsWith('data: '))?.slice(6);
+          if (!raw) continue;
+          const data = JSON.parse(raw);
+          if (data.type === 'error') throw new Error(data.error || 'MD Expert stream failed.');
+          if (data.type === 'delta' && data.content) {
+            setExpertMessages(previous => previous.map(item => item.id === assistantId
+              ? { ...item, content: item.content + data.content }
+              : item));
+          }
+          if (data.type === 'done') {
+            setExpertMessages(previous => previous.map(item => item.id === assistantId
+              ? { ...item, confidence: data.confidence || 'medium' }
+              : item));
+          }
+        }
+        if (done) break;
+      }
     } catch (caught) {
-      setExpertMessages(previous => [...previous, {
-        id: `assistant-error-${Date.now()}`,
-        role: 'assistant',
-        content: caught instanceof Error ? caught.message : 'MD Expert is unavailable.',
-      }]);
+      const errorContent = caught instanceof Error ? caught.message : 'MD Expert is unavailable.';
+      setExpertMessages(previous => streamingAssistantId
+        ? previous.map(item => item.id === streamingAssistantId ? { ...item, content: errorContent } : item)
+        : [...previous, { id: `assistant-error-${Date.now()}`, role: 'assistant', content: errorContent }]);
     } finally { setChatBusy(false); }
   };
 

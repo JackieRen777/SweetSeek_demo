@@ -42,6 +42,7 @@ RDLogger.DisableLog("rdApp.*")
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_DIR = REPO_ROOT / "data" / "models"
 FEAT_DIR = REPO_ROOT / "data" / "features"
+REG_DIR = REPO_ROOT / "data" / "regression"
 
 # Day 5 tuned threshold
 THRESHOLD = 0.36
@@ -61,10 +62,30 @@ class SweetnessPredictor:
         self.feature_names = json.loads((FEAT_DIR / "feature_names.json").read_text(encoding="utf-8"))
         self.feature_meta = json.loads((FEAT_DIR / "feature_meta.json").read_text(encoding="utf-8"))
 
+        # Regression models (BrixDB-trained)
+        self._rf_reg = None
+        self._xgb_reg = None
+        self._reg_preprocessor = None
+
         # Defer SHAP TreeExplainer init to first predict() call.
         # Reason: importing shap and constructing TreeExplainer at Flask startup
         # has caused SIGSEGV crashes on macOS ARM64 (multithreading conflict).
         self._shap_explainer = None
+
+    def _load_regression_models(self):
+        """Lazy-load regression models."""
+        if self._rf_reg is not None:
+            return True
+        try:
+            with open(REG_DIR / "rf_reg.pkl", "rb") as f:
+                self._rf_reg = pickle.load(f)["model"]
+            with open(REG_DIR / "xgb_reg.pkl", "rb") as f:
+                self._xgb_reg = pickle.load(f)["model"]
+            with open(REG_DIR / "preprocessor.pkl", "rb") as f:
+                self._reg_preprocessor = pickle.load(f)
+            return True
+        except FileNotFoundError:
+            return False
 
     @property
     def shap_explainer(self):
@@ -174,6 +195,23 @@ class SweetnessPredictor:
         except Exception as e:
             print(f"[SweetnessPredictor] descriptor calc failed: {e}", file=sys.stderr)
 
+        # Step 7: regression prediction (sweetness intensity)
+        regression = None
+        if self._load_regression_models():
+            try:
+                X_reg = self._reg_preprocessor.transform(X_raw.reshape(1, -1)).astype(np.float32)
+                pred_rf_reg = self._rf_reg.predict(X_reg)[0]
+                pred_xgb_reg = self._xgb_reg.predict(X_reg)[0]
+                log_sw = float((pred_rf_reg + pred_xgb_reg) / 2.0)
+                relative_sweetness = round(10 ** log_sw, 1)
+                regression = {
+                    "log_sw": round(log_sw, 3),
+                    "relative_sweetness": relative_sweetness,
+                    "model_r2": 0.679,
+                }
+            except Exception as e:
+                print(f"[SweetnessPredictor] regression failed: {e}", file=sys.stderr)
+
         return {
             "smiles": smiles,
             "smiles_canonical": smiles_canonical,
@@ -181,6 +219,7 @@ class SweetnessPredictor:
             "sweet_prob": float(proba_ens),
             "shap_top5": shap_top5,
             "properties": properties,
+            "regression": regression,
             "status": "ok",
         }
 
