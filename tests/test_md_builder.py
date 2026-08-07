@@ -60,6 +60,26 @@ def source(item):
     return {"source": "upload", "filename": item.filename}
 
 
+def sdf_bytes():
+    return b"""Ligand
+  SweetSeek
+
+  2  1  0  0  0  0            999 V2000
+    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+M  END
+$$$$
+"""
+
+
+def test_sdf_inspection_supports_viewing_but_not_direct_amber_generation():
+    ligand = inspect_input("ligand.sdf", sdf_bytes())
+    assert ligand.inspection["format"] == "sdf"
+    assert ligand.inspection["atoms"] == 2
+    assert "MOL2 conversion" in ligand.inspection["warnings"][0]
+
+
 def test_inspection_and_system_suggestions():
     single = inspect_input("single.pdb", pdb_bytes())
     complex_input = inspect_input("complex.pdb", pdb_bytes(("A", "B")))

@@ -104,6 +104,9 @@
 .mdp-expert-composer button { width: 34px; height: 34px; border: 0; border-radius: 5px; background: #2563eb; color: #fff; display: grid; place-items: center; }
 .mdp-expert-composer button:disabled { opacity: .5; cursor: not-allowed; }
 .mdp-mobile-tabs { display: none; }
+.mdp-structure-viewer { position: relative; width: 100%; height: 320px; margin-top: 14px; overflow: hidden; border: 1px solid #1e293b; border-radius: 6px; background: #0b1220; }
+.mdp-structure-viewer canvas { display: block; width: 100%; height: 100%; }
+.mdp-viewer-caption { position: absolute; z-index: 2; left: 10px; bottom: 10px; max-width: calc(100% - 20px); padding: 5px 8px; border: 1px solid rgba(148, 163, 184, .35); border-radius: 4px; background: rgba(15, 23, 42, .8); color: #cbd5e1; font-size: 10px; pointer-events: none; }
 .mdp-spin { animation: mdp-spin .8s linear infinite; }
 @keyframes mdp-spin { to { transform: rotate(360deg); } }
 

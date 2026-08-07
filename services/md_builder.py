@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 MAX_PDB_FILES = 2
 MAX_MOL2_FILES = 1
-ALLOWED_EXTENSIONS = {".pdb", ".ent", ".mol2"}
+ALLOWED_EXTENSIONS = {".pdb", ".ent", ".mol2", ".sdf", ".sd"}
 
 STANDARD_AMINO_ACIDS = {
     "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE",
@@ -235,15 +235,47 @@ def inspect_mol2(content: bytes, filename: str) -> dict[str, Any]:
     }
 
 
+def inspect_sdf(content: bytes, filename: str) -> dict[str, Any]:
+    text = _decode_text(content)
+    lines = text.splitlines()
+    if len(lines) < 4:
+        raise MDBuilderError("The SDF file is incomplete")
+    fields = lines[3].split()
+    try:
+        atoms = int(fields[0])
+    except (IndexError, ValueError):
+        raise MDBuilderError("The SDF counts line is invalid") from None
+    if atoms <= 0 or len(lines) < 4 + atoms:
+        raise MDBuilderError("No valid atoms were found in the SDF file")
+    for line in lines[4:4 + atoms]:
+        atom_fields = line.split()
+        if len(atom_fields) < 4:
+            raise MDBuilderError("An SDF atom line is invalid")
+        try:
+            float(atom_fields[0]); float(atom_fields[1]); float(atom_fields[2])
+        except ValueError:
+            raise MDBuilderError("An SDF atom coordinate is invalid") from None
+    return {
+        "filename": filename, "format": "sdf", "atoms": atoms, "residues": 1,
+        "chains": [], "warnings": ["SDF can be viewed now; AMBER generation requires MOL2 conversion."], "unsupported": [], "valid": True,
+        "has_charges": False, "net_charge": None,
+    }
+
+
 def inspect_input(filename: str, content: bytes) -> InputFile:
     clean_name = safe_filename(filename)
-    inspection = inspect_mol2(content, clean_name) if clean_name.endswith(".mol2") else inspect_pdb(content, clean_name)
+    if clean_name.endswith(".mol2"):
+        inspection = inspect_mol2(content, clean_name)
+    elif clean_name.endswith((".sdf", ".sd")):
+        inspection = inspect_sdf(content, clean_name)
+    else:
+        inspection = inspect_pdb(content, clean_name)
     return InputFile(clean_name, content, inspection)
 
 
 def suggest_system(inspections: list[dict[str, Any]]) -> dict[str, Any]:
     pdbs = [item for item in inspections if item["format"] == "pdb"]
-    mol2s = [item for item in inspections if item["format"] == "mol2"]
+    mol2s = [item for item in inspections if item["format"] in {"mol2", "sdf"}]
     if len(pdbs) == 1 and len(mol2s) == 1:
         return {"system_type": "protein_ligand", "input_mode": "single_structure", "needs_chain_grouping": False}
     if len(pdbs) == 2 and not mol2s:
@@ -294,9 +326,9 @@ def validate_input_counts(inputs: list[InputFile]) -> None:
     if sum(len(item.content) for item in inputs) > MAX_UPLOAD_BYTES:
         raise MDBuilderError("Combined input size exceeds 20 MB")
     pdb_count = sum(item.inspection["format"] == "pdb" for item in inputs)
-    mol2_count = sum(item.inspection["format"] == "mol2" for item in inputs)
+    mol2_count = sum(item.inspection["format"] in {"mol2", "sdf"} for item in inputs)
     if pdb_count > MAX_PDB_FILES or mol2_count > MAX_MOL2_FILES or not inputs:
-        raise MDBuilderError("Provide at most two PDB files and one MOL2 file")
+        raise MDBuilderError("Provide at most two PDB files and one MOL2 or SDF file")
     if len({item.filename for item in inputs}) != len(inputs):
         raise MDBuilderError("Input filenames must be unique")
     invalid = [item.inspection for item in inputs if not item.inspection["valid"]]
@@ -327,7 +359,7 @@ def _template_environment() -> Environment:
 def render_project(config: MDConfig, inputs: list[InputFile]) -> dict[str, str]:
     validate_input_counts(inputs)
     pdbs = [item for item in inputs if item.inspection["format"] == "pdb"]
-    mol2s = [item for item in inputs if item.inspection["format"] == "mol2"]
+    mol2s = [item for item in inputs if item.inspection["format"] in {"mol2", "sdf"}]
     if config.system_type == "single_protein" and len(pdbs) != 1:
         raise MDBuilderError("Single-protein projects require one PDB file")
     if config.system_type == "protein_protein" and config.input_mode == "two_partners" and len(pdbs) != 2:
@@ -336,6 +368,8 @@ def render_project(config: MDConfig, inputs: list[InputFile]) -> dict[str, str]:
         raise MDBuilderError("Single-complex projects require one PDB file")
     if config.system_type == "protein_ligand" and (len(pdbs) != 1 or len(mol2s) != 1):
         raise MDBuilderError("Protein-ligand projects require one PDB and one MOL2 file")
+    if config.system_type == "protein_ligand" and mol2s[0].inspection["format"] == "sdf":
+        raise MDBuilderError("SDF-to-MOL2 preparation is not available yet; upload a MOL2 file for AMBER generation")
     if config.system_type == "protein_ligand" and config.charge_method == "existing":
         if not mol2s[0].inspection.get("has_charges"):
             raise MDBuilderError("The MOL2 file does not contain usable atomic charges; select AM1-BCC or RESP")

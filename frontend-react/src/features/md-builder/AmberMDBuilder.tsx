@@ -6,6 +6,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './amber-md-builder.css';
+import StructureViewer from './StructureViewer';
 
 type SystemChoice = 'single_protein' | 'protein_protein' | 'protein_ligand';
 type Tab = 'setup' | 'files' | 'expert';
@@ -14,7 +15,7 @@ type ChainGroup = 'partner1' | 'partner2' | 'excluded';
 interface ChainInfo { id: string; residues: number; name: string }
 interface Inspection {
   filename: string;
-  format: 'pdb' | 'mol2';
+  format: 'pdb' | 'mol2' | 'sdf';
   atoms: number;
   residues: number;
   chains: ChainInfo[];
@@ -93,7 +94,7 @@ const GENERATED_FILES = [
 
 function resolvedSetup(choice: SystemChoice, structures: StructureEntry[]) {
   const pdbs = structures.filter(item => item.inspection.format === 'pdb');
-  const mol2s = structures.filter(item => item.inspection.format === 'mol2');
+  const mol2s = structures.filter(item => item.inspection.format === 'mol2' || item.inspection.format === 'sdf');
   const system = choice;
   const inputMode = system === 'protein_protein'
     ? (pdbs.length === 2 ? 'two_partners' : 'single_complex')
@@ -115,6 +116,7 @@ export default function AmberMDBuilder() {
   const [suggestedUpdates, setSuggestedUpdates] = useState<Partial<Parameters> | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [viewerContents, setViewerContents] = useState<Array<{ name: string; format: string; text: string }>>([]);
   const [download, setDownload] = useState<{ url: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const partner1InputRef = useRef<HTMLInputElement>(null);
@@ -130,8 +132,14 @@ export default function AmberMDBuilder() {
   }, [download]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ block: 'end' });
+    if (typeof chatEndRef.current?.scrollIntoView === 'function') chatEndRef.current.scrollIntoView({ block: 'end' });
   }, [expertMessages, chatBusy]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(structures.filter(item => item.file).map(async item => ({ name: item.filename, format: item.inspection.format, text: await item.file!.text() }))).then(items => { if (!cancelled) setViewerContents(items); });
+    return () => { cancelled = true; };
+  }, [structures]);
 
   const scrollPanel = (event: WheelEvent<HTMLElement>) => {
     const panel = event.currentTarget;
@@ -158,9 +166,9 @@ export default function AmberMDBuilder() {
     setStructures(previous => {
       const combined = [...previous, ...entries].slice(0, 3);
       const pdbs = combined.filter(item => item.inspection.format === 'pdb');
-      const mol2s = combined.filter(item => item.inspection.format === 'mol2');
+      const mol2s = combined.filter(item => item.inspection.format === 'mol2' || item.inspection.format === 'sdf');
       if (pdbs.length > 2 || mol2s.length > 1) {
-        setError('Use at most two PDB files and one MOL2 file.');
+        setError('Use at most two PDB files and one MOL2 or SDF file.');
         return previous;
       }
       if (pdbs.length === 1 && pdbs[0].inspection.chains.length === 2) {
@@ -180,10 +188,18 @@ export default function AmberMDBuilder() {
     Array.from(files).forEach(file => form.append('files', file));
     try {
       const response = await fetch('/api/md-builder/inspect', { method: 'POST', body: form });
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: { structures?: Inspection[]; error?: string };
+      try {
+        data = JSON.parse(responseText) as { structures?: Inspection[]; error?: string };
+      } catch {
+        throw new Error(responseText.trim().startsWith('<!doctype') || responseText.trim().startsWith('<html')
+          ? 'MD backend is not serving this route. Restart the Flask backend on port 5001 and try again.'
+          : `MD backend returned an invalid response (${response.status}).`);
+      }
       if (!response.ok) throw new Error(data.error || 'Could not inspect the files.');
       const selectedFiles = Array.from(files);
-      addEntries(data.structures.map((inspection: Inspection, index: number) => ({
+      addEntries((data.structures || []).map((inspection: Inspection, index: number) => ({
         source: 'upload', filename: inspection.filename, inspection,
         file: selectedFiles[index],
       })));
@@ -294,7 +310,7 @@ export default function AmberMDBuilder() {
     if (structures.some(item => !item.inspection.valid)) return 'Remove unsupported structures before generation.';
     if (setup.system === 'single_protein' && (setup.pdbs.length !== 1 || setup.mol2s.length)) return 'Single protein requires one PDB file.';
     if (setup.system === 'protein_protein' && setup.pdbs.length < 1) return 'Protein-protein requires one complex or two PDB files.';
-    if (setup.system === 'protein_ligand' && (setup.pdbs.length !== 1 || setup.mol2s.length !== 1)) return 'Protein-ligand requires one PDB and one MOL2 file.';
+    if (setup.system === 'protein_ligand' && (setup.pdbs.length !== 1 || setup.mol2s.length !== 1)) return 'Protein-ligand requires one PDB and one MOL2 or SDF file.';
     if (setup.system === 'protein_ligand' && parameters.charge_method === 'existing' && !canUseExistingCharges) return 'No usable atomic charges were detected in the MOL2 file.';
     if (setup.inputMode === 'single_complex') {
       const p1 = Object.values(chainGroups).some(value => value === 'partner1');
@@ -393,11 +409,12 @@ export default function AmberMDBuilder() {
             {systemChoice === 'protein_ligand' && <div className="mdp-upload-pair">
               <button className="mdp-upload" onClick={() => partner1InputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload receptor protein</strong><small>PDB file</small></span></button>
               <input ref={partner1InputRef} type="file" accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
-              <button className="mdp-upload" onClick={() => ligandInputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload ligand molecule</strong><small>MOL2 file</small></span></button>
-              <input ref={ligandInputRef} type="file" accept=".mol2" hidden onChange={event => inspectFiles(event.target.files)} />
+              <button className="mdp-upload" onClick={() => ligandInputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload ligand molecule</strong><small>MOL2 or SDF file</small></span></button>
+              <input ref={ligandInputRef} type="file" accept=".mol2,.sdf" hidden onChange={event => inspectFiles(event.target.files)} />
             </div>}
           </div>
           <div className="mdp-structure-list">{structures.map((item, index) => <div className="mdp-structure-row" key={`${item.filename}-${index}`}><FileCode2 size={18} /><div><strong>{item.filename}</strong><span>{item.inspection.format.toUpperCase()} · {item.inspection.atoms.toLocaleString()} atoms · {item.inspection.chains.length || 1} {item.inspection.format === 'pdb' ? 'chains' : 'molecule'}</span>{item.inspection.warnings.map(warning => <small key={warning}>{warning}</small>)}</div><button title="Remove structure" onClick={() => setStructures(previous => previous.filter((_, row) => row !== index))}><X size={16} /></button></div>)}</div>
+          <StructureViewer contents={viewerContents} />
           {complexChains.length > 1 && <div className="mdp-chain-table"><div className="mdp-chain-header"><span>Chain</span><span>Residues</span><span>Assignment</span></div>{complexChains.map(chain => <div className="mdp-chain-row" key={chain.id}><strong>{chain.id === '_' ? 'Blank' : chain.id}</strong><span>{chain.residues}</span><select aria-label={`Assign chain ${chain.id}`} value={chainGroups[chain.id] || 'excluded'} onChange={event => setChainGroups(previous => ({ ...previous, [chain.id]: event.target.value as ChainGroup }))}><option value="partner1">Partner 1</option><option value="partner2">Partner 2</option><option value="excluded">Excluded</option></select></div>)}</div>}
         </section>
 
