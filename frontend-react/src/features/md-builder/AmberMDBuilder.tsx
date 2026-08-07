@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import './amber-md-builder.css';
 import StructureViewer from './StructureViewer';
 import Docking from '../docking/Docking';
+import type { SelectedDockingPose } from '../docking/Docking';
 
 type SystemChoice = 'single_protein' | 'protein_protein' | 'protein_ligand';
 type Tab = 'setup' | 'files' | 'expert' | 'docking';
@@ -119,6 +120,7 @@ export default function AmberMDBuilder() {
   const [notice, setNotice] = useState('');
   const [viewerContents, setViewerContents] = useState<Array<{ name: string; format: string; text: string }>>([]);
   const [download, setDownload] = useState<{ url: string; name: string } | null>(null);
+  const [dockingPose, setDockingPose] = useState<SelectedDockingPose | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const partner1InputRef = useRef<HTMLInputElement>(null);
   const partner2InputRef = useRef<HTMLInputElement>(null);
@@ -329,6 +331,7 @@ export default function AmberMDBuilder() {
     const partner2 = Object.entries(chainGroups).filter(([, group]) => group === 'partner2').map(([chain]) => chain);
     const config = {
       ...parameters,
+      docking_pose: dockingPose ? { id: dockingPose.id, rank: dockingPose.rank, score: dockingPose.score, job_id: dockingPose.jobId } : null,
       system_type: setup.system,
       input_mode: setup.inputMode,
       structures: structures.map(({ source, filename, pdb_id, unit: sourceUnit, assembly_id }) => ({
@@ -340,6 +343,7 @@ export default function AmberMDBuilder() {
     const form = new FormData();
     form.append('config', JSON.stringify(config));
     structures.forEach(item => { if (item.file) form.append('files', item.file, item.filename); });
+    if (dockingPose) form.append('docking_pose', new File([dockingPose.structure], 'docked_pose.pdb', { type: 'chemical/x-pdb' }));
     try {
       const response = await fetch('/api/md-builder/generate', { method: 'POST', body: form });
       if (!response.ok) {
@@ -387,7 +391,7 @@ export default function AmberMDBuilder() {
   return <div className="mdp-shell" aria-label="AMBER MD Builder">
     <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['setup', 'files', 'expert', 'docking'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
     {(error || notice) && <div className={`mdp-banner ${error ? 'error' : 'success'}`}>{error ? <AlertTriangle size={16} /> : <Check size={16} />}<span>{error || notice}</span><button onClick={() => { setError(''); setNotice(''); }}><X size={15} /></button></div>}
-    {tab === 'docking' ? <div className="mdp-docking-inline"><Docking /></div> : <div className="mdp-workspace">
+    {tab === 'docking' ? <div className="mdp-docking-inline"><Docking onPoseSelected={setDockingPose} /></div> : <div className="mdp-workspace">
       <main className={`mdp-main overflow-y-auto ${tab !== 'setup' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
         <section className="mdp-section">
           <div className="mdp-section-heading"><div><span>01</span><h2>Select system</h2></div><span className="mdp-detected">Detected: {String(setup.system).replaceAll('_', ' ')}</span></div>

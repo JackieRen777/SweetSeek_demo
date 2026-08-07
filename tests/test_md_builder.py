@@ -126,6 +126,16 @@ def test_single_protein_zip_contains_inputs_and_valid_shell(tmp_path):
                 subprocess.run(["bash", "-n", str(target)], check=True)
 
 
+def test_selected_docking_pose_is_included_in_zip():
+    protein = inspect_input("protein.pdb", pdb_bytes())
+    config = MDConfig(simulation_time_ns=5, structures=[source(protein)], docking_pose={"id": "pose-2", "score": -7.4})
+    archive = build_zip(config, [protein], docking_pose=b"ATOM      1  CA  ALA A   1       1.000   1.000   1.000\nEND\n")
+    with zipfile.ZipFile(archive) as zipped:
+        assert "amber_md_project/inputs/docked_pose.pdb" in zipped.namelist()
+        assert "pose-2" in zipped.read("amber_md_project/parameters.json").decode()
+        assert "docked_pose.pdb" in zipped.read("amber_md_project/README.md").decode()
+
+
 def test_single_complex_and_two_partner_templates_are_distinct():
     complex_input = inspect_input("complex.pdb", pdb_bytes(("A", "B")))
     complex_config = MDConfig(

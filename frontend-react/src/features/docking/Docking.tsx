@@ -7,10 +7,12 @@ type DockingKind = 'protein_ligand' | 'protein_protein';
 type Uploaded = { role: 'receptor' | 'ligand'; file: File };
 type Pose = { id: string; rank: number; score: number | null; structure: string; format: string };
 type Job = { id: string; status: string; progress: number; error?: string | null; poses: Pose[] };
+export type SelectedDockingPose = Pose & { jobId: string };
+interface DockingProps { onPoseSelected?: (pose: SelectedDockingPose | null) => void }
 
 const labels: Record<DockingKind, string> = { protein_ligand: 'Protein–small molecule', protein_protein: 'Protein–protein' };
 
-export default function Docking() {
+export default function Docking({ onPoseSelected }: DockingProps) {
   const [kind, setKind] = useState<DockingKind>('protein_ligand');
   const [uploads, setUploads] = useState<Uploaded[]>([]);
   const [poses, setPoses] = useState(10);
@@ -22,6 +24,9 @@ export default function Docking() {
   const receptorInput = useRef<HTMLInputElement>(null);
   const ligandInput = useRef<HTMLInputElement>(null);
   const activePose = job?.poses[selectedPose];
+  useEffect(() => {
+    onPoseSelected?.(activePose && job ? { ...activePose, jobId: job.id } : null);
+  }, [activePose, job?.id, onPoseSelected]);
 
   useEffect(() => {
     fetch('/api/docking/status').then(response => response.json()).then(data => setEngine(data.engines || {})).catch(() => undefined);

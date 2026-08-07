@@ -60,6 +60,7 @@ class MDConfig(BaseModel):
     charge_method: str = "am1bcc"
     ligand_net_charge: int = Field(0, ge=-10, le=10)
     ligand_multiplicity: int = Field(1, ge=1, le=7)
+    docking_pose: dict[str, Any] | None = None
 
     @field_validator("project_name")
     @classmethod
@@ -396,6 +397,7 @@ def render_project(config: MDConfig, inputs: list[InputFile]) -> dict[str, str]:
         "all_selected_chains": ",".join(config.partner1_chains + config.partner2_chains),
         "protein_ff_leap": "leaprc.protein.ff19SB" if config.protein_force_field == "ff19SB" else "leaprc.protein.ff14SB",
         "water_leap": "leaprc.water.opc" if config.water_model == "OPCBOX" else "leaprc.water.tip3p",
+        "docking_pose": config.docking_pose,
     }
     env = _template_environment()
     templates = {
@@ -416,13 +418,15 @@ def render_project(config: MDConfig, inputs: list[InputFile]) -> dict[str, str]:
     return files
 
 
-def build_zip(config: MDConfig, inputs: list[InputFile]) -> io.BytesIO:
+def build_zip(config: MDConfig, inputs: list[InputFile], docking_pose: bytes | None = None) -> io.BytesIO:
     files = render_project(config, inputs)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         root = config.project_name
         for item in inputs:
             archive.writestr(f"{root}/inputs/{item.filename}", item.content)
+        if docking_pose:
+            archive.writestr(f"{root}/inputs/docked_pose.pdb", docking_pose)
         for path, content in files.items():
             info = zipfile.ZipInfo(f"{root}/{path}")
             info.external_attr = (0o755 if path.endswith(".sh") else 0o644) << 16
