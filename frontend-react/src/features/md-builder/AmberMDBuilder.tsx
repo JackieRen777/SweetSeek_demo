@@ -7,9 +7,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './amber-md-builder.css';
 import StructureViewer from './StructureViewer';
+import Docking from '../docking/Docking';
 
 type SystemChoice = 'single_protein' | 'protein_protein' | 'protein_ligand';
-type Tab = 'setup' | 'files' | 'expert';
+type Tab = 'setup' | 'files' | 'expert' | 'docking';
 type ChainGroup = 'partner1' | 'partner2' | 'excluded';
 
 interface ChainInfo { id: string; residues: number; name: string }
@@ -384,9 +385,9 @@ export default function AmberMDBuilder() {
   );
 
   return <div className="mdp-shell" aria-label="AMBER MD Builder">
-    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['setup', 'files', 'expert'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
+    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['setup', 'files', 'expert', 'docking'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
     {(error || notice) && <div className={`mdp-banner ${error ? 'error' : 'success'}`}>{error ? <AlertTriangle size={16} /> : <Check size={16} />}<span>{error || notice}</span><button onClick={() => { setError(''); setNotice(''); }}><X size={15} /></button></div>}
-    <div className="mdp-workspace">
+    {tab === 'docking' ? <div className="mdp-docking-inline"><Docking /></div> : <div className="mdp-workspace">
       <main className={`mdp-main overflow-y-auto ${tab !== 'setup' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
         <section className="mdp-section">
           <div className="mdp-section-heading"><div><span>01</span><h2>Select system</h2></div><span className="mdp-detected">Detected: {String(setup.system).replaceAll('_', ' ')}</span></div>
@@ -448,6 +449,6 @@ export default function AmberMDBuilder() {
         {suggestedUpdates && <div className="mdp-suggested-updates"><div><strong>Suggested parameter changes</strong><span>{Object.entries(suggestedUpdates).map(([key, value]) => `${PARAMETER_LABELS[key as keyof Parameters] || key}: ${value}`).join(' · ')}</span></div><button onClick={() => applyExpertUpdates(suggestedUpdates, true)}>Apply changes</button></div>}
         <div className="mdp-expert-composer"><textarea aria-label="Ask MD Expert" value={expertInput} maxLength={12000} placeholder="Ask about setup, logs, instability, unbinding, or AMBER input files..." onChange={event => setExpertInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void sendExpertMessage(); } }} /><button aria-label="Send to MD Expert" title="Send message" onClick={() => void sendExpertMessage()} disabled={chatBusy || !expertInput.trim()}>{chatBusy ? <Loader2 className="mdp-spin" size={17} /> : <Send size={17} />}</button></div>
       </aside>
-    </div>
+    </div>}
   </div>;
 }
