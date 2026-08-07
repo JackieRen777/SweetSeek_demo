@@ -64,7 +64,8 @@
 .mdp-file-tree div { display: flex; gap: 7px; align-items: center; padding: 4px 6px; }
 .mdp-empty-files { margin: auto 0; text-align: center; color: #94a3b8; font-size: 11px; }
 .mdp-empty-files svg { margin: auto; }
-.mdp-generate-ready { flex: 1; min-height: 150px; display: flex; flex-direction: column; gap: 12px; }
+.mdp-generate-ready { flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.mdp-generate-ready .mdp-empty-files { margin: 8px 0 0; }
 .mdp-file-actions { display: grid; gap: 8px; margin-top: auto; }
 .mdp-regenerate { min-height: 38px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #334155; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; font-weight: 650; }
 .mdp-regenerate:disabled { opacity: .55; cursor: not-allowed; }

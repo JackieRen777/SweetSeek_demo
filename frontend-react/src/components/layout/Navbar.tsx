@@ -5,7 +5,7 @@ import { ChevronDown } from 'lucide-react';
 interface NavbarProps {
   activeScreen: number;
   onNavigate: (index: number) => void;
-  activeFeature: 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | 'md-builder' | null;
+  activeFeature: 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | 'md-builder' | 'docking' | null;
 }
 
 interface NavCategory {
@@ -31,6 +31,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
       items: [
         { label: 'Dual-Protein Q&A', index: 5, feature: 'dual-protein' },
         { label: 'AMBER MD Builder', index: 8, feature: 'md-builder' },
+        { label: 'Docking workspace', index: 9, feature: 'docking' },
       ],
     },
     {
