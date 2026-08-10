@@ -205,11 +205,8 @@ class ChatService:
             yield f"data: {json.dumps({'type': 'status', 'message': f'找到 {filtered_count} 个相关文本块'}, ensure_ascii=False)}\n\n"
             yield f"data: {json.dumps({'type': 'status', 'message': f'去重后找到 {unique_count} 篇唯一文献'}, ensure_ascii=False)}\n\n"
             
-            # 发送参考文献
-            if self.mode == "encapsulation":
-                references_for_frontend = serialize_encapsulation_references(references, unique_papers_dict)
-            else:
-                references_for_frontend = self._format_references_for_frontend(references)
+            # All research domains share the same normalized citation payload.
+            references_for_frontend = serialize_encapsulation_references(references, unique_papers_dict)
 
             yield f"data: {json.dumps({'type': 'references', 'references': references_for_frontend}, ensure_ascii=False)}\n\n"
             yield f"data: {json.dumps({'type': 'retrieval_stats', 'stats': retrieval['stats'], 'warning': retrieval['warning']}, ensure_ascii=False)}\n\n"
@@ -948,12 +945,8 @@ class ChatService:
             fallback_refs = ", ".join(f"[{ref['ref_id']}]" for ref in references[:4])
             tail_parts.append(f"\n\n相关证据：{fallback_refs}。")
 
-        if self.mode == "encapsulation":
-            return "".join(tail_parts)
-
-        ext = self._build_extended_reference_block(references)
-        if ext and "延伸文献" not in (answer or ""):
-            tail_parts.append("\n" + ext)
+        # Bibliographies are rendered from structured reference data in the
+        # shared frontend; do not append a second AI-generated reference list.
         return "".join(tail_parts)
 
     def _augment_answer(self, answer: str, references: List[Dict[str, Any]]) -> str:

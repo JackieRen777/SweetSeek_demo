@@ -48,6 +48,9 @@ echo "rsync 目标: ${SSH_TARGET}:${SERVER_PATH%/}/"
 rsync -az --delete \
   --rsync-path="mkdir -p '${SERVER_PATH%/}' && rsync" \
   --exclude=".git" \
+  --exclude=".env" \
+  --exclude=".env.local" \
+  --exclude=".env.production.local" \
   --exclude=".venv" \
   --exclude="venv" \
   --exclude="node_modules" \
@@ -57,6 +60,11 @@ rsync -az --delete \
   --exclude="faiss_db" \
   --exclude="storage_dual_protein" \
   --exclude="models/modelscope_cache" \
+  --exclude="sweet_related_paper" \
+  --exclude="Dual_Protein_related_paper/papers" \
+  --exclude="Dual_Protein_related_paper/metadata.json.*" \
+  --exclude="Encapsulation_related_paper/papers" \
+  --exclude="Encapsulation_related_paper/metadata.json.*" \
   ./ "${SSH_TARGET}:${SERVER_PATH%/}/"
 
 echo "[3/6] 远程安装依赖..."

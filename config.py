@@ -105,6 +105,7 @@ class Config:
     # Base Paths
     BASE_DIR = Path(__file__).resolve().parent
     CHROMA_DB_DIR = BASE_DIR / "chroma_db_v3"
+    METADATA_PATH = Path(os.getenv('METADATA_PATH', str(BASE_DIR / "chroma_db" / "metadata.json")))
     LOG_DIR = BASE_DIR / "logs"
     STATIC_DIR = BASE_DIR / "static"
     TEMPLATE_DIR = BASE_DIR / "frontend"
@@ -133,6 +134,11 @@ class Config:
     EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5")
     # 模型源：huggingface 或 modelscope (推荐国内使用 modelscope)
     EMBED_MODEL_SOURCE = os.getenv("EMBED_MODEL_SOURCE", "modelscope")
+    # 嵌入推理不使用 torch.compile；关闭探测可避免部分 macOS/PyTorch
+    # 组合在首次请求时长时间加载 torch._dynamo。
+    EMBED_DISABLE_TORCH_DYNAMO = os.getenv("EMBED_DISABLE_TORCH_DYNAMO", "true").lower() in (
+        "true", "1", "yes"
+    )
     
     COLLECTION_NAME = "sweetseek_papers"
     

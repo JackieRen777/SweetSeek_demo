@@ -247,8 +247,8 @@ function App() {
                     </Suspense>
                   </div>
                 ) : (
-                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
-                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
+                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
+                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
                         {activeFeature === 'qa' && <ChatInterface />}
                         {activeFeature === 'equation' && <SweetTasteEquation />}

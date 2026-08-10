@@ -347,6 +347,18 @@ class PDFMetadataExtractor:
             '10.1038/s41598': 'Scientific Reports',
             '10.1038/ijo': 'International Journal of Obesity',
             '10.1017/s0029665': 'Proceedings of the Nutrition Society',
+            '10.1016/j.foodhyd': 'Food Hydrocolloids',
+            '10.1016/j.foodchem': 'Food Chemistry',
+            '10.1016/j.foodres': 'Food Research International',
+            '10.1016/j.lwt': 'LWT - Food Science and Technology',
+            '10.1016/j.ijbiomac': 'International Journal of Biological Macromolecules',
+            '10.1016/j.carbpol': 'Carbohydrate Polymers',
+            '10.1016/j.jcis': 'Journal of Colloid and Interface Science',
+            '10.1016/j.colsurfb': 'Colloids and Surfaces B: Biointerfaces',
+            '10.1016/j.foodcont': 'Food Control',
+            '10.1016/j.tifs': 'Trends in Food Science & Technology',
+            '10.1016/j.fbio': 'Food Bioscience',
+            '10.1016/j.ultsonch': 'Ultrasonics Sonochemistry',
         }
         
         # 先检查特殊期刊

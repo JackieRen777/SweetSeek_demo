@@ -7,10 +7,10 @@ cd "$ROOT_DIR"
 LOG_FILE="$ROOT_DIR/logs/local_5001.log"
 mkdir -p "$ROOT_DIR/logs"
 
-if [ -f ".venv/bin/activate" ]; then
-  source .venv/bin/activate
-elif [ -f "venv/bin/activate" ]; then
+if [ -f "venv/bin/activate" ]; then
   source venv/bin/activate
+elif [ -f ".venv/bin/activate" ]; then
+  source .venv/bin/activate
 else
   echo "❌ 未找到可用虚拟环境（.venv 或 venv）"
   exit 1

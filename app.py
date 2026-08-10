@@ -175,9 +175,15 @@ app.register_blueprint(create_md_builder_blueprint(lambda: llm_client))
 # 双蛋白 RAG 系统（独立实例）
 from persistent_storage import PersistentRAGSystem
 from services.chat_service import ChatService
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+DUAL_PROTEIN_METADATA_PATH = os.getenv(
+    "DUAL_PROTEIN_METADATA_PATH",
+    os.path.join(PROJECT_ROOT, "Dual_Protein_related_paper", "metadata.json"),
+)
 dual_protein_rag = PersistentRAGSystem(
     data_dir="./Dual_Protein_related_paper/papers",
-    persist_dir="./storage_dual_protein"
+    persist_dir="./storage_dual_protein",
+    metadata_path=DUAL_PROTEIN_METADATA_PATH,
 )
 dual_protein_chat_service = ChatService(
     rag_system=dual_protein_rag,
@@ -187,7 +193,6 @@ dual_protein_chat_service = ChatService(
     mode="dual",
 )
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 ENCAPSULATION_DATA_DIR = os.getenv(
     "ENCAPSULATION_DATA_DIR",
     os.path.join(PROJECT_ROOT, "Encapsulation_related_paper", "papers"),

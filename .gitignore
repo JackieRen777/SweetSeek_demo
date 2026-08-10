@@ -116,6 +116,7 @@ faiss_db/
 chroma_db_v3/
 models/modelscope_cache/
 Dual_Protein_related_paper/papers/
+Dual_Protein_related_paper/metadata.json.*
 food_research_data/datasets/
 *.pdf
 *.pdf.pdf

@@ -14,7 +14,9 @@ from __future__ import annotations
 import logging
 import os
 import shutil
+import sys
 import threading
+import types
 from pathlib import Path
 import re
 from datetime import datetime
@@ -39,6 +41,13 @@ except Exception:
         StorageContext,
         load_index_from_storage,
     )
+
+try:
+    import faiss
+    from llama_index.vector_stores.faiss import FaissVectorStore
+except ImportError:
+    faiss = None
+    FaissVectorStore = None
 
 
 logging.basicConfig(level=logging.INFO)
@@ -78,12 +87,25 @@ class PersistentRAGSystem:
         self.embedding_mode: str = "unknown"
         self.last_build_report: Dict[str, Any] = {}
 
+    def _uses_faiss_store(self) -> bool:
+        vector_store_path = os.path.join(self.persist_dir, "default__vector_store.json")
+        try:
+            with open(vector_store_path, "rb") as handle:
+                first = handle.read(16).lstrip()
+            return bool(first) and first[:1] not in {b"{", b"["}
+        except OSError:
+            return False
+
     def _infer_embedding_dim(self) -> int:
         """从现有持久化索引中推断向量维度，避免维度不一致导致检索失败。"""
         try:
             vector_store_path = os.path.join(self.persist_dir, "default__vector_store.json")
             if not os.path.exists(vector_store_path):
                 return self.embedding_dim
+            if self._uses_faiss_store():
+                if faiss is None:
+                    return self.embedding_dim
+                return int(faiss.read_index(vector_store_path).d)
             import json
             with open(vector_store_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -103,6 +125,10 @@ class PersistentRAGSystem:
         try:
             vector_store_path = os.path.join(self.persist_dir, "default__vector_store.json")
             if not os.path.exists(vector_store_path):
+                return dims
+            if self._uses_faiss_store():
+                if faiss is not None:
+                    dims.add(int(faiss.read_index(vector_store_path).d))
                 return dims
             import json
             with open(vector_store_path, "r", encoding="utf-8") as f:
@@ -212,9 +238,11 @@ class PersistentRAGSystem:
             from config import config as _cfg
             model_path = str(getattr(_cfg, "EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5"))
             embed_source = str(getattr(_cfg, "EMBED_MODEL_SOURCE", "modelscope")).lower()
+            disable_torch_dynamo = bool(getattr(_cfg, "EMBED_DISABLE_TORCH_DYNAMO", True))
         except Exception:
             model_path = "BAAI/bge-small-zh-v1.5"
             embed_source = "modelscope"
+            disable_torch_dynamo = True
         model_key = (embed_source, os.path.abspath(model_path) if os.path.isdir(model_path) else model_path)
         with _SHARED_EMBEDDING_LOCK:
             shared = _SHARED_EMBEDDINGS.get(model_key)
@@ -237,6 +265,17 @@ class PersistentRAGSystem:
         
         # 尝试使用真实的嵌入模型
         try:
+            if disable_torch_dynamo:
+                import torch
+
+                # Transformers 会在第一次 forward 时探测 torch._dynamo，
+                # 即使 SentenceTransformer 仅做普通推理也会触发昂贵的懒加载。
+                dynamo_stub = types.ModuleType("torch._dynamo")
+                dynamo_stub.is_compiling = lambda: False
+                sys.modules.setdefault("torch._dynamo", dynamo_stub)
+                if "_dynamo" not in torch.__dict__:
+                    torch._dynamo = sys.modules["torch._dynamo"]
+
             from sentence_transformers import SentenceTransformer
             from llama_index.core.embeddings import BaseEmbedding as _BaseEmb
             with _SHARED_EMBEDDING_LOCK:
@@ -316,7 +355,16 @@ class PersistentRAGSystem:
             logging.info("检测到持久化索引，尝试加载...")
             try:
                 self._configure_models()
-                storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
+                if self._uses_faiss_store():
+                    if FaissVectorStore is None:
+                        raise RuntimeError("FAISS index detected but llama-index-vector-stores-faiss is unavailable")
+                    vector_store = FaissVectorStore.from_persist_dir(self.persist_dir)
+                    storage_context = StorageContext.from_defaults(
+                        vector_store=vector_store,
+                        persist_dir=self.persist_dir,
+                    )
+                else:
+                    storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
                 self.index = load_index_from_storage(storage_context)
                 # 自动校验索引向量维度与当前模型维度是否一致，不一致则自动重建
                 try:
@@ -565,7 +613,11 @@ except Exception:
 
 # 全局实例：使用 config 中的目录（避免默认指向空目录）
 if config is not None:
-    rag_system = PersistentRAGSystem(data_dir=config.DATA_DIR, persist_dir=config.PERSIST_DIR, metadata_path=str(config.CHROMA_DB_DIR / 'metadata.json'))
+    rag_system = PersistentRAGSystem(
+        data_dir=config.DATA_DIR,
+        persist_dir=config.PERSIST_DIR,
+        metadata_path=str(config.METADATA_PATH),
+    )
 else:
     rag_system = PersistentRAGSystem()
 

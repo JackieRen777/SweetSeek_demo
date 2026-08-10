@@ -98,7 +98,7 @@ def _chunk_payload(chunk: Any, index: int) -> Dict[str, Any]:
     }
 
 
-def serialize_encapsulation_references(
+def serialize_research_references(
     references: Iterable[Dict[str, Any]], unique_papers: Dict[str, Any]
 ) -> List[Dict[str, Any]]:
     payload: List[Dict[str, Any]] = []
@@ -124,6 +124,10 @@ def serialize_encapsulation_references(
         }
         payload.append(item)
     return payload
+
+
+# Backward-compatible name for existing Encapsulation imports and tests.
+serialize_encapsulation_references = serialize_research_references
 
 
 def resolve_document_path(document_id: str, data_dir: str) -> Optional[Path]:
