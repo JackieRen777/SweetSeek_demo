@@ -3,7 +3,7 @@
 .mdp-banner.error { color: #92400e; background: #fffbeb; border-color: #fcd34d; }
 .mdp-banner.success { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
 .mdp-banner button { margin-left: auto; background: none; border: 0; color: inherit; padding: 2px; }
-.mdp-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 2.5fr) minmax(0, 2.5fr) minmax(0, 5fr); overflow: hidden; border: 1px solid #e2e8f0; border-radius: 6px; }
+.mdp-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 2.7fr) minmax(480px, 3.8fr) minmax(0, 5fr); overflow: hidden; border: 1px solid #e2e8f0; border-radius: 6px; }
 .mdp-main, .mdp-files-panel { min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
 .mdp-main { padding: 20px 24px 28px; }
 .mdp-files-panel { padding: 20px; background: #fff; border-left: 1px solid #e2e8f0; }
@@ -46,6 +46,12 @@
 .mdp-parameters { display: flex; flex-direction: column; gap: 11px; }
 .mdp-parameters label { display: flex; flex-direction: column; gap: 5px; color: #475569; font-size: 10px; font-weight: 650; }
 .mdp-parameters input, .mdp-parameters select { width: 100%; height: 34px; padding: 0 9px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #0f172a; font-size: 11px; box-sizing: border-box; }
+.mdp-parameters-inline { gap: 8px; }
+.mdp-parameters-inline .mdp-section-heading { margin-bottom: 4px; }
+.mdp-parameter-row { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .62fr) minmax(0, .68fr) minmax(0, 1.28fr) minmax(0, 1fr); gap: 6px; align-items: end; }
+.mdp-parameter-row label { min-width: 0; }
+.mdp-parameter-row input, .mdp-parameter-row select { height: 32px; padding-inline: 7px; }
+.mdp-project-field input { font-size: 10px; }
 .mdp-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .mdp-lock-count { color: #64748b; }
 .mdp-ligand-fields { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; }
@@ -54,7 +60,7 @@
 .mdp-advanced[open] summary { margin-bottom: 10px; }
 .mdp-advanced[open] summary svg { transform: rotate(180deg); }
 .mdp-advanced .mdp-field-grid { margin-bottom: 8px; }
-.mdp-parameter-section { padding-bottom: 6px; margin-bottom: 0; border-bottom: 0; }
+.mdp-parameter-section { padding-bottom: 12px; margin-bottom: 2px; border-bottom: 1px solid #e2e8f0; }
 .mdp-generate, .mdp-download { min-height: 38px; border: 0; border-radius: 6px; background: #2563eb; color: #fff; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; font-weight: 650; text-decoration: none; }
 .mdp-generate:disabled { opacity: .55; cursor: not-allowed; }
 .mdp-files-panel { display: flex; flex-direction: column; gap: 12px; }
@@ -129,6 +135,7 @@
   .mdp-main, .mdp-files-panel { display: block; height: 100%; border-left: 0; padding: 18px; }
   .mdp-expert-panel { height: 100%; border-left: 0; }
   .mdp-mobile-hidden { display: none; }
+  .mdp-parameter-row { grid-template-columns: minmax(0, 1.15fr) minmax(0, .62fr) minmax(0, .68fr) minmax(0, 1.28fr) minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
   .mdp-shell { width: calc(100% - 24px); height: calc(100% - 20px); margin: 8px auto 12px; }
@@ -138,4 +145,6 @@
   .mdp-segments { grid-template-columns: repeat(3, 1fr); }
   .mdp-banner { margin-bottom: 8px; }
   .mdp-expert-composer textarea { min-height: 82px; }
+  .mdp-parameter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mdp-project-field, .mdp-preset-field { grid-column: 1 / -1; }
 }

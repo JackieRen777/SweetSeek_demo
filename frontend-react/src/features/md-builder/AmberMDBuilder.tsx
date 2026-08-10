@@ -359,15 +359,15 @@ export default function AmberMDBuilder() {
   };
 
   const parameterPanel = (
-    <div className="mdp-parameters">
+    <div className="mdp-parameters mdp-parameters-inline">
       <div className="mdp-section-heading"><div><span>03</span><h2>Review parameters</h2></div><span className="mdp-lock-count">{lockedFields.size} edited</span></div>
-      <label>Project name<input value={parameters.project_name} onChange={event => updateParameter('project_name', event.target.value)} /></label>
-      <div className="mdp-field-grid">
+      <div className="mdp-parameter-row">
+        <label className="mdp-project-field">Project name<input value={parameters.project_name} onChange={event => updateParameter('project_name', event.target.value)} /></label>
         <label>Production (ns)<input type="number" min="0.1" value={parameters.simulation_time_ns} onChange={event => updateParameter('simulation_time_ns', Number(event.target.value))} /></label>
         <label>Temperature (K)<input type="number" value={parameters.temperature_k} onChange={event => updateParameter('temperature_k', Number(event.target.value))} /></label>
+        <label className="mdp-preset-field">Protocol preset<select value={parameters.preset} onChange={event => updateParameter('preset', event.target.value as Parameters['preset'])}><option value="standard">Standard · ff19SB + OPC</option><option value="compatibility">Compatibility · ff14SB + TIP3P</option></select></label>
+        <label>Salt<select value={parameters.salt_molar} onChange={event => updateParameter('salt_molar', Number(event.target.value))}><option value={0}>Neutralize only</option><option value={0.15}>Approx. 0.15 M NaCl</option></select></label>
       </div>
-      <label>Protocol preset<select value={parameters.preset} onChange={event => updateParameter('preset', event.target.value as Parameters['preset'])}><option value="standard">Standard · ff19SB + OPC</option><option value="compatibility">Compatibility · ff14SB + TIP3P</option></select></label>
-      <label>Salt<select value={parameters.salt_molar} onChange={event => updateParameter('salt_molar', Number(event.target.value))}><option value={0}>Neutralize only</option><option value={0.15}>Approx. 0.15 M NaCl</option></select></label>
       {setup.system === 'protein_ligand' && <div className="mdp-ligand-fields">
         <label>Ligand charges<select value={parameters.charge_method} onChange={event => updateParameter('charge_method', event.target.value as Parameters['charge_method'])}><option value="am1bcc">AM1-BCC (recommended)</option><option value="resp">RESP · requires Gaussian</option><option value="existing" disabled={!canUseExistingCharges}>Use existing MOL2 charges{canUseExistingCharges ? '' : ' · not detected'}</option></select></label>
         <div className="mdp-field-grid"><label>Net charge<input type="number" value={parameters.ligand_net_charge} onChange={event => updateParameter('ligand_net_charge', Number(event.target.value))} /></label><label>Multiplicity<input type="number" min="1" value={parameters.ligand_multiplicity} onChange={event => updateParameter('ligand_multiplicity', Number(event.target.value))} /></label></div>
@@ -389,7 +389,7 @@ export default function AmberMDBuilder() {
   );
 
   return <div className="mdp-shell" aria-label="AMBER MD Builder">
-    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['setup', 'files', 'expert', 'docking'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
+    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['docking', 'setup', 'files', 'expert'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
     {(error || notice) && <div className={`mdp-banner ${error ? 'error' : 'success'}`}>{error ? <AlertTriangle size={16} /> : <Check size={16} />}<span>{error || notice}</span><button onClick={() => { setError(''); setNotice(''); }}><X size={15} /></button></div>}
     {tab === 'docking' ? <div className="mdp-docking-inline"><Docking onPoseSelected={setDockingPose} /></div> : <div className="mdp-workspace">
       <main className={`mdp-main overflow-y-auto ${tab !== 'setup' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
@@ -423,10 +423,10 @@ export default function AmberMDBuilder() {
           {complexChains.length > 1 && <div className="mdp-chain-table"><div className="mdp-chain-header"><span>Chain</span><span>Residues</span><span>Assignment</span></div>{complexChains.map(chain => <div className="mdp-chain-row" key={chain.id}><strong>{chain.id === '_' ? 'Blank' : chain.id}</strong><span>{chain.residues}</span><select aria-label={`Assign chain ${chain.id}`} value={chainGroups[chain.id] || 'excluded'} onChange={event => setChainGroups(previous => ({ ...previous, [chain.id]: event.target.value as ChainGroup }))}><option value="partner1">Partner 1</option><option value="partner2">Partner 2</option><option value="excluded">Excluded</option></select></div>)}</div>}
         </section>
 
-        <section className="mdp-section mdp-parameter-section">{parameterPanel}</section>
       </main>
 
       <section className={`mdp-files-panel overflow-y-auto ${tab !== 'files' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
+        <section className="mdp-section mdp-parameter-section">{parameterPanel}</section>
         <div className="mdp-section-heading"><div><span>04</span><h2>Generate & download</h2></div></div>
         <div className="mdp-protocol-summary"><strong>{parameters.preset === 'standard' ? 'Standard soluble-protein protocol' : 'Compatibility protocol'}</strong><span>{parameters.protein_force_field} · {parameters.water_model.replace('BOX', '')} · {parameters.simulation_time_ns} ns NPT</span></div>
         <div className="mdp-file-tree">{[...GENERATED_FILES, ...(setup.system === 'protein_ligand' && parameters.charge_method !== 'existing' ? ['prepare_lig.sh'] : [])].map(file => <div key={file}><FileCode2 size={14} />{file}</div>)}</div>
