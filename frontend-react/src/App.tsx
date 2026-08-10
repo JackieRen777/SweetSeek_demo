@@ -7,6 +7,7 @@ import Hero from './features/landing/HeroSection';
 import QA from './features/qa/QASection';
 import SweetTasteEquationSection from './features/equation/SweetTasteEquationSection';
 import Database from './features/database/DatabaseSection';
+import SweetPredictionSection from './features/prediction/SweetPredictionSection';
 // import ErrorBoundary from './components/ui/ErrorBoundary';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Slider from './components/layout/Slider';
@@ -22,7 +23,7 @@ const EncapsulationChatInterface = lazy(() => import('./features/encapsulation/c
 const MLPredictSection = lazy(() => import('./features/ml-predict/MLPredictSection'));
 const AmberMDBuilder = lazy(() => import('./features/md-builder/AmberMDBuilder'));
 
-const SCREEN_COUNT = 4; // Reduced from 5 to 4
+const SCREEN_COUNT = 5;
 
 type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | 'md-builder' | null;
 
@@ -204,6 +205,13 @@ function App() {
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
             <ErrorBoundary name="DatabaseSection">
               <Database onTryNow={() => handleOpenFeature('database')} />
+            </ErrorBoundary>
+          </div>
+
+          {/* Section 5: Sweetness Prediction */}
+          <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
+            <ErrorBoundary name="SweetPredictionSection">
+              <SweetPredictionSection onTryNow={() => handleOpenFeature('ml-predict')} />
             </ErrorBoundary>
           </div>
 

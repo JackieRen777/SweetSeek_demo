@@ -9,6 +9,7 @@ interface FeatureSectionProps {
   onTryNow: () => void;
   visualComponent: ReactNode;
   reversed?: boolean; // If true, visual on left, text on right
+  buttonLabel?: string;
 }
 
 const FeatureSection: React.FC<FeatureSectionProps> = ({ 
@@ -16,7 +17,8 @@ const FeatureSection: React.FC<FeatureSectionProps> = ({
   description, 
   onTryNow, 
   visualComponent,
-  reversed = false 
+  reversed = false,
+  buttonLabel = 'Try now',
 }) => {
   return (
     <div className={`w-full h-full flex flex-col ${reversed ? 'md:flex-row-reverse' : 'md:flex-row'} items-center justify-between px-6 md:px-16 max-w-[1400px] mx-auto relative`}>
@@ -51,7 +53,7 @@ const FeatureSection: React.FC<FeatureSectionProps> = ({
             "
           >
             <span className="relative z-10 flex items-center gap-2">
-              Try now <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              {buttonLabel} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </span>
           </motion.button>
         </motion.div>

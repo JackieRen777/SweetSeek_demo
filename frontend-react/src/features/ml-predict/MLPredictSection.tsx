@@ -9,6 +9,6 @@ interface Props {
   onClose?: () => void;
 }
 
-export default function MLPredictSection(_props: Props) {
-  return <MLPredictInterface />;
+export default function MLPredictSection({ onClose }: Props) {
+  return <MLPredictInterface onClose={onClose} />;
 }
