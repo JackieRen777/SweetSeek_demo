@@ -15,7 +15,7 @@ fi
 source "${ENV_FILE}"
 
 SSH_TARGET="${SERVER_USER}@${SERVER_IP}"
-SSH_BASE=(ssh -p "${SERVER_PORT}" -tt "${SSH_TARGET}")
+SSH_BASE=(ssh -p "${SERVER_PORT}" "${SSH_TARGET}")
 
 if [[ -z "${SERVER_PATH:-}" || "${SERVER_PATH}" != /* ]]; then
   echo "❌ SERVER_PATH 非法: '${SERVER_PATH:-}'"
