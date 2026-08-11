@@ -2,7 +2,7 @@
 
 # SweetSeek 自动部署脚本 v3.0 (React + Flask + Nginx)
 # 服务器配置
-SERVER_IP="8.137.32.247"
+SERVER_IP="8.136.8.223"
 SERVER_USER="root"
 SERVER_PATH="/www/wwwroot/FCN_SweetSeek"
 
