@@ -25,6 +25,8 @@ wheels/
 
 # 环境变量（包含API密钥，不要上传！）
 .env
+.env.production
+scripts/maintenance/deploy/ecs.env
 
 # 模型文件（太大，不要上传）
 models/
