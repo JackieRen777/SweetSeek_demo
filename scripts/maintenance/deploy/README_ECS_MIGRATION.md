@@ -1,34 +1,10 @@
-## SweetSeek 迁移到新 ECS（8.136.8.223）
+# ECS 迁移检查表
 
-### 0) 一次性准备
-```bash
-cd /Users/jackieren/Desktop/FCN_SweetSeek
-cp scripts/maintenance/deploy/ecs.env.example scripts/maintenance/deploy/ecs.env
-chmod +x scripts/maintenance/deploy/bootstrap_ecs.sh
-chmod +x scripts/maintenance/deploy/deploy_ecs_oneclick.sh
-```
+1. 从 `ecs.env.example` 创建未跟踪的 `ecs.env`，使用 SSH 密钥认证。
+2. 在目标服务器的数据盘准备 `SweetSeek_paper_database` 和已有索引。
+3. 执行 `bootstrap_ecs.sh` 初始化依赖和目录。
+4. 执行 `deploy_ecs_oneclick.sh` 发布代码并完成健康检查。
+5. 验证九个前端功能、四个知识域健康接口和 SSE 流式回答。
+6. 切换 DNS 后观察至少一个发布周期，再停用旧服务器。
 
-### 1) 初始化新 ECS（只做一次）
-```bash
-bash scripts/maintenance/deploy/bootstrap_ecs.sh
-```
-
-论文数据库固定放在 `/data/sweetseek/SweetSeek_paper_database`，不会随代码部署同步或删除。
-
-### 2) 一键上线（以后每次都用这条）
-```bash
-bash scripts/maintenance/deploy/deploy_ecs_oneclick.sh
-```
-
-### 3) 切换域名
-把 `sweetseek.top` 的 A 记录改到 `8.136.8.223`，TTL 设为 60 秒。
-
-### 4) 切换顺序（不要先删旧机）
-1. 新 ECS 上线并验收
-2. 切 DNS
-3. 观察 24-48 小时
-4. 再停旧机 `8.136.8.223`
-5. 最后删除旧机
-
-### 5) 回退（紧急）
-把 `sweetseek.top` A 记录改回旧 IP `8.136.8.223`。
+代码部署不会同步或删除论文、元数据、模型、索引和私有环境文件。回退代码使用 Git，数据与索引使用独立备份。

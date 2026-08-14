@@ -39,7 +39,7 @@ cd "${PROJECT_ROOT}"
 
 echo "[1/6] 本地构建前端..."
 cd frontend-react
-npm install --silent
+npm ci --silent
 npm run build
 cd "${PROJECT_ROOT}"
 
@@ -49,8 +49,10 @@ rsync -az --delete \
   --rsync-path="mkdir -p '${SERVER_PATH%/}' && rsync" \
   --exclude=".git" \
   --exclude=".env" \
+  --exclude=".env.production" \
   --exclude=".env.local" \
   --exclude=".env.production.local" \
+  --exclude="scripts/maintenance/deploy/ecs.env" \
   --exclude=".venv" \
   --exclude="venv" \
   --exclude="node_modules" \
@@ -61,7 +63,9 @@ rsync -az --delete \
   --exclude="storage_dual_protein" \
   --exclude="storage_encapsulation" \
   --exclude="storage_proteoglycan" \
-  --exclude="models/modelscope_cache" \
+  --exclude="models" \
+  --exclude="chroma_db" \
+  --exclude="chroma_db_v3" \
   --exclude="SweetSeek_paper_database" \
   --exclude="sweet_related_paper" \
   --exclude="Dual_Protein_related_paper/papers" \
