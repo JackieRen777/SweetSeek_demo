@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Set
 from path_utils import normalize_for_storage
 from services.metadata_service import MetadataService
 from services.query_processor import QueryProcessor
+from services.rag_types import stable_document_id
 
 
 class SupplementService:
@@ -52,9 +53,12 @@ class SupplementService:
                 "doi": str(meta.get("doi", "Not Available")),
                 "filename": filename or os.path.basename(str(path)),
                 "file_path": str(path),
+                "document_id": stable_document_id(str(path)),
                 "score": 0.04 + 0.01 * overlap,
                 "final_score": 0.04 + 0.01 * overlap,
                 "content": "",
+                "source_type": "metadata_supplement",
+                "supplemented": True,
             }
             is_focus = dual_focus_mode and normalize_for_storage(str(path)) in dual_focus_files
             if is_focus or overlap > 0 or concept_hits > 0:

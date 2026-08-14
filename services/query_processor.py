@@ -8,13 +8,19 @@ class QueryProcessor:
     def __init__(self, query_expander: Any):
         self.query_expander = query_expander
 
-    def build_query_variants(self, question: str, expanded_query: str) -> List[str]:
-        variants = [question]
-        if expanded_query and expanded_query != question:
-            variants.append(expanded_query)
-        topic_tokens = self.extract_topic_tokens(question)
+    def build_query_variants(self, expanded_query: str, original_question: str) -> List[str]:
+        variants: List[str] = []
+        for candidate in (expanded_query, original_question):
+            value = (candidate or "").strip()
+            if value and value not in variants:
+                variants.append(value)
+        if " OR " in (expanded_query or ""):
+            first_segment = expanded_query.split(" OR ", 1)[0].strip()
+            if first_segment and first_segment not in variants:
+                variants.append(first_segment)
+        topic_tokens = self.extract_topic_tokens(original_question)
         if topic_tokens:
-            short = " ".join(topic_tokens[:4])
+            short = " ".join(topic_tokens[:3])
             if short not in variants:
                 variants.append(short)
             if len(topic_tokens) >= 2:

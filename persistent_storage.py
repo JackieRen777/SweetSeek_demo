@@ -514,7 +514,16 @@ class PersistentRAGSystem:
             return False
         try:
             self._configure_models()
-            storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
+            if self._uses_faiss_store():
+                if FaissVectorStore is None:
+                    raise RuntimeError("FAISS index detected but llama-index-vector-stores-faiss is unavailable")
+                vector_store = FaissVectorStore.from_persist_dir(self.persist_dir)
+                storage_context = StorageContext.from_defaults(
+                    vector_store=vector_store,
+                    persist_dir=self.persist_dir,
+                )
+            else:
+                storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
             self.index = load_index_from_storage(storage_context)
             return True
         except Exception as e:

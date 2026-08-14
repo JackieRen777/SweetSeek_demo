@@ -1,9 +1,10 @@
 """多查询检索、过滤、去重、多样化"""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from path_utils import normalize_for_storage
 from services.query_processor import QueryProcessor
+from services.rag_types import stable_chunk_id, stable_document_id
 
 
 class RetrievalService:
@@ -24,7 +25,7 @@ class RetrievalService:
                 file_path = metadata.get('file_path') or metadata.get('file_name') or ''
                 chunk_text = getattr(chunk, 'text', '') or ''
                 node_id = getattr(chunk, 'node_id', None) or getattr(getattr(chunk, 'node', None), 'node_id', None)
-                key = str(node_id or f"{file_path}:{hash(chunk_text[:160])}")
+                key = str(node_id or stable_chunk_id(chunk, file_path))
                 prev = merged.get(key)
                 if prev is None:
                     merged[key] = chunk
@@ -78,6 +79,7 @@ class RetrievalService:
                 unique_papers_dict[paper_file_path] = {
                     'file_path': paper_file_path,
                     'filename': paper_filename,
+                    'document_id': stable_document_id(paper_file_path),
                     'max_score': chunk_score,
                     'chunks': [chunk],
                     'sample_content': chunk.text[:200] + '...' if len(chunk.text) > 200 else chunk.text

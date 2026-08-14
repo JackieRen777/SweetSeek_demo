@@ -5,6 +5,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from services.metadata_service import MetadataService
+from services.rag_types import stable_document_id
 
 
 class ContextBuilder:
@@ -27,8 +28,12 @@ class ContextBuilder:
                     'title': paper_metadata.get('title', 'Unknown Title'),
                     'authors': paper_metadata.get('authors', []),
                     'doi': paper_metadata.get('doi', 'Not Available'),
+                    'volume': paper_metadata.get('volume', ''),
+                    'issue': paper_metadata.get('issue', ''),
+                    'pages': paper_metadata.get('pages', paper_metadata.get('page', '')),
                     'filename': paper_info['filename'],
                     'file_path': paper_info['file_path'],
+                    'document_id': stable_document_id(paper_info['file_path']),
                     'score': paper_info['max_score'],
                     'content': paper_info['sample_content']
                 })
@@ -43,6 +48,7 @@ class ContextBuilder:
                     'doi': 'Not Available',
                     'filename': paper_info['filename'],
                     'file_path': paper_info['file_path'],
+                    'document_id': stable_document_id(paper_info['file_path']),
                     'score': paper_info['max_score'],
                     'content': paper_info['sample_content']
                 })
@@ -100,7 +106,7 @@ class ContextBuilder:
 2. 主要证据（含文献编号）
 3. 应用或风险提示（简短）"""
 
-        return f"""你是食品科学专业领域的专家。请严格基于给定文献回答问题，保持科学严谨，避免臆测。
+        return f"""你是{self.expert_role()}。请严格基于给定文献回答问题，保持科学严谨，避免臆测。
 
 【参考文献列表】（共{len(references)}篇，编号为ref_1到ref_{len(references)}）：
 {ref_list_summary}
@@ -144,6 +150,18 @@ class ContextBuilder:
             out.append(item)
         return out
 
+    def expert_role(self) -> str:
+        if self.mode == "proteoglycan":
+            return "食品蛋白质-多糖复合体系专家，擅长分子相互作用、复合凝聚、界面行为、乳液与凝胶、加工稳定性、消化和递送应用"
+        return "食品科学专业领域的专家"
+
+    def system_message(self, reference_count: int) -> str:
+        return (
+            f"你是{self.expert_role()}。重要：你只能引用ref_1到ref_{reference_count}"
+            f"这{reference_count}篇文献，不要使用其他编号。只输出最终答案，不要输出思维链、"
+            "推理过程、分析过程或自我说明。"
+        )
+
     @staticmethod
     def build_extended_reference_block(references: List[Dict[str, Any]]) -> str:
         if not references:
@@ -160,9 +178,5 @@ class ContextBuilder:
         tail_parts: List[str] = []
         if references and not re.search(r"\[ref_\d+", answer or ""):
             fallback_refs = ", ".join(f"[{ref['ref_id']}]" for ref in references[:4])
-            tail_parts.append(f"\n\n【证据标注补充】该回答主要基于以下文献：{fallback_refs}。")
-
-        ext = ContextBuilder.build_extended_reference_block(references)
-        if ext and "延伸文献" not in (answer or ""):
-            tail_parts.append("\n" + ext)
+            tail_parts.append(f"\n\n相关证据：{fallback_refs}。")
         return "".join(tail_parts)

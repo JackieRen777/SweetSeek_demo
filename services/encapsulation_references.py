@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import math
 import re
 import unicodedata
@@ -10,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from path_utils import normalize_for_storage
+from services.rag_types import stable_chunk_id, stable_document_id
 
 
 MISSING_VALUES = {"", "n/a", "not available", "unknown", "unknown journal", "unknown title", "none"}
@@ -29,11 +29,6 @@ def normalize_doi(value: Any) -> str:
     doi = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", doi, flags=re.IGNORECASE)
     doi = re.sub(r"^doi\s*:\s*", "", doi, flags=re.IGNORECASE)
     return doi.rstrip(".,; ")
-
-
-def stable_document_id(file_path: str) -> str:
-    normalized = normalize_for_storage(file_path)
-    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:24]
 
 
 def format_gbt7714(metadata: Dict[str, Any]) -> str:
@@ -77,7 +72,8 @@ def _chunk_payload(chunk: Any, index: int) -> Dict[str, Any]:
     metadata = getattr(chunk, "metadata", {}) or {}
     text = re.sub(r"\s+", " ", str(getattr(chunk, "text", "") or "")).strip()
     node_id = getattr(chunk, "node_id", None) or getattr(getattr(chunk, "node", None), "node_id", None)
-    chunk_id = str(node_id or hashlib.sha256(text.encode("utf-8")).hexdigest()[:20])
+    file_path = metadata.get("file_path") or metadata.get("file_name") or ""
+    chunk_id = str(node_id or stable_chunk_id(chunk, file_path))
     page_raw = metadata.get("page_label") or metadata.get("page_number") or metadata.get("page")
     try:
         page: Optional[int] = int(str(page_raw).strip()) if page_raw is not None else None
