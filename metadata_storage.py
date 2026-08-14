@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
+from knowledge_paths import get_domain_paths
 from path_utils import normalize_for_storage
 
 logging.basicConfig(level=logging.INFO)
@@ -20,14 +21,15 @@ logger = logging.getLogger(__name__)
 class MetadataStorage:
     """元数据存储管理器"""
     
-    def __init__(self, storage_path: str = "./chroma_db/metadata.json"):
+    def __init__(self, storage_path: Optional[str] = None):
         """
         初始化存储管理器
         
         Args:
             storage_path: 元数据JSON文件路径
         """
-        self.storage_path = Path(storage_path)
+        resolved_path = storage_path or str(get_domain_paths("sweetness").metadata)
+        self.storage_path = Path(resolved_path)
         self._ensure_storage_dir()
         self._metadata_cache = self._load_metadata()
     
@@ -279,30 +281,3 @@ class MetadataStorage:
             'storage_path': str(self.storage_path),
             'storage_size': self.storage_path.stat().st_size if self.storage_path.exists() else 0
         }
-
-
-# 测试函数
-if __name__ == '__main__':
-    storage = MetadataStorage()
-    
-    # 测试保存
-    test_metadata = {
-        'journal': 'Test Journal',
-        'year': '2024',
-        'title': 'Test Article',
-        'authors': ['Author A', 'Author B'],
-        'doi': '10.1234/test',
-        'filename': 'test.pdf'
-    }
-    
-    storage.save_metadata('test/path/test.pdf', test_metadata)
-    
-    # 测试读取
-    retrieved = storage.get_metadata('test/path/test.pdf')
-    print("\n检索的元数据:")
-    print(json.dumps(retrieved, indent=2, ensure_ascii=False))
-    
-    # 测试统计
-    stats = storage.get_stats()
-    print("\n存储统计:")
-    print(json.dumps(stats, indent=2))

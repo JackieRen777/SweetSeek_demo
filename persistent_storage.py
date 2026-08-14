@@ -70,9 +70,13 @@ class PersistentRAGSystem:
         self,
         data_dir: str = "./food_research_data/datasets",
         persist_dir: str = "./storage",
-        metadata_path: str = "./chroma_db_v3/metadata.json",
+        metadata_path: Optional[str] = None,
         allow_auto_build: Optional[bool] = None,
     ):
+        if metadata_path is None:
+            from knowledge_paths import get_domain_paths
+
+            metadata_path = str(get_domain_paths("sweetness").metadata)
         self.data_dir = _project_path(data_dir)
         self.persist_dir = _project_path(persist_dir)
         self.metadata_storage = MetadataStorage(storage_path=_project_path(metadata_path))

@@ -11,13 +11,6 @@ import os as _os
 _os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 _os.environ.setdefault("OMP_NUM_THREADS", "1")
 
-try:
-    __import__('pysqlite3')
-    import sys
-    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-except ImportError:
-    pass
-
 from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
@@ -29,7 +22,6 @@ from evidence_ranker import EvidenceRanker
 import logging
 from functools import wraps
 import traceback
-import sys
 import threading
 from config import config
 from logger import setup_logger

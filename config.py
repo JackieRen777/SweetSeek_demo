@@ -105,7 +105,6 @@ class Config:
     """Base configuration."""
     # Base Paths
     BASE_DIR = Path(__file__).resolve().parent
-    CHROMA_DB_DIR = BASE_DIR / "chroma_db_v3"
     _SWEETNESS_PATHS = get_domain_paths("sweetness")
     METADATA_PATH = _SWEETNESS_PATHS.metadata
     LOG_DIR = BASE_DIR / "logs"

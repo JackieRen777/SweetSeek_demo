@@ -2,6 +2,13 @@ import json
 from pathlib import Path
 
 from metadata_storage import MetadataStorage
+from knowledge_paths import get_domain_paths
+
+
+def test_default_storage_uses_unified_sweetness_metadata():
+    storage = MetadataStorage()
+
+    assert storage.storage_path == get_domain_paths("sweetness").metadata
 
 
 def test_get_metadata_fallback_by_filename(tmp_path: Path):
@@ -26,4 +33,3 @@ def test_load_metadata_from_backup(tmp_path: Path):
 
     storage = MetadataStorage(str(storage_path))
     assert storage.get_all_metadata() == backup_data
-

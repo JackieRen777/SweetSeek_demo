@@ -88,7 +88,7 @@ def run_sweetness_incremental() -> Dict[str, int]:
         if not rag_system.load_or_create_index():
             raise RuntimeError(f"Sweetness index is not ready: {rag_system.last_error}")
 
-    metadata_storage = MetadataStorage()
+    metadata_storage = MetadataStorage(storage_path=str(config.METADATA_PATH))
     new_meta = _extract_pdf_metadata_for_files(new_files, metadata_storage)
 
     docs = SimpleDirectoryReader(input_files=new_files).load_data()
