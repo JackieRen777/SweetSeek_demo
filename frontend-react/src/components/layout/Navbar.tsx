@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Menu, X } from 'lucide-react';
 
 interface NavbarProps {
   activeScreen: number;
   onNavigate: (index: number) => void;
-  activeFeature: 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | 'md-builder' | null;
+  activeFeature: 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'proteoglycan' | 'ml-predict' | 'md-builder' | null;
 }
 
 interface NavCategory {
@@ -15,6 +15,7 @@ interface NavCategory {
 
 const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature }) => {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const categories: NavCategory[] = [
     {
@@ -34,9 +35,10 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
       ],
     },
     {
-      label: 'Encapsulation',
+      label: 'Proteoglycan',
       items: [
         { label: 'Encapsulation Q&A', index: 7, feature: 'encapsulation' },
+        { label: 'Proteoglycan Q&A', index: 9, feature: 'proteoglycan' },
       ],
     },
   ];
@@ -62,6 +64,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
   const handleItemClick = (item: { index: number; feature: string | null }) => {
     onNavigate(item.index);
     setOpenCategory(null); // Close drawer after selection
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -191,15 +194,63 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
           </button>
         </div>
 
-        {/* Mobile Menu Button (placeholder for future mobile support) */}
+        {/* Mobile Menu Button */}
         <div className="md:hidden">
-          <button className="p-2 text-slate-600 hover:text-slate-800">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="flex size-10 items-center justify-center rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+            className="pointer-events-auto absolute left-4 right-4 top-[84px] max-h-[calc(100vh-104px)] overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-lg md:hidden"
+          >
+            <button
+              type="button"
+              onClick={() => { onNavigate(0); setMobileMenuOpen(false); }}
+              className="w-full rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Home
+            </button>
+            {categories.map((category) => (
+              <section key={category.label} className="mt-2 border-t border-slate-100 pt-2">
+                <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">{category.label}</div>
+                {category.items.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => handleItemClick(item)}
+                    className={`w-full rounded-md px-3 py-2.5 text-left text-sm font-medium ${
+                      isActive(item) ? 'bg-blue-50 text-[var(--color-primary)]' : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </section>
+            ))}
+            <button
+              type="button"
+              onClick={() => handleItemClick(referencesItem)}
+              className="mt-2 w-full border-t border-slate-100 px-3 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              References
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

@@ -24,7 +24,7 @@ import os
 import time
 from datetime import datetime
 from persistent_storage import rag_system
-from query_expander import SweetnessQueryExpander, DualProteinQueryExpander
+from query_expander import SweetnessQueryExpander, DualProteinQueryExpander, ProteoglycanQueryExpander
 from evidence_ranker import EvidenceRanker
 import logging
 from functools import wraps
@@ -34,6 +34,7 @@ import threading
 from config import config
 from logger import setup_logger
 from services.dependencies import build_services
+from knowledge_paths import get_domain_paths
 
 # NOTE: 文件中的函数多数通过 Flask 的 @app.route 装饰器在运行时被调用。
 # 静态分析工具（如 vulture）会将这些运行时注册的路由误判为未使用，
@@ -176,13 +177,11 @@ app.register_blueprint(create_md_builder_blueprint(lambda: llm_client))
 from persistent_storage import PersistentRAGSystem
 from services.chat_service import ChatService
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-DUAL_PROTEIN_METADATA_PATH = os.getenv(
-    "DUAL_PROTEIN_METADATA_PATH",
-    os.path.join(PROJECT_ROOT, "Dual_Protein_related_paper", "metadata.json"),
-)
+DUAL_PROTEIN_PATHS = get_domain_paths("dual_protein")
+DUAL_PROTEIN_METADATA_PATH = str(DUAL_PROTEIN_PATHS.metadata)
 dual_protein_rag = PersistentRAGSystem(
-    data_dir="./Dual_Protein_related_paper/papers",
-    persist_dir="./storage_dual_protein",
+    data_dir=str(DUAL_PROTEIN_PATHS.papers),
+    persist_dir=str(DUAL_PROTEIN_PATHS.index),
     metadata_path=DUAL_PROTEIN_METADATA_PATH,
 )
 dual_protein_chat_service = ChatService(
@@ -193,18 +192,10 @@ dual_protein_chat_service = ChatService(
     mode="dual",
 )
 
-ENCAPSULATION_DATA_DIR = os.getenv(
-    "ENCAPSULATION_DATA_DIR",
-    os.path.join(PROJECT_ROOT, "Encapsulation_related_paper", "papers"),
-)
-ENCAPSULATION_PERSIST_DIR = os.getenv(
-    "ENCAPSULATION_PERSIST_DIR",
-    os.path.join(PROJECT_ROOT, "storage_encapsulation"),
-)
-ENCAPSULATION_METADATA_PATH = os.getenv(
-    "ENCAPSULATION_METADATA_PATH",
-    os.path.join(PROJECT_ROOT, "Encapsulation_related_paper", "metadata.json"),
-)
+ENCAPSULATION_PATHS = get_domain_paths("encapsulation")
+ENCAPSULATION_DATA_DIR = str(ENCAPSULATION_PATHS.papers)
+ENCAPSULATION_PERSIST_DIR = str(ENCAPSULATION_PATHS.index)
+ENCAPSULATION_METADATA_PATH = str(ENCAPSULATION_PATHS.metadata)
 
 # Encapsulation（包埋）独立知识域：与现有 Sweetness/Dual-Protein 索引隔离。
 encapsulation_system_ready = False
@@ -237,6 +228,51 @@ def initialize_encapsulation_rag():
         return False
     finally:
         encapsulation_initializing = False
+
+PROTEOGLYCAN_PATHS = get_domain_paths("proteoglycan")
+PROTEOGLYCAN_DATA_DIR = str(PROTEOGLYCAN_PATHS.papers)
+PROTEOGLYCAN_PERSIST_DIR = str(PROTEOGLYCAN_PATHS.index)
+PROTEOGLYCAN_METADATA_PATH = str(PROTEOGLYCAN_PATHS.metadata)
+PROTEOGLYCAN_EMPTY_MESSAGE = "Proteoglycan 知识库尚未建立，请先导入 PDF 并构建索引"
+
+proteoglycan_system_ready = False
+proteoglycan_initializing = False
+proteoglycan_rag = PersistentRAGSystem(
+    data_dir=PROTEOGLYCAN_DATA_DIR,
+    persist_dir=PROTEOGLYCAN_PERSIST_DIR,
+    metadata_path=PROTEOGLYCAN_METADATA_PATH,
+    allow_auto_build=False,
+)
+proteoglycan_chat_service = ChatService(
+    rag_system=proteoglycan_rag,
+    query_expander=ProteoglycanQueryExpander(),
+    evidence_ranker=evidence_ranker,
+    llm_client=llm_client,
+    mode="proteoglycan",
+)
+
+def proteoglycan_index_exists() -> bool:
+    required = ("docstore.json", "index_store.json", "default__vector_store.json")
+    return all(os.path.isfile(os.path.join(PROTEOGLYCAN_PERSIST_DIR, name)) for name in required)
+
+def initialize_proteoglycan_rag():
+    global proteoglycan_system_ready, proteoglycan_initializing
+    if proteoglycan_initializing:
+        return proteoglycan_system_ready
+    if not proteoglycan_index_exists():
+        proteoglycan_system_ready = False
+        return False
+    proteoglycan_initializing = True
+    try:
+        with rag_load_lock:
+            proteoglycan_system_ready = bool(proteoglycan_rag.load_existing_index())
+        return proteoglycan_system_ready
+    except Exception as exc:
+        app_logger.error(f"Proteoglycan 初始化失败: {exc}")
+        proteoglycan_system_ready = False
+        return False
+    finally:
+        proteoglycan_initializing = False
 
 def initialize_rag_system():
     """初始化RAG系统（使用持久化存储）"""
@@ -671,7 +707,7 @@ def api_dual_protein_ask():
 def api_dual_protein_health():
     """双蛋白系统健康检查"""
     global dual_protein_docs_count_cache
-    stats = dual_protein_rag.get_stats() if dual_protein_system_ready else {}
+    stats = dual_protein_rag.get_stats()
     if dual_protein_system_ready and dual_protein_docs_count_cache == 0:
         dual_protein_docs_count_cache = stats.get('total_documents', 0)
     try:
@@ -745,7 +781,94 @@ def api_encapsulation_documents():
 def api_encapsulation_upload():
     return jsonify({
         'success': False,
-        'error': '网页上传已禁用。请将 PDF 放入 Encapsulation_related_paper/papers 后运行离线索引维护脚本。',
+        'error': '网页上传已禁用。请将 PDF 放入 SweetSeek_paper_database/encapsulation/papers 后运行离线索引维护脚本。',
+    }), 403
+
+@app.route('/api/proteoglycan/health', methods=['GET'])
+@handle_api_errors
+def api_proteoglycan_health():
+    try:
+        count = len(proteoglycan_rag.metadata_storage.get_all_metadata())
+    except Exception:
+        count = 0
+    return jsonify({
+        'success': True,
+        'system_ready': proteoglycan_system_ready,
+        'initializing': proteoglycan_initializing,
+        'documents_count': count,
+        'index_exists': proteoglycan_index_exists(),
+        'persist_dir': PROTEOGLYCAN_PERSIST_DIR,
+        'last_error': proteoglycan_rag.last_error,
+    })
+
+@app.route('/api/proteoglycan/prewarm', methods=['POST'])
+@handle_api_errors
+def api_proteoglycan_prewarm():
+    if proteoglycan_system_ready or proteoglycan_initializing:
+        return jsonify({'success': True, 'status': 'ready' if proteoglycan_system_ready else 'initializing'})
+    if not proteoglycan_index_exists():
+        return jsonify({'success': True, 'status': 'not_indexed'})
+    threading.Thread(target=initialize_proteoglycan_rag, daemon=True).start()
+    return jsonify({'success': True, 'status': 'warming'})
+
+@app.route('/api/proteoglycan/ask_stream', methods=['POST'])
+@handle_api_errors
+def api_proteoglycan_ask_stream():
+    from flask import Response, stream_with_context
+    if not proteoglycan_index_exists():
+        return jsonify({'success': False, 'error': PROTEOGLYCAN_EMPTY_MESSAGE}), 503
+    if not proteoglycan_system_ready:
+        initialize_proteoglycan_rag()
+    if not proteoglycan_system_ready:
+        return jsonify({'success': False, 'error': PROTEOGLYCAN_EMPTY_MESSAGE}), 503
+    data = _get_json_dict()
+    question = data.get('question', '').strip()
+    if not question:
+        return jsonify({'success': False, 'error': '问题不能为空'}), 400
+    threshold, max_results = _parse_retrieval_params(
+        data,
+        float(os.getenv('PROTEOGLYCAN_RAG_SIMILARITY_THRESHOLD', '0.18')),
+        int(os.getenv('PROTEOGLYCAN_RAG_MAX_RESULTS', '120')),
+    )
+    return Response(
+        stream_with_context(proteoglycan_chat_service.ask_stream(question, threshold, max_results)),
+        mimetype='text/event-stream',
+    )
+
+@app.route('/api/proteoglycan/documents', methods=['GET'])
+@handle_api_errors
+def api_proteoglycan_documents():
+    rows = []
+    for path, meta in proteoglycan_rag.metadata_storage.get_all_metadata().items():
+        rows.append({
+            'id': path,
+            'filename': meta.get('filename', os.path.basename(path)),
+            'title': meta.get('title', ''),
+            'authors': meta.get('authors', []),
+            'journal': meta.get('journal', ''),
+            'year': meta.get('year', 'N/A'),
+            'doi': meta.get('doi', ''),
+            'status': 'indexed',
+            'path': path,
+        })
+    query = request.args.get('q', '').lower().strip()
+    if query:
+        rows = [row for row in rows if query in ' '.join([
+            row['filename'], row['title'], row['journal'], str(row['year'])
+        ]).lower()]
+    return jsonify({
+        'success': True,
+        'documents': rows,
+        'total': len(rows),
+        'system_ready': proteoglycan_system_ready,
+    })
+
+@app.route('/api/proteoglycan/documents/upload', methods=['POST'])
+@handle_api_errors
+def api_proteoglycan_upload():
+    return jsonify({
+        'success': False,
+        'error': '网页上传已禁用。请将 PDF 放入 SweetSeek_paper_database/proteoglycan/papers 后运行离线索引维护脚本。',
     }), 403
 
 @app.route('/api/search', methods=['POST'])

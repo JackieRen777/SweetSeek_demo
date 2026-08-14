@@ -15,7 +15,7 @@ echo "=========================================="
 echo "  重建 Dual-Protein 索引（单命令）"
 echo "=========================================="
 echo "项目目录: $ROOT_DIR"
-echo "文献目录: $ROOT_DIR/Dual_Protein_related_paper/papers"
+echo "文献目录: ${PAPER_DATABASE_ROOT:-$ROOT_DIR/SweetSeek_paper_database}/dual_protein/papers"
 echo "索引目录: $ROOT_DIR/storage_dual_protein"
 echo ""
 

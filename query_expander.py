@@ -201,6 +201,43 @@ class DualProteinQueryExpander:
         }
 
 
+class ProteoglycanQueryExpander(DualProteinQueryExpander):
+    """食品蛋白质-多糖复合体系查询扩展器。"""
+
+    def __init__(self):
+        self.term_synonyms = {
+            "蛋白-多糖复合物": ["protein-polysaccharide complex", "protein polysaccharide interaction", "biopolymer complex"],
+            "乳清蛋白": ["whey protein", "whey protein isolate", "WPI", "beta-lactoglobulin", "β-lactoglobulin"],
+            "酪蛋白": ["casein", "sodium caseinate", "caseinate"],
+            "大豆蛋白": ["soy protein", "soy protein isolate", "SPI"],
+            "豌豆蛋白": ["pea protein", "pea protein isolate", "PPI"],
+            "玉米醇溶蛋白": ["zein", "corn protein"],
+            "果胶": ["pectin"],
+            "海藻酸盐": ["alginate", "alginic acid"],
+            "卡拉胶": ["carrageenan", "kappa-carrageenan", "iota-carrageenan"],
+            "阿拉伯胶": ["gum arabic", "acacia gum"],
+            "壳聚糖": ["chitosan"],
+            "黄原胶": ["xanthan gum", "xanthan"],
+        }
+        self.concept_expansion = {
+            "复合凝聚": ["complex coacervation", "coacervate", "associative phase separation"],
+            "界面组装": ["interfacial assembly", "interfacial adsorption", "protein-polysaccharide interface"],
+            "静电作用": ["electrostatic interaction", "charge interaction", "zeta potential"],
+            "疏水作用": ["hydrophobic interaction", "hydrophobic association"],
+            "氢键": ["hydrogen bond", "hydrogen bonding", "h-bond"],
+            "相分离": ["phase separation", "thermodynamic incompatibility", "associative separation"],
+            "乳液": ["emulsion", "emulsification", "Pickering emulsion", "emulsion stability"],
+            "凝胶": ["gel", "gelation", "hydrogel"],
+            "流变": ["rheology", "viscoelasticity", "storage modulus"],
+            "消化": ["digestion", "in vitro digestion", "bioaccessibility"],
+            "递送": ["delivery system", "controlled release", "encapsulation", "bioactive delivery"],
+            "离子强度": ["ionic strength", "salt concentration", "ion effect"],
+            "热处理": ["thermal processing", "heat treatment", "heating"],
+            "pH": ["pH", "isoelectric point", "pI", "acidification"],
+        }
+        self.reverse_index = self._build_reverse_index()
+
+
 # 使用示例
 if __name__ == "__main__":
     expander = SweetnessQueryExpander()

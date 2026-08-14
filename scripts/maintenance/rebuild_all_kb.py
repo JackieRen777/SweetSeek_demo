@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from persistent_storage import PersistentRAGSystem, rag_system
+from knowledge_paths import get_domain_paths
 
 
 def _rebuild_one(name: str, system: PersistentRAGSystem) -> Dict[str, Any]:
@@ -38,10 +39,11 @@ def _rebuild_one(name: str, system: PersistentRAGSystem) -> Dict[str, Any]:
 
 
 def main() -> int:
+    dual_paths = get_domain_paths("dual_protein")
     dual_system = PersistentRAGSystem(
-        data_dir="./Dual_Protein_related_paper/papers",
-        persist_dir="./storage_dual_protein",
-        metadata_path="./chroma_db_v3/metadata.json",
+        data_dir=str(dual_paths.papers),
+        persist_dir=str(dual_paths.index),
+        metadata_path=str(dual_paths.metadata),
     )
 
     results = {

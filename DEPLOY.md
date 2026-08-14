@@ -56,8 +56,8 @@ services:
     volumes:
       # 【关键】将宿主机的持久化目录挂载到容器内
       - /data/sweetseek_db:/app/chroma_db
-      # 挂载 PDF 数据目录（可选）
-      - ./sweet_related_paper:/app/sweet_related_paper
+      # 统一论文数据库使用宿主机独立数据目录
+      - /data/sweetseek/SweetSeek_paper_database:/data/sweetseek/SweetSeek_paper_database:ro
     restart: always
 ```
 

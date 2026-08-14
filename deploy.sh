@@ -61,8 +61,7 @@ echo -e "${YELLOW}正在上传构建产物 (dist)...${NC}"
 # 上传本地构建好的 dist 文件夹
 rsync -avz --progress frontend-react/dist/ $SERVER_USER@$SERVER_IP:$SERVER_PATH/frontend-react/dist/
 
-echo -e "${YELLOW}正在上传 PDF 文档和数据...${NC}"
-rsync -avz --progress --exclude='.*' sweet_related_paper/ $SERVER_USER@$SERVER_IP:$SERVER_PATH/sweet_related_paper/
+echo -e "${YELLOW}论文数据库使用独立数据目录，本次代码部署不上传 PDF。${NC}"
 
 echo -e "${YELLOW}正在更新依赖配置...${NC}"
 rsync -avz requirements.txt $SERVER_USER@$SERVER_IP:$SERVER_PATH/requirements.txt

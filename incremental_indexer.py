@@ -9,7 +9,7 @@ from llama_index.core import SimpleDirectoryReader
 
 from config import config
 from metadata_storage import MetadataStorage
-from path_utils import normalize_for_storage, to_absolute
+from path_utils import normalize_for_storage
 from pdf_metadata_extractor import PDFMetadataExtractor
 from persistent_storage import rag_system
 
@@ -24,7 +24,7 @@ class IncrementalIndexer:
         self.tracking_file = tracking_file
         self.indexed_files = self._load_tracking()
         self.metadata_extractor = PDFMetadataExtractor()
-        self.metadata_storage = MetadataStorage()
+        self.metadata_storage = MetadataStorage(storage_path=str(config.METADATA_PATH))
     
     def _load_tracking(self) -> Set[str]:
         """加载已索引文件列表（存储为相对路径，加载时转为绝对路径）"""
@@ -33,7 +33,7 @@ class IncrementalIndexer:
                 with open(self.tracking_file, 'r', encoding='utf-8') as f:
                     stored = json.load(f)
                 # 兼容旧格式（绝对路径）和新格式（相对路径）
-                return set(to_absolute(p) for p in stored)
+                return set(normalize_for_storage(p) for p in stored)
             except Exception as e:
                 print(f"加载跟踪文件失败: {e}")
                 return set()
@@ -64,7 +64,7 @@ class IncrementalIndexer:
     def get_new_files(self) -> List[str]:
         """检测新文件"""
         all_files = self.get_all_files()
-        new_files = [f for f in all_files if f not in self.indexed_files]
+        new_files = [f for f in all_files if normalize_for_storage(f) not in self.indexed_files]
         return new_files
     
     def extract_metadata_for_new_files(self, new_files: List[str]):
@@ -124,7 +124,7 @@ class IncrementalIndexer:
         
         if success:
             # 更新跟踪列表
-            self.indexed_files.update(new_files)
+            self.indexed_files.update(normalize_for_storage(path) for path in new_files)
             self._save_tracking()
             print("\n✅ 增量索引更新成功！")
             print(f"📊 当前已索引文件数: {len(self.indexed_files)}")

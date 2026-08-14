@@ -145,3 +145,17 @@ Encapsulation_related_paper/metadata.json
 Encapsulation_related_paper/metadata.json.*
 storage_encapsulation/
 storage_encapsulation.bak_*/
+
+# Proteoglycan runtime knowledge base
+Proteoglycan_related_paper/papers/*
+!Proteoglycan_related_paper/papers/.gitkeep
+Proteoglycan_related_paper/metadata.json
+Proteoglycan_related_paper/metadata.json.*
+storage_proteoglycan/
+storage_proteoglycan.bak_*/
+
+# Unified paper database: keep only documentation and empty directory markers.
+SweetSeek_paper_database/*/papers/*
+!SweetSeek_paper_database/*/papers/.gitkeep
+SweetSeek_paper_database/*/metadata.json
+SweetSeek_paper_database/*/metadata.json.*

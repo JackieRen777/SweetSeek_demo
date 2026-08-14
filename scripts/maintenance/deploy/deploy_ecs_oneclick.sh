@@ -59,7 +59,10 @@ rsync -az --delete \
   --exclude="*.pyc" \
   --exclude="faiss_db" \
   --exclude="storage_dual_protein" \
+  --exclude="storage_encapsulation" \
+  --exclude="storage_proteoglycan" \
   --exclude="models/modelscope_cache" \
+  --exclude="SweetSeek_paper_database" \
   --exclude="sweet_related_paper" \
   --exclude="Dual_Protein_related_paper/papers" \
   --exclude="Dual_Protein_related_paper/metadata.json.*" \

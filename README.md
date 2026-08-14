@@ -41,9 +41,11 @@ SweetSeek/
 │   ├── chroma.sqlite3              # 向量索引数据库
 │   ├── metadata.json               # PDF 元数据
 │   └── indexed_files.json          # 已索引文件列表
-├── sweet_related_paper/            # 文献库
-│   ├── papers/                     # 学术论文
-│   └── datasets/                   # 数据集
+├── SweetSeek_paper_database/       # 统一文献库
+│   ├── sweetness/papers/           # 甜味文献
+│   ├── dual_protein/papers/        # 双蛋白文献
+│   ├── encapsulation/papers/       # 包埋文献
+│   └── proteoglycan/papers/        # 蛋白-多糖文献
 └── models/                         # 本地嵌入模型（自动下载）
 ```
 
@@ -106,7 +108,7 @@ python app.py
 
 ### 添加文献（服务器端）
 
-将 PDF 文件放到 `sweet_related_paper/papers/` 目录，然后：
+将 PDF 文件放到 `SweetSeek_paper_database/sweetness/papers/` 目录，然后：
 
 **方法1：增量索引（推荐）**
 ```bash
@@ -248,7 +250,7 @@ python incremental_indexer.py --rebuild-tracking
 A: 首次运行会下载中文嵌入模型（约 400MB）和构建索引，请耐心等待。
 
 **Q: 如何添加新文献？**  
-A: 通过上传页面上传，或直接将文件放入 `sweet_related_paper/papers/` 目录，系统会自动增量索引。
+A: 将文件放入 `SweetSeek_paper_database/sweetness/papers/`，停止问答服务后运行离线增量索引命令。
 
 **Q: 索引需要重建吗？**  
 A: 一般不需要。索引会自动保存在 `faiss_db/` 目录，重启后自动加载；仅在索引损坏或文档结构大变更时重建。

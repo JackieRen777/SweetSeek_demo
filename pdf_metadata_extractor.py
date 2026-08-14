@@ -464,7 +464,7 @@ if __name__ == '__main__':
     extractor = PDFMetadataExtractor()
     
     # 测试一个PDF文件
-    test_pdf = 'sweet_related_paper/papers/nutrients-12-03408_1.pdf'
+    test_pdf = 'SweetSeek_paper_database/sweetness/papers/nutrients-12-03408_1.pdf'
     if Path(test_pdf).exists():
         metadata = extractor.extract_metadata(test_pdf)
         print("\n提取的元数据:")

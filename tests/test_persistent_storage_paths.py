@@ -1,17 +1,19 @@
 from pathlib import Path
 
 from persistent_storage import PersistentRAGSystem
+from knowledge_paths import get_domain_paths
 
 
 def test_relative_storage_paths_are_anchored_to_project_root():
+    paths = get_domain_paths("encapsulation")
     rag = PersistentRAGSystem(
-        data_dir="Encapsulation_related_paper/papers",
-        persist_dir="storage_encapsulation",
-        metadata_path="Encapsulation_related_paper/metadata.json",
+        data_dir=str(paths.papers),
+        persist_dir=str(paths.index),
+        metadata_path=str(paths.metadata),
     )
 
     project_root = Path(__file__).resolve().parents[1]
-    assert Path(rag.data_dir) == project_root / "Encapsulation_related_paper" / "papers"
+    assert Path(rag.data_dir) == project_root / "SweetSeek_paper_database" / "encapsulation" / "papers"
     assert Path(rag.persist_dir) == project_root / "storage_encapsulation"
 
 

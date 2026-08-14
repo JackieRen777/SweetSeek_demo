@@ -30,7 +30,7 @@ rm -f \
   "$repo_root/frontend-react/src/features/encapsulation/components/AnswerContent.test.tsx" \
   "$repo_root/frontend-react/src/features/encapsulation/components/CitationLink.tsx" \
   "$repo_root/frontend-react/src/features/encapsulation/components/PdfViewerPage.tsx" \
-  "$repo_root/Encapsulation_related_paper/metadata.json.pre-v2.bak"
+  "${PAPER_DATABASE_ROOT:-$repo_root/SweetSeek_paper_database}/encapsulation/metadata.json.pre-v2.bak"
 
 tar -xzf "$checkpoint" -C "$repo_root"
 echo "Encapsulation files restored to the 2026-07-27 15:50:53 baseline."

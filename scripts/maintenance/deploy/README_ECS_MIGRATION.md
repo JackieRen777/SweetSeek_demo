@@ -13,6 +13,8 @@ chmod +x scripts/maintenance/deploy/deploy_ecs_oneclick.sh
 bash scripts/maintenance/deploy/bootstrap_ecs.sh
 ```
 
+论文数据库固定放在 `/data/sweetseek/SweetSeek_paper_database`，不会随代码部署同步或删除。
+
 ### 2) 一键上线（以后每次都用这条）
 ```bash
 bash scripts/maintenance/deploy/deploy_ecs_oneclick.sh
@@ -30,4 +32,3 @@ bash scripts/maintenance/deploy/deploy_ecs_oneclick.sh
 
 ### 5) 回退（紧急）
 把 `sweetseek.top` A 记录改回旧 IP `8.136.8.223`。
-

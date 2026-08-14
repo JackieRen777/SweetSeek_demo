@@ -12,6 +12,7 @@ import SweetPredictionSection from './features/prediction/SweetPredictionSection
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Slider from './components/layout/Slider';
 import { useThresholdScroll } from './utils/thresholdScroll';
+import { featureFromPath, REVERSE_PATH_MAP, type FeatureType } from './routing';
 
 // Lazy load feature components
 const ChatInterface = lazy(() => import('./features/qa/components/ChatInterface'));
@@ -20,43 +21,11 @@ const DatabaseInterface = lazy(() => import('./features/database/DatabaseInterfa
 const ReferencesList = lazy(() => import('./features/references/components/ReferencesList'));
 const DualProteinChatInterface = lazy(() => import('./features/dual-protein/components/DualProteinChatInterface'));
 const EncapsulationChatInterface = lazy(() => import('./features/encapsulation/components/EncapsulationChatInterface'));
+const ProteoglycanChatInterface = lazy(() => import('./features/proteoglycan/components/ProteoglycanChatInterface'));
 const MLPredictSection = lazy(() => import('./features/ml-predict/MLPredictSection'));
 const AmberMDBuilder = lazy(() => import('./features/md-builder/AmberMDBuilder'));
 
 const SCREEN_COUNT = 5;
-
-type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'ml-predict' | 'md-builder' | null;
-
-// URL Mapping
-const PATH_MAP: Record<string, FeatureType> = {
-  '/sweetseek': 'qa', // URL is usually lowercase
-  '/professionalq&a': 'qa', // Legacy support
-  '/equation': 'equation',
-  '/database': 'database',
-  '/references': 'references',
-  '/dual-protein': 'dual-protein',
-  '/encapsulation': 'encapsulation',
-  '/embedding': 'encapsulation',
-  '/ml-predict': 'ml-predict',
-  '/amber-md-builder': 'md-builder',
-};
-
-const REVERSE_PATH_MAP: Record<string, string> = {
-  'qa': '/sweetseek', // Displayed URL
-  'equation': '/equation',
-  'database': '/database',
-  'references': '/references',
-  'dual-protein': '/dual-protein',
-  'encapsulation': '/encapsulation',
-  'ml-predict': '/ml-predict',
-  'md-builder': '/amber-md-builder',
-};
-
-const featureFromPath = (pathname: string): FeatureType => {
-  const path = pathname.toLowerCase();
-  const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
-  return PATH_MAP[cleanPath] || (cleanPath === '/qa' ? 'qa' : null);
-};
 
 function App() {
   const [activeFeature, setActiveFeature] = useState<FeatureType>(() => featureFromPath(window.location.pathname));
@@ -129,6 +98,7 @@ function App() {
       else if (index === 6) { setActiveFeature('ml-predict'); return; }
       else if (index === 7) { setActiveFeature('encapsulation'); return; }
       else if (index === 8) { setActiveFeature('md-builder'); return; }
+      else if (index === 9) { setActiveFeature('proteoglycan'); return; }
 
       // Also scroll to that section in the background
       navigateTo(index);
@@ -247,8 +217,8 @@ function App() {
                     </Suspense>
                   </div>
                 ) : (
-                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
-                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'md-builder' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
+                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'proteoglycan' || activeFeature === 'md-builder' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
+                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'proteoglycan' || activeFeature === 'md-builder' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
                         {activeFeature === 'qa' && <ChatInterface />}
                         {activeFeature === 'equation' && <SweetTasteEquation />}
@@ -256,6 +226,7 @@ function App() {
                         {activeFeature === 'references' && <ReferencesList />}
                         {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
                         {activeFeature === 'encapsulation' && <EncapsulationChatInterface />}
+                        {activeFeature === 'proteoglycan' && <ProteoglycanChatInterface />}
                         {activeFeature === 'md-builder' && <AmberMDBuilder />}
                       </Suspense>
                     </div>

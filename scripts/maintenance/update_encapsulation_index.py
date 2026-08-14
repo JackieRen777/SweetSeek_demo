@@ -19,6 +19,8 @@ sys.path.insert(0, str(ROOT))
 from llama_index.core import SimpleDirectoryReader  # noqa: E402
 
 from persistent_storage import PersistentRAGSystem  # noqa: E402
+from knowledge_paths import get_domain_paths  # noqa: E402
+from path_utils import normalize_for_storage, to_absolute  # noqa: E402
 
 
 REQUIRED_INDEX_FILES = {
@@ -29,7 +31,7 @@ REQUIRED_INDEX_FILES = {
 
 
 def relative_pdf_paths(papers_dir: Path) -> list[str]:
-    return sorted(path.relative_to(papers_dir).as_posix() for path in papers_dir.rglob("*.pdf"))
+    return sorted(normalize_for_storage(str(path)) for path in papers_dir.rglob("*.pdf"))
 
 
 def write_json_atomic(path: Path, payload: object) -> None:
@@ -58,10 +60,11 @@ def gunicorn_running(project_root: Path) -> bool:
 
 
 def main() -> int:
+    paths = get_domain_paths("encapsulation")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--papers", type=Path, default=ROOT / "Encapsulation_related_paper" / "papers")
-    parser.add_argument("--index", type=Path, default=ROOT / "storage_encapsulation")
-    parser.add_argument("--metadata", type=Path, default=ROOT / "Encapsulation_related_paper" / "metadata.json")
+    parser.add_argument("--papers", type=Path, default=paths.papers)
+    parser.add_argument("--index", type=Path, default=paths.index)
+    parser.add_argument("--metadata", type=Path, default=paths.metadata)
     parser.add_argument(
         "--initialize-manifest",
         action="store_true",
@@ -104,7 +107,7 @@ def main() -> int:
         return 1
 
     for position, relative_path in enumerate(new_relative_paths, 1):
-        pdf_path = papers_dir / relative_path
+        pdf_path = Path(to_absolute(relative_path))
         documents = SimpleDirectoryReader(input_files=[str(pdf_path)]).load_data()
         for document in documents:
             rag.index.insert(document)

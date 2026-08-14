@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
+from knowledge_paths import get_domain_paths
 
 # Load environment variables
 load_dotenv()
@@ -40,7 +41,7 @@ class RAGConfig:
         def _float(key: str, default: float) -> float:
             return float(os.getenv(f"{prefix}_{key}", os.getenv(key, str(default))))
         def _bool(key: str, default: bool) -> bool:
-            return os.getenv(key, str(default).lower()).lower() in ("true", "1", "yes")
+            return os.getenv(f"{prefix}_{key}", os.getenv(key, str(default).lower())).lower() in ("true", "1", "yes")
 
         return cls(
             target_min=_int("RETRIEVAL_TARGET_MIN", cls.target_min),
@@ -105,7 +106,8 @@ class Config:
     # Base Paths
     BASE_DIR = Path(__file__).resolve().parent
     CHROMA_DB_DIR = BASE_DIR / "chroma_db_v3"
-    METADATA_PATH = Path(os.getenv('METADATA_PATH', str(BASE_DIR / "chroma_db" / "metadata.json")))
+    _SWEETNESS_PATHS = get_domain_paths("sweetness")
+    METADATA_PATH = _SWEETNESS_PATHS.metadata
     LOG_DIR = BASE_DIR / "logs"
     STATIC_DIR = BASE_DIR / "static"
     TEMPLATE_DIR = BASE_DIR / "frontend"
@@ -122,9 +124,8 @@ class Config:
     DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-reasoner')
     
     # RAG Settings
-    # 文献主目录默认使用 sweet_related_paper（与线上数据一致）
-    DATA_DIR = os.getenv('DATA_DIR', str(BASE_DIR / "sweet_related_paper"))
-    PERSIST_DIR = os.getenv('PERSIST_DIR', str(BASE_DIR / "faiss_db"))
+    DATA_DIR = str(_SWEETNESS_PATHS.papers)
+    PERSIST_DIR = str(_SWEETNESS_PATHS.index)
     # 索引构建批次大小（降低内存峰值）
     INDEX_BUILD_BATCH_SIZE = int(os.getenv('INDEX_BUILD_BATCH_SIZE', 25))
 
@@ -136,7 +137,7 @@ class Config:
     EMBED_MODEL_SOURCE = os.getenv("EMBED_MODEL_SOURCE", "modelscope")
     # 嵌入推理不使用 torch.compile；关闭探测可避免部分 macOS/PyTorch
     # 组合在首次请求时长时间加载 torch._dynamo。
-    EMBED_DISABLE_TORCH_DYNAMO = os.getenv("EMBED_DISABLE_TORCH_DYNAMO", "true").lower() in (
+    EMBED_DISABLE_TORCH_DYNAMO = os.getenv("EMBED_DISABLE_TORCH_DYNAMO", "false").lower() in (
         "true", "1", "yes"
     )
     
@@ -180,3 +181,4 @@ config = DevelopmentConfig() if os.getenv('FLASK_ENV') == 'development' else Pro
 # RAG parameter configs (single source of truth)
 sweet_rag_config = RAGConfig.from_env(prefix="SWEET")
 dual_rag_config = DualRAGConfig.from_env()
+proteoglycan_rag_config = RAGConfig.from_env(prefix="PROTEOGLYCAN")

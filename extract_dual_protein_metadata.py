@@ -5,6 +5,7 @@ import os
 import re
 from pathlib import Path
 from metadata_storage import MetadataStorage
+from knowledge_paths import get_domain_paths
 
 def parse_dual_protein_filename(filename: str) -> dict:
     """
@@ -140,7 +141,8 @@ def extract_metadata_for_dual_protein():
     """为Dual-Protein文献提取元数据"""
     
     # 文献目录
-    papers_dir = Path('./Dual_Protein_related_paper/papers')
+    paths = get_domain_paths("dual_protein")
+    papers_dir = paths.papers
     
     if not papers_dir.exists():
         print(f"❌ 目录不存在: {papers_dir}")
@@ -151,7 +153,7 @@ def extract_metadata_for_dual_protein():
     print(f"找到 {len(pdf_files)} 个PDF文件")
     
     # 初始化元数据存储
-    metadata_storage = MetadataStorage(storage_path='./chroma_db_v3/metadata.json')
+    metadata_storage = MetadataStorage(storage_path=str(paths.metadata))
     
     # 提取并保存元数据
     success_count = 0

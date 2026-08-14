@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from path_utils import normalize_for_storage  # noqa: E402
+from knowledge_paths import get_domain_paths  # noqa: E402
 from pdf_metadata_extractor import PDFMetadataExtractor  # noqa: E402
 from services.encapsulation_metadata import fetch_crossref_metadata, merge_metadata  # noqa: E402
 
@@ -55,9 +56,10 @@ def atomic_write(path: Path, data: Dict[str, Any]) -> None:
 
 
 def main() -> int:
+    paths = get_domain_paths("encapsulation")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--papers", default=str(ROOT / "Encapsulation_related_paper/papers"))
-    parser.add_argument("--metadata", default=str(ROOT / "Encapsulation_related_paper/metadata.json"))
+    parser.add_argument("--papers", default=str(paths.papers))
+    parser.add_argument("--metadata", default=str(paths.metadata))
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--no-crossref", action="store_true")
     parser.add_argument("--only-missing-crossref", action="store_true")

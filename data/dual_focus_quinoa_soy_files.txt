@@ -1,22 +1,22 @@
 # User-confirmed second upload: 21 quinoa-soy related papers
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0001868625003458-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0260877415003878-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0260877424003546-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0268005X14000903-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0268005X19321836-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0268005X21001752-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0268005X23004757-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0308814618310355-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0308814624035702-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S0308814625031772-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/1-s2.0-S2212429225012520-main.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/Characteristics.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/Current insights into heat treatment for improving functionalities of soy protein_ A review(科研通-ablesci.com).pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/Effect of metal types on the controllable supramolecular self-assembly of .pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/Enzymatic hydrolysates of soy protein promote the physicochemical.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/Modulation of protein self-assembly via hydrolysis and metal ion 的全文翻译.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/Nutritional quality of protein flours of fava bean (Vicia faba L.) and in vitro.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/Oxidized dextran improves the stability and effectively controls the release.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/由金属多酚介导的蛋白质可控超分子自组装：特性及其在封装疏水小分子中的应用.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/荞麦蛋白共价复合物.pdf
-/Users/jackieren/Desktop/FCN_SweetSeek/Dual_Protein_related_paper/papers/阐明大豆蛋白纤维形成与降解过程：纤维形成区域的鉴定及自组装机制的见解.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0001868625003458-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0260877415003878-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0260877424003546-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0268005X14000903-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0268005X19321836-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0268005X21001752-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0268005X23004757-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0308814618310355-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0308814624035702-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S0308814625031772-main.pdf
+SweetSeek_paper_database/dual_protein/papers/1-s2.0-S2212429225012520-main.pdf
+SweetSeek_paper_database/dual_protein/papers/Characteristics.pdf
+SweetSeek_paper_database/dual_protein/papers/Current insights into heat treatment for improving functionalities of soy protein_ A review(科研通-ablesci.com).pdf
+SweetSeek_paper_database/dual_protein/papers/Effect of metal types on the controllable supramolecular self-assembly of .pdf
+SweetSeek_paper_database/dual_protein/papers/Enzymatic hydrolysates of soy protein promote the physicochemical.pdf
+SweetSeek_paper_database/dual_protein/papers/Modulation of protein self-assembly via hydrolysis and metal ion 的全文翻译.pdf
+SweetSeek_paper_database/dual_protein/papers/Nutritional quality of protein flours of fava bean (Vicia faba L.) and in vitro.pdf
+SweetSeek_paper_database/dual_protein/papers/Oxidized dextran improves the stability and effectively controls the release.pdf
+SweetSeek_paper_database/dual_protein/papers/由金属多酚介导的蛋白质可控超分子自组装：特性及其在封装疏水小分子中的应用.pdf
+SweetSeek_paper_database/dual_protein/papers/荞麦蛋白共价复合物.pdf
+SweetSeek_paper_database/dual_protein/papers/阐明大豆蛋白纤维形成与降解过程：纤维形成区域的鉴定及自组装机制的见解.pdf

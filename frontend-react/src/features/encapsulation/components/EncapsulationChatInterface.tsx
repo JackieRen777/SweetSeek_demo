@@ -4,18 +4,15 @@ import { AlertCircle, ArrowUp, ArrowUpRight, LoaderCircle, Square } from 'lucide
 import AnswerContent from './AnswerContent';
 import type { ChatMessage, EncapsulationReference } from '../types';
 import { isNearBottom } from '../scrollUtils';
+import { encapsulationQAConfig, type ResearchQAConfig } from '../researchQAConfig';
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const CONVERSATION_REVEAL_MS = 320;
-const PRESET_QUESTIONS = [
-  '哪些壁材可以提高包埋效率？',
-  '喷雾干燥如何影响生物活性物质的稳定性？',
-  '食品递送系统中的释放行为受哪些因素控制？',
-];
-
 type ExperiencePhase = 'intro' | 'departing' | 'conversation';
 
-const EncapsulationChatInterface: React.FC = () => {
+const EncapsulationChatInterface: React.FC<{ config?: ResearchQAConfig }> = ({
+  config = encapsulationQAConfig,
+}) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
@@ -31,8 +28,8 @@ const EncapsulationChatInterface: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    fetch('/api/encapsulation/prewarm', { method: 'POST' }).catch(() => undefined);
-  }, []);
+    fetch(`${config.apiBase}/prewarm`, { method: 'POST' }).catch(() => undefined);
+  }, [config.apiBase]);
 
   useEffect(() => {
     if (!messages.length || !autoScrollRef.current) return;
@@ -98,7 +95,7 @@ const EncapsulationChatInterface: React.FC = () => {
     abortRef.current = controller;
 
     try {
-      const response = await fetch('/api/encapsulation/ask_stream', {
+      const response = await fetch(`${config.apiBase}/ask_stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question }),
@@ -179,11 +176,11 @@ const EncapsulationChatInterface: React.FC = () => {
           onKeyDown={handleKeyDown}
           disabled={typing}
           rows={1}
-          placeholder="Ask anything about encapsulation research"
+          placeholder={config.placeholder}
           className={`block max-h-[180px] w-full resize-none bg-transparent px-6 pr-16 text-[15px] leading-6 text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-70 ${
             variant === 'intro' ? 'min-h-[96px] py-5' : 'min-h-[76px] py-4'
           }`}
-          aria-label="Encapsulation question"
+          aria-label={config.ariaLabel}
         />
         <button
           type="button"
@@ -202,7 +199,7 @@ const EncapsulationChatInterface: React.FC = () => {
           aria-label="Suggested questions"
           data-testid="suggested-questions"
         >
-          {PRESET_QUESTIONS.map((question) => (
+          {config.presetQuestions.map((question) => (
             <button
               key={question}
               type="button"
@@ -229,15 +226,23 @@ const EncapsulationChatInterface: React.FC = () => {
     }`}>
       {phase !== 'conversation' ? (
         <motion.div
-          data-testid="encapsulation-welcome"
+          data-testid={config.welcomeTestId}
           initial={false}
           animate={phase === 'departing' ? { opacity: 0, scale: 0.99 } : { opacity: 1, scale: 1 }}
           transition={{ duration: reducedMotion ? 0.12 : 0.28, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 flex w-full max-w-[1040px] flex-col items-center text-center"
         >
-          <h1 className="font-medium leading-[1.06] tracking-normal text-slate-950">
-            <span className="block whitespace-nowrap text-[24px] sm:text-[36px] md:text-[48px] lg:text-[54px]">Explore encapsulation science</span>
-            <span className="mt-1 block whitespace-nowrap text-[17px] sm:text-[27px] md:text-[36px] lg:text-[46px]">from precise encapsulation to targeted release</span>
+          <h1 className="w-full min-w-0 font-medium leading-[1.06] tracking-normal text-slate-950">
+            <span className={`block whitespace-nowrap ${
+              config.compactMobileTitle
+                ? 'text-[20px] sm:text-[34px] md:text-[46px] lg:text-[52px]'
+                : 'text-[24px] sm:text-[36px] md:text-[48px] lg:text-[54px]'
+            }`}>{config.title}</span>
+            <span className={`mt-1 block whitespace-nowrap ${
+              config.compactMobileTitle
+                ? 'text-[15px] sm:text-[24px] md:text-[34px] lg:text-[42px]'
+                : 'text-[17px] sm:text-[27px] md:text-[36px] lg:text-[46px]'
+            }`}>{config.subtitle}</span>
           </h1>
           <div className="mt-8 w-full max-w-[890px] text-left md:mt-10">{composer('intro')}</div>
         </motion.div>

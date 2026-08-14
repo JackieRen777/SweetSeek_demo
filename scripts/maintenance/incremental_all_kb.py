@@ -4,7 +4,7 @@
 Coverage:
 1) Sweetness KB (config.DATA_DIR -> config.PERSIST_DIR)
 2) Metadata extraction for newly added dual-protein PDFs
-3) Dual-protein KB (Dual_Protein_related_paper/papers -> storage_dual_protein)
+3) Dual-protein KB (unified paper database -> storage_dual_protein)
 """
 
 from __future__ import annotations
@@ -20,6 +20,8 @@ from config import config
 from metadata_storage import MetadataStorage
 from pdf_metadata_extractor import PDFMetadataExtractor
 from persistent_storage import PersistentRAGSystem, rag_system
+from knowledge_paths import get_domain_paths
+from path_utils import normalize_for_storage
 
 
 SUPPORTED_EXTS = (".pdf", ".docx", ".txt", ".md", ".csv", ".json")
@@ -76,8 +78,8 @@ def run_sweetness_incremental() -> Dict[str, int]:
     tracking_file = os.path.join(str(config.PERSIST_DIR), "indexed_files.json")
 
     all_files = _walk_files(data_dir)
-    tracked = _load_tracking(tracking_file)
-    new_files = [f for f in all_files if f not in tracked]
+    tracked = {normalize_for_storage(path) for path in _load_tracking(tracking_file)}
+    new_files = [f for f in all_files if normalize_for_storage(f) not in tracked]
 
     if not new_files:
         return {"new_files": 0, "new_docs": 0, "new_metadata": 0}
@@ -94,27 +96,27 @@ def run_sweetness_incremental() -> Dict[str, int]:
     if not ok:
         raise RuntimeError("Sweetness incremental indexing failed")
 
-    tracked.update(new_files)
+    tracked.update(normalize_for_storage(path) for path in new_files)
     _save_tracking(tracking_file, tracked)
     return {"new_files": len(new_files), "new_docs": len(docs), "new_metadata": new_meta}
 
 
 def run_dual_incremental() -> Dict[str, int]:
-    data_dir = "./Dual_Protein_related_paper/papers"
-    persist_dir = "./storage_dual_protein"
+    paths = get_domain_paths("dual_protein")
+    data_dir = str(paths.papers)
+    persist_dir = str(paths.index)
     tracking_file = os.path.join(persist_dir, "indexed_files.json")
 
-    dual_rag = PersistentRAGSystem(data_dir=data_dir, persist_dir=persist_dir)
+    dual_rag = PersistentRAGSystem(data_dir=data_dir, persist_dir=persist_dir, metadata_path=str(paths.metadata))
     all_files = _walk_files(data_dir)
-    tracked = _load_tracking(tracking_file)
-    new_files = [f for f in all_files if f not in tracked]
+    tracked = {normalize_for_storage(path) for path in _load_tracking(tracking_file)}
+    new_files = [f for f in all_files if normalize_for_storage(f) not in tracked]
 
     if dual_rag.index is None:
         if not dual_rag.load_or_create_index():
             raise RuntimeError(f"Dual-protein index is not ready: {dual_rag.last_error}")
 
-    # Metadata for dual files is also stored in the shared metadata file.
-    metadata_storage = MetadataStorage(storage_path="./chroma_db_v3/metadata.json")
+    metadata_storage = MetadataStorage(storage_path=str(paths.metadata))
     new_meta = _extract_pdf_metadata_for_files(new_files, metadata_storage) if new_files else 0
 
     new_docs = 0
@@ -124,7 +126,7 @@ def run_dual_incremental() -> Dict[str, int]:
         ok = dual_rag.add_documents(docs)
         if not ok:
             raise RuntimeError("Dual-protein incremental indexing failed")
-        tracked.update(new_files)
+        tracked.update(normalize_for_storage(path) for path in new_files)
         _save_tracking(tracking_file, tracked)
 
     return {"new_files": len(new_files), "new_docs": new_docs, "new_metadata": new_meta}

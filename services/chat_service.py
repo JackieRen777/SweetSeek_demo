@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
-from config import config, sweet_rag_config, dual_rag_config, RAGConfig
+from config import config, sweet_rag_config, dual_rag_config, proteoglycan_rag_config, RAGConfig
 from path_utils import normalize_for_storage
 from services.llm_client import DeepSeekLLMClient
 from services.sweetness_prediction_service import get_sweetness_prediction_service
@@ -31,7 +31,11 @@ class ChatService:
         self.mode = mode
         self.conversations: List[Dict[str, Any]] = []
 
-        rc: RAGConfig = dual_rag_config if mode == "dual" else sweet_rag_config
+        configs = {
+            "dual": dual_rag_config,
+            "proteoglycan": proteoglycan_rag_config,
+        }
+        rc: RAGConfig = configs.get(mode, sweet_rag_config)
         self.qa_max_tokens = rc.qa_max_tokens
         self.retrieval_target_min = rc.target_min
         self.retrieval_target_max = rc.target_max
@@ -222,7 +226,7 @@ class ChatService:
                 return
 
             messages = [
-                {"role": "system", "content": f"你是食品科学专业领域的专家。重要：你只能引用ref_1到ref_{len(references)}这{len(references)}篇文献，不要使用其他编号。"},
+                {"role": "system", "content": self._system_message(len(references))},
                 {"role": "user", "content": prompt},
             ]
 
@@ -907,7 +911,8 @@ class ChatService:
 2. 主要证据（含文献编号）
 3. 应用或风险提示（简短）"""
 
-        return f"""你是食品科学专业领域的专家。请严格基于给定文献回答问题，保持科学严谨，避免臆测。
+        expert_role = self._expert_role()
+        return f"""你是{expert_role}。请严格基于给定文献回答问题，保持科学严谨，避免臆测。
 
 【参考文献列表】（共{len(references)}篇，编号为ref_1到ref_{len(references)}）：
 {ref_list_summary}
@@ -927,6 +932,18 @@ class ChatService:
 【问题】：{question}
 
 请用中文回答，结构清晰，正文控制在中等篇幅（通常约{length_hint}），并在关键观点后标注文献来源。"""
+
+    def _expert_role(self) -> str:
+        if self.mode == "proteoglycan":
+            return "食品蛋白质-多糖复合体系专家，擅长分子相互作用、复合凝聚、界面行为、乳液与凝胶、加工稳定性、消化和递送应用"
+        return "食品科学专业领域的专家"
+
+    def _system_message(self, reference_count: int) -> str:
+        return (
+            f"你是{self._expert_role()}。重要：你只能引用ref_1到ref_{reference_count}"
+            f"这{reference_count}篇文献，不要使用其他编号。只输出最终答案，不要输出思维链、"
+            "推理过程、分析过程或自我说明。"
+        )
 
     def _build_extended_reference_block(self, references: List[Dict[str, Any]]) -> str:
         if not references:
@@ -954,7 +971,7 @@ class ChatService:
 
     def _call_llm(self, prompt, references) -> Tuple[str, Optional[str]]:
         messages = [
-            {"role": "system", "content": f"你是食品科学专业领域的专家。重要：你只能引用ref_1到ref_{len(references)}这{len(references)}篇文献，不要使用其他编号。只输出最终答案，不要输出思维链、推理过程、分析过程或自我说明。"},
+            {"role": "system", "content": self._system_message(len(references))},
             {"role": "user", "content": prompt},
         ]
         
