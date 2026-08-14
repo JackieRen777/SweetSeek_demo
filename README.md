@@ -69,6 +69,16 @@ cd frontend-react && npm test -- --run && npm run build
 ./scripts/maintenance/verify_cleanup.sh
 ```
 
+## RAG 评测
+
+第一阶段使用甜味域 60 题候选集。检索评测不调用回答模型，也不会创建或重建索引：
+
+```bash
+venv/bin/python -m evaluation.rag_benchmark --mode retrieval --limit 5
+```
+
+生成和端到端评测、领域终审与发布门禁见 `docs/architecture/RAG_EVALUATION.md`。未经领域审核的 `candidate` 题目不会进入正式评分。
+
 ## 文献和索引维护
 
 统一论文目录：

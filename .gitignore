@@ -75,6 +75,8 @@ logs/
 rag_outputs/
 output/
 temp/
+evaluation/reports/*.json
+evaluation/contexts/*.json
 
 # 测试文件
 .pytest_cache/

@@ -53,6 +53,15 @@ diff -u docs/architecture/API_ROUTES_BASELINE.txt "${route_snapshot}"
 rm -f "${route_snapshot}"
 
 venv/bin/python -m pytest -q
+venv/bin/python - <<'PY'
+from evaluation.gold import annotation_summary, load_gold_set
+
+summary = annotation_summary(load_gold_set("evaluation/questions/sweet_gold_v1.json"))
+expected = {"fact": 15, "summary": 15, "comparison": 10, "mechanism": 10, "unanswerable": 10}
+if summary["total"] != 60 or summary["by_type"] != expected:
+    raise SystemExit(f"RAG evaluation set distribution changed: {summary}")
+print(f"RAG evaluation questions: {summary['total']} ({summary['approved']} approved)")
+PY
 (
   cd frontend-react
   npm test -- --run
