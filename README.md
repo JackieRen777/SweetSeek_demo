@@ -1,326 +1,106 @@
-# SweetSeek - 智能科研问答系统
+# SweetSeek
 
-基于 RAG（检索增强生成）技术的 AI 科研助手，专为食品科学与甜味研究设计。
+SweetSeek 是面向食品科学研究的全栈科研平台。系统由 React 前端、Flask API、FAISS 检索、统一论文数据库和 DeepSeek 兼容 LLM 接口组成。
 
-**最后更新：2026-01-22**
+## 正式功能
 
-## 🎯 核心功能
+- 甜味科学 RAG 问答
+- 甜味感知方程与可视化
+- 甜味化合物数据库与文献列表
+- 双蛋白、包埋、蛋白-多糖独立知识域问答
+- 甜度机器学习预测
+- AMBER 分子动力学流程生成器
 
-- **智能问答**：基于 DeepSeek 大模型，深度理解科研问题并生成专业回答
-- **文献检索**：自动从本地文献库检索相关内容，支持 PDF、Word、Markdown 等格式
-- **查询扩展**：自动识别甜味剂同义词和相关术语，提高检索准确率
-- **证据分级**：对检索到的文献进行质量评估和分级
-- **元数据提取**：自动提取 PDF 文献的期刊、作者、DOI 等信息
-- **增量索引**：支持增量添加新文献，无需重建整个索引
-- **持久化存储**：使用 Chroma 向量数据库，启动速度快，内存占用低
+## 架构
 
-## 📁 项目结构
-
-```
-SweetSeek/
-├── app.py                          # Flask 主应用
-├── persistent_storage.py           # RAG 系统核心（Chroma 向量数据库）
-├── incremental_indexer.py          # 增量索引管理器
-├── query_expander.py               # 查询扩展模块（同义词/术语扩展）
-├── evidence_ranker.py              # 证据分级系统
-├── metadata_storage.py             # 元数据存储管理器
-├── pdf_metadata_extractor.py       # PDF 元数据提取器
-├── upload_handler.py               # 文件上传处理器
-├── test_performance.py             # 性能测试工具
-├── requirements.txt                # Python 依赖
-├── .env                            # 环境变量配置
-├── frontend/                       # 前端 HTML 页面
-│   ├── index.html                  # 主页
-│   ├── search.html                 # 搜索页面
-│   └── about.html                  # 关于页面
-├── static/                         # 静态资源
-│   ├── style.css                   # 样式表
-│   ├── main.js                     # 主页脚本
-│   └── search.js                   # 搜索页面脚本
-├── chroma_db/                      # Chroma 向量数据库（自动生成）
-│   ├── chroma.sqlite3              # 向量索引数据库
-│   ├── metadata.json               # PDF 元数据
-│   └── indexed_files.json          # 已索引文件列表
-├── SweetSeek_paper_database/       # 统一文献库
-│   ├── sweetness/papers/           # 甜味文献
-│   ├── dual_protein/papers/        # 双蛋白文献
-│   ├── encapsulation/papers/       # 包埋文献
-│   └── proteoglycan/papers/        # 蛋白-多糖文献
-└── models/                         # 本地嵌入模型（自动下载）
+```text
+frontend-react/                  React + Vite 前端
+app.py                           Flask 入口与 API 路由
+services/                        问答、LLM、化合物和 MD Builder 服务
+persistent_storage.py            FAISS 索引加载、构建与增量写入
+knowledge_paths.py               四个知识域的统一路径配置
+SweetSeek_paper_database/        论文与 JSON 元数据，不进入 Git
+faiss_db/ + storage_*/           可重建运行索引，不进入 Git
+evaluation/                      固定问题集与 RAG 基准
+scripts/maintenance/             唯一维护和部署入口
 ```
 
-## 🚀 快速开始
+详细边界见 `docs/architecture/PROJECT_LAYOUT.md` 和 `docs/architecture/CODE_ASSET_AUDIT.md`。
 
-### 1. 环境要求
+## 本地开发
 
-- Python 3.10+
-- 8GB+ RAM（推荐 16GB）
-- 2GB+ 磁盘空间
-
-### 2. 安装依赖
+要求 Python 3.10+ 和 Node.js 20+。
 
 ```bash
-# 克隆项目
-git clone <repository-url>
-cd SweetSeek
-
-# 创建虚拟环境（推荐）
-python3 -m venv .venv
-source .venv/bin/activate  # macOS/Linux
-# Windows: .venv\Scripts\activate
-
-# 安装依赖
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
+
+cd frontend-react
+npm ci
+cd ..
 ```
 
-### 3. 配置 API 密钥
+复制 `.env.example` 为未跟踪的 `.env`，填入 LLM 配置。论文根目录默认是仓库内的 `SweetSeek_paper_database/`，也可通过 `PAPER_DATABASE_ROOT` 指向仓库外数据盘。
 
-编辑 `.env` 文件，填入你的 DeepSeek API 密钥：
+启动后端：
 
 ```bash
-DEEPSEEK_API_KEY=your_api_key_here
-DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
-DEEPSEEK_MODEL=deepseek-chat
-
-# 嵌入模型配置（默认使用本地中文模型）
-EMBED_MODEL_TYPE=modelscope
-EMBED_MODEL_NAME=BAAI/bge-small-zh-v1.5
+./scripts/maintenance/restart-local-5001.sh
 ```
 
-获取 DeepSeek API 密钥：https://platform.deepseek.com/
-
-### 4. 启动系统
+启动前端：
 
 ```bash
-python app.py
+cd frontend-react
+npm run dev
 ```
 
-首次启动会：
-1. 下载中文嵌入模型（约 400MB，仅首次）
-2. 构建向量索引（约 1-2 分钟，取决于文献数量）
-3. 启动 Flask 服务器
-
-### 5. 访问界面
-
-打开浏览器访问：**http://localhost:5001**
-
-## 📖 使用指南
-
-### 添加文献（服务器端）
-
-将 PDF 文件放到 `SweetSeek_paper_database/sweetness/papers/` 目录，然后：
-
-**方法1：增量索引（推荐）**
-```bash
-python incremental_indexer.py
-```
-
-**方法2：重启服务器**
-```bash
-# 停止服务器 (Ctrl+C)
-python app.py
-# 系统会自动检测并索引新文件
-```
-
-### 智能问答
-
-1. 访问 http://localhost:5001/search.html
-2. 输入问题，例如：
-   - "阿斯巴甜对健康的影响是什么？"
-   - "甜菊糖的甜度是蔗糖的多少倍？"
-   - "糖醇类甜味剂的代谢机制"
-3. 系统会：
-   - 自动扩展查询（识别同义词）
-   - 检索相关文献
-   - 生成专业回答
-   - 提供文献引用和证据分级
-
-## 🔧 核心模块说明
-
-### 1. persistent_storage.py
-RAG 系统核心，负责：
-- 文档加载和向量化
-- Chroma 向量数据库管理
-- 索引构建和持久化
-- 查询引擎
-
-**优势**：
-- 内存占用减少 40-50%
-- 启动速度快 2-10 倍
-- 支持增量更新
-
-### 2. query_expander.py
-查询扩展模块，包含：
-- 甜味剂同义词词典（中英文）
-- 概念扩展词典
-- 自动术语识别和扩展
-
-**示例**：
-- "阿斯巴甜" → 扩展为 "aspartame", "天冬酰苯丙氨酸甲酯", "APM"
-- "甜味" → 扩展为 "sweetness", "甜度", "sweet taste"
-
-### 3. evidence_ranker.py
-证据分级系统，评估文献质量：
-- 研究类型评分
-- 期刊等级评分
-- 时效性评分
-- 数据质量评分
-
-### 4. metadata_storage.py
-元数据管理器，负责：
-- PDF 元数据持久化
-- 元数据缓存
-- 备份和恢复
-
-### 5. pdf_metadata_extractor.py
-PDF 元数据提取器，自动提取：
-- 期刊名称（识别率 98.8%）
-- 发表年份
-- 文章标题
-- 作者列表
-- DOI
-
-**期刊识别策略**：
-1. 从 PDF 元数据提取
-2. 从第一页文本提取
-3. 从 DOI 推断（支持 40+ 期刊/出版商）
-4. 从文件名推断
-
-### 6. incremental_indexer.py
-增量索引管理器，支持：
-- 检测新文件
-- 增量添加到索引
-- 跟踪已索引文件
-- 避免重复索引
-
-## 🎨 前端页面
-
-- **index.html**：主页，系统介绍和导航
-- **search.html**：智能问答界面
-- **about.html**：关于页面
-
-## 🔍 技术栈
-
-| 组件 | 技术 |
-|------|------|
-| LLM | DeepSeek (deepseek-chat) |
-| 嵌入模型 | BAAI/bge-small-zh-v1.5 (本地) |
-| RAG 框架 | LlamaIndex 0.14.10 |
-| 向量数据库 | ChromaDB 1.4.0 |
-| Web 框架 | Flask 3.1.2 |
-| PDF 处理 | pypdf 6.4.1 |
-| 前端 | HTML5 + CSS3 + Vanilla JS |
-
-## 📊 性能指标
-
-| 指标 | Chroma 版本 | 原始版本 |
-|------|-------------|----------|
-| 启动时间 | 2-5 秒 | 15-30 秒 |
-| 内存占用 | 500-800 MB | 1.2-1.5 GB |
-| 索引构建 | 1-2 分钟 | 3-5 分钟 |
-| 查询速度 | 0.5-1 秒 | 1-2 秒 |
-
-## 🛠️ 高级功能
-
-### 重建索引
+## 测试与清理验证
 
 ```bash
-# 推荐：低内存稳健重建（可调批次，默认 25）
-./scripts/maintenance/rebuild-index.sh
-
-# 或显式指定批次大小（例如 15）
-./scripts/maintenance/rebuild-index.sh 15
+venv/bin/python -m pytest -q
+cd frontend-react && npm test -- --run && npm run build
 ```
 
-### 增量添加文档
+完整只读检查：
 
 ```bash
-python incremental_indexer.py
+./scripts/maintenance/verify_cleanup.sh
 ```
 
-### 重建跟踪文件
+## 文献和索引维护
+
+统一论文目录：
+
+```text
+SweetSeek_paper_database/<domain>/papers/
+SweetSeek_paper_database/<domain>/metadata.json
+```
+
+其中 `<domain>` 为 `sweetness`、`dual_protein`、`encapsulation` 或 `proteoglycan`。
 
 ```bash
-python incremental_indexer.py --rebuild-tracking
+# 所有知识域增量更新
+python scripts/maintenance/incremental_all_kb.py
+
+# 甜味知识域完整重建
+./scripts/maintenance/rebuild-index.sh 10
+
+# 双蛋白元数据补全
+python scripts/maintenance/extract_dual_protein_metadata.py
 ```
 
-## 🐛 常见问题
+论文、元数据、模型和索引均属于运行资产，不通过代码部署覆盖。
 
-**Q: 首次启动很慢？**  
-A: 首次运行会下载中文嵌入模型（约 400MB）和构建索引，请耐心等待。
+## 生产部署
 
-**Q: 如何添加新文献？**  
-A: 将文件放入 `SweetSeek_paper_database/sweetness/papers/`，停止问答服务后运行离线增量索引命令。
+唯一发布入口：
 
-**Q: 索引需要重建吗？**  
-A: 一般不需要。索引会自动保存在 `faiss_db/` 目录，重启后自动加载；仅在索引损坏或文档结构大变更时重建。
+```bash
+cp scripts/maintenance/deploy/ecs.env.example scripts/maintenance/deploy/ecs.env
+# 编辑未跟踪的 ecs.env
+bash scripts/maintenance/deploy/deploy_ecs_oneclick.sh
+```
 
-**Q: 如何回滚最近一次改动？**  
-A: 使用 Git 回滚到上一个稳定提交（建议先备份 `.env` 与数据目录）。
-
-**Q: 内存不足怎么办？**  
-A: 减少 `similarity_top_k` 参数（在 `app.py` 中），或使用更小的嵌入模型。
-
-**Q: 如何停止系统？**  
-A: 在终端按 `Ctrl + C`。
-
-## 📝 开发计划
-
-- [ ] 支持更多文件格式（Excel、PPT）
-- [ ] 多语言支持（英文界面）
-- [ ] 文献自动分类
-- [ ] 知识图谱可视化
-- [ ] 批量导入功能
-- [ ] API 接口
-
-## 📄 许可证
-
-MIT License
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
----
-
-## 🚀 部署到服务器
-
-### 日常开发流程
-
-1. **修改代码并测试**
-2. **推送到 GitHub**
-   ```bash
-   ./scripts/maintenance/network/git_push.sh
-   ```
-   - 自动生成更新摘要
-   - 可选添加自定义说明
-   - 询问是否立即部署
-
-3. **部署到服务器**
-   ```bash
-   ./scripts/maintenance/deploy/deploy.sh
-   ```
-   - 自动拉取代码
-   - 检查环境配置
-   - 重启服务
-
-4. **快速重启服务**
-   ```bash
-   ./scripts/maintenance/restart-server.sh
-   ```
-
-5. **本地一键重启（推荐本机开发）**
-   ```bash
-   ./scripts/maintenance/restart-local-5001.sh
-   ```
-
-### 可用脚本
-
-- `scripts/maintenance/network/git_push.sh` - 智能推送（推荐）
-- `scripts/maintenance/deploy/deploy.sh` - 部署到服务器
-- `scripts/maintenance/restart-server.sh` - 快速重启
-- `scripts/maintenance/restart-local-5001.sh` - 本地一键重启（127.0.0.1:5001）
-
----
-
-**开始你的 SweetSeek 科研之旅！** 🚀
+首次配置服务器时先运行 `bootstrap_ecs.sh`。完整说明见 `DEPLOY.md`。

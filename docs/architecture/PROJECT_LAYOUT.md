@@ -1,30 +1,35 @@
-# FCN_SweetSeek 项目结构（V1.0 现状整理）
+# SweetSeek 项目边界
 
-## 核心运行路径
-- `app.py`: Flask 入口 + API 路由
-- `services/`: 问答编排、依赖注入、化合物服务
-- `persistent_storage.py`: RAG 索引加载/构建/增量写入
-- `incremental_indexer.py`: 文献增量索引入口
-- `config.py`: 配置层（端口、索引目录、模型等）
+## 核心源码
 
-## 数据与索引目录
-- `sweet_related_paper/`: 文献源数据
-- `faiss_db/`: 当前检索索引持久化目录（PERSIST_DIR 默认）
-- `chroma_db_v3/`: 元数据目录（metadata.json）
-- `storage_dual_protein/`: 双蛋白模块索引
+- `app.py`：Flask 应用和兼容 API。
+- `services/`：业务服务与问答编排。
+- `persistent_storage.py`：FAISS 索引生命周期。
+- `knowledge_paths.py`：知识域路径的唯一来源。
+- `frontend-react/src/`：九个正式前端功能。
+- `tests/`、`frontend-react/src/**/*.test.*`：回归保护。
 
-## 前端
-- `frontend-react/`: React 前端工程
+## 不可再生或生产敏感资产
 
-## 运维与维护脚本
-- `scripts/rebuild_local_index.py`: 本地强制重建索引脚本
-- `scripts/maintenance/`: 部署/重启/回滚/诊断脚本
+- `SweetSeek_paper_database/`：论文原文和 JSON 元数据。
+- `models/`：本地嵌入模型。
+- `data/`：甜味化合物与 ML 模型输入/产物。
+- `results/`：论文图表和已确认评测结果。
 
-## 文档
-- `docs/`: 项目文档
-- `docs/reports/`: 历史报告归档
+这些目录不能按“未导入源码”判断为垃圾。
 
-## 待清理候选（不影响运行）
-- 根目录历史临时文件与重复报告
-- 无引用的旧部署脚本
-- 明显过时的备份索引目录（需确认后删）
+## 可再生运行资产
+
+- `faiss_db/`：甜味知识域索引。
+- `storage_dual_protein/`、`storage_encapsulation/`、`storage_proteoglycan/`：领域索引。
+- `frontend-react/dist/`、`frontend-react/node_modules/`、Python/测试缓存和日志。
+
+可再生不代表可在生产发布时删除；索引只由维护命令更新。
+
+## 运维入口
+
+- `scripts/maintenance/deploy/deploy_ecs_oneclick.sh`：唯一生产发布入口。
+- `scripts/maintenance/deploy/bootstrap_ecs.sh`：首次服务器初始化。
+- `scripts/maintenance/restart-local-5001.sh`：本地后端启动。
+- `scripts/maintenance/incremental_all_kb.py`：知识库增量更新。
+- `scripts/maintenance/verify_cleanup.sh`：只读质量门禁。
