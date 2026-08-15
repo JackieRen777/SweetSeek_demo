@@ -242,12 +242,18 @@ class PersistentRAGSystem:
             from config import config as _cfg
             model_path = str(getattr(_cfg, "EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5"))
             embed_source = str(getattr(_cfg, "EMBED_MODEL_SOURCE", "modelscope")).lower()
+            embed_device = str(getattr(_cfg, "EMBED_DEVICE", "") or "").strip().lower()
+            embed_batch_size = max(1, int(getattr(_cfg, "EMBED_BATCH_SIZE", 8)))
+            embed_num_threads = max(1, int(getattr(_cfg, "EMBED_NUM_THREADS", 1)))
             disable_torch_dynamo = bool(getattr(_cfg, "EMBED_DISABLE_TORCH_DYNAMO", True))
         except Exception:
             model_path = "BAAI/bge-small-zh-v1.5"
             embed_source = "modelscope"
+            embed_device = ""
+            embed_batch_size = 8
+            embed_num_threads = 1
             disable_torch_dynamo = True
-        model_key = (embed_source, os.path.abspath(model_path) if os.path.isdir(model_path) else model_path)
+        model_key = (embed_source, os.path.abspath(model_path) if os.path.isdir(model_path) else model_path, embed_device)
         with _SHARED_EMBEDDING_LOCK:
             shared = _SHARED_EMBEDDINGS.get(model_key)
             if shared is not None:
@@ -269,9 +275,13 @@ class PersistentRAGSystem:
         
         # 尝试使用真实的嵌入模型
         try:
+            import torch
+            try:
+                torch.set_num_threads(embed_num_threads)
+                torch.set_num_interop_threads(embed_num_threads)
+            except RuntimeError:
+                pass
             if disable_torch_dynamo:
-                import torch
-
                 # Transformers 会在第一次 forward 时探测 torch._dynamo，
                 # 即使 SentenceTransformer 仅做普通推理也会触发昂贵的懒加载。
                 dynamo_stub = types.ModuleType("torch._dynamo")
@@ -297,7 +307,7 @@ class PersistentRAGSystem:
                         except Exception as ms_e:
                             logging.warning(f"ModelScope 下载失败，将尝试按原路径/模型名加载: {ms_e}")
 
-                    st_model = SentenceTransformer(model_path)
+                    st_model = SentenceTransformer(model_path, device=embed_device or None)
                     logging.info(f"成功加载嵌入模型: {model_path}")
                     try:
                         model_dim = int(st_model.get_sentence_embedding_dimension())
@@ -319,7 +329,7 @@ class PersistentRAGSystem:
                             return [float(x) for x in vec.tolist()] if hasattr(vec, 'tolist') else [float(x) for x in vec]
 
                         def _get_text_embeddings(self, texts: List[str]) -> List[List[float]]:
-                            vectors = st_model.encode(texts, batch_size=32, show_progress_bar=False)
+                            vectors = st_model.encode(texts, batch_size=embed_batch_size, show_progress_bar=False)
                             rows = vectors.tolist() if hasattr(vectors, 'tolist') else vectors
                             return [[float(x) for x in row] for row in rows]
 

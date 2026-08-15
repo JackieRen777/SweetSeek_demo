@@ -134,6 +134,10 @@ class Config:
     EMBED_MODEL_NAME = os.getenv("EMBED_MODEL_NAME", "BAAI/bge-small-zh-v1.5")
     # 模型源：huggingface 或 modelscope (推荐国内使用 modelscope)
     EMBED_MODEL_SOURCE = os.getenv("EMBED_MODEL_SOURCE", "modelscope")
+    # 可显式指定 cpu/cuda/mps；留空时由 SentenceTransformers 自动选择。
+    EMBED_DEVICE = os.getenv("EMBED_DEVICE", "").strip().lower()
+    EMBED_BATCH_SIZE = max(1, int(os.getenv("EMBED_BATCH_SIZE", "8")))
+    EMBED_NUM_THREADS = max(1, int(os.getenv("EMBED_NUM_THREADS", "1")))
     # 嵌入推理不使用 torch.compile；关闭探测可避免部分 macOS/PyTorch
     # 组合在首次请求时长时间加载 torch._dynamo。
     EMBED_DISABLE_TORCH_DYNAMO = os.getenv("EMBED_DISABLE_TORCH_DYNAMO", "false").lower() in (

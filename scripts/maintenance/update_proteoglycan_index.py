@@ -20,6 +20,7 @@ from llama_index.core import SimpleDirectoryReader  # noqa: E402
 from persistent_storage import PersistentRAGSystem  # noqa: E402
 from knowledge_paths import get_domain_paths  # noqa: E402
 from path_utils import normalize_for_storage, to_absolute  # noqa: E402
+from pdf_metadata_extractor import PDFMetadataExtractor  # noqa: E402
 
 
 PROTEOGLYCAN_PATHS = get_domain_paths("proteoglycan")
@@ -46,6 +47,32 @@ def write_json_atomic(path: Path, payload: object) -> None:
         if os.path.exists(temporary):
             os.unlink(temporary)
         raise
+
+
+def extract_missing_metadata(all_pdfs: list[str], metadata_path: Path) -> int:
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8")) if metadata_path.is_file() else {}
+    except (OSError, json.JSONDecodeError):
+        metadata = {}
+    extractor = PDFMetadataExtractor()
+    created = 0
+    for position, relative_path in enumerate(all_pdfs, 1):
+        existing = metadata.get(relative_path, {})
+        if existing and existing.get("file_path"):
+            continue
+        absolute_path = Path(to_absolute(relative_path))
+        extracted = extractor.extract_metadata(str(absolute_path))
+        extracted["filename"] = absolute_path.name
+        extracted["file_path"] = relative_path
+        extracted["source"] = "proteoglycan_local_pdf"
+        metadata[relative_path] = extracted
+        created += 1
+        if position % 50 == 0:
+            write_json_atomic(metadata_path, metadata)
+            print(f"[{position}/{len(all_pdfs)}] metadata extracted")
+    write_json_atomic(metadata_path, metadata)
+    print(json.dumps({"metadata_entries": len(metadata), "metadata_created": created}, ensure_ascii=False))
+    return len(metadata)
 
 
 def gunicorn_running(project_root: Path) -> bool:
@@ -145,13 +172,25 @@ def main() -> int:
         os.replace(index_dir, backup)
         print(f"Existing index moved to {backup}")
 
+    if not all_pdfs:
+        print("No PDFs found; refusing to build an empty Proteoglycan index.")
+        return 2
+    extract_missing_metadata(all_pdfs, metadata_path)
+
     rag = PersistentRAGSystem(
         data_dir=str(papers_dir),
         persist_dir=str(index_dir),
         metadata_path=str(metadata_path),
         allow_auto_build=False,
     )
-    if not index_dir.exists():
+    index_complete = index_dir.is_dir() and REQUIRED_INDEX_FILES.issubset(
+        {path.name for path in index_dir.iterdir() if path.is_file()}
+    )
+    if not index_complete:
+        manifest_path = index_dir / "indexed_files.json"
+        if manifest_path.is_file() and json.loads(manifest_path.read_text(encoding="utf-8")):
+            print("Index is incomplete but its manifest is non-empty; use --rebuild after inspection.")
+            return 2
         return first_build(rag, all_pdfs, index_dir)
     return incremental_update(rag, papers_dir, index_dir, all_pdfs)
 
