@@ -75,6 +75,8 @@ rsync -az --delete \
   --exclude=".env.local" \
   --exclude=".env.production.local" \
   --exclude="scripts/maintenance/deploy/ecs.env" \
+  --exclude=".codex-backups" \
+  --exclude="docs/soft-copyright" \
   --exclude=".venv" \
   --exclude="venv" \
   --exclude="node_modules" \
