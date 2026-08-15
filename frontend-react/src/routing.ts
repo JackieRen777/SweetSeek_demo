@@ -1,4 +1,4 @@
-export type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'proteoglycan' | 'ml-predict' | 'md-builder' | null;
+export type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'proteoglycan' | 'ml-predict' | 'md-builder' | 'docking' | null;
 
 const PATH_MAP: Record<string, FeatureType> = {
   '/sweetseek': 'qa',
@@ -12,6 +12,7 @@ const PATH_MAP: Record<string, FeatureType> = {
   '/proteoglycan': 'proteoglycan',
   '/ml-predict': 'ml-predict',
   '/amber-md-builder': 'md-builder',
+  '/docking': 'docking',
 };
 
 export const REVERSE_PATH_MAP: Record<string, string> = {
@@ -24,6 +25,7 @@ export const REVERSE_PATH_MAP: Record<string, string> = {
   'proteoglycan': '/proteoglycan',
   'ml-predict': '/ml-predict',
   'md-builder': '/amber-md-builder',
+  'docking': '/docking',
 };
 
 export const featureFromPath = (pathname: string): FeatureType => {

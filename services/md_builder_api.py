@@ -445,7 +445,11 @@ def create_md_builder_blueprint(llm_client_getter: Callable):
                         raise MDBuilderError("Combined input size exceeds 20 MB")
                     item = inspect_input(filename, content)
                 inputs.append(item)
-            archive = build_zip(config, inputs)
+            pose_upload = request.files.get("docking_pose")
+            docking_pose = pose_upload.read(MAX_UPLOAD_BYTES + 1) if pose_upload else None
+            if docking_pose and len(docking_pose) > MAX_UPLOAD_BYTES:
+                raise MDBuilderError("Docking pose exceeds the 20 MB limit")
+            archive = build_zip(config, inputs, docking_pose=docking_pose)
             return send_file(
                 archive,
                 mimetype="application/zip",

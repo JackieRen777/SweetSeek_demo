@@ -4,6 +4,8 @@
 2. 在目标服务器的数据盘准备 `SweetSeek_paper_database` 和已有索引。
 3. 执行 `bootstrap_ecs.sh` 初始化依赖和目录。
 4. 执行 `deploy_ecs_oneclick.sh` 发布代码并完成健康检查。
+
+发布脚本仅接受与 `origin/main` 完全一致的干净本地 `main`，功能分支或包含未提交修改的工作区会被拒绝。
 5. 验证九个前端功能、四个知识域健康接口和 SSE 流式回答。
 6. 切换 DNS 后观察至少一个发布周期，再停用旧服务器。
 

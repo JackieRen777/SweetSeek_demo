@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Menu, X } from 'lucide-react';
+import type { FeatureType } from '../../routing';
 
 interface NavbarProps {
   activeScreen: number;
   onNavigate: (index: number) => void;
-  activeFeature: 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'proteoglycan' | 'ml-predict' | 'md-builder' | null;
+  activeFeature: FeatureType;
 }
 
 interface NavCategory {
@@ -32,12 +33,18 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
       items: [
         { label: 'Dual-Protein Q&A', index: 5, feature: 'dual-protein' },
         { label: 'AMBER MD Builder', index: 8, feature: 'md-builder' },
+        { label: 'Docking', index: 10, feature: 'docking' },
+      ],
+    },
+    {
+      label: 'Encapsulation',
+      items: [
+        { label: 'Encapsulation Q&A', index: 7, feature: 'encapsulation' },
       ],
     },
     {
       label: 'Proteoglycan',
       items: [
-        { label: 'Encapsulation Q&A', index: 7, feature: 'encapsulation' },
         { label: 'Proteoglycan Q&A', index: 9, feature: 'proteoglycan' },
       ],
     },

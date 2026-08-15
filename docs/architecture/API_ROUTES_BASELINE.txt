@@ -12,6 +12,8 @@ GET /api/encapsulation/health
 GET /api/health
 GET /api/proteoglycan/documents
 GET /api/proteoglycan/health
+GET /api/docking/jobs/<job_id>
+GET /api/docking/status
 GET /api/stats
 GET /api/structure/render
 GET /assets/<path:filename>
@@ -42,4 +44,5 @@ POST /api/ml/predict
 POST /api/proteoglycan/ask_stream
 POST /api/proteoglycan/documents/upload
 POST /api/proteoglycan/prewarm
+POST /api/docking/jobs
 POST /api/search

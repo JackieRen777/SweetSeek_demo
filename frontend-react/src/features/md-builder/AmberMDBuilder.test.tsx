@@ -16,9 +16,11 @@ describe('AmberMDBuilder', () => {
     expect(screen.queryByText('Describe your simulation')).toBeNull();
     expect(screen.getByRole('button', { name: 'Single protein' })).toBeTruthy();
     expect(screen.getByLabelText('Production (ns)')).toBeTruthy();
-    expect(container.querySelector('.mdp-main')?.contains(screen.getByLabelText('Production (ns)'))).toBe(true);
+    expect(container.querySelector('.mdp-files-panel')?.contains(screen.getByLabelText('Production (ns)'))).toBe(true);
     expect(screen.getByRole('button', { name: 'Generate project' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'MD Expert' })).toBeTruthy();
+    expect(screen.getByLabelText('3D structure viewer')).toBeTruthy();
+    expect(screen.getByText('Upload a PDB, MOL2, or SDF to view the structure')).toBeTruthy();
   });
 
   it('applies setup conditions from expert chat without overwriting manually edited fields', async () => {

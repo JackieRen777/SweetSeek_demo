@@ -37,6 +37,28 @@ echo ""
 
 cd "${PROJECT_ROOT}"
 
+CURRENT_BRANCH="$(git branch --show-current)"
+if [[ "${CURRENT_BRANCH}" != "main" ]]; then
+  echo "❌ 生产环境只能从 main 分支发布，当前分支: ${CURRENT_BRANCH:-detached HEAD}"
+  exit 1
+fi
+
+if [[ -n "$(git status --porcelain --untracked-files=normal)" ]]; then
+  echo "❌ 工作区存在未提交修改，拒绝发布"
+  git status --short
+  exit 1
+fi
+
+git fetch origin main
+LOCAL_HEAD="$(git rev-parse HEAD)"
+REMOTE_HEAD="$(git rev-parse origin/main)"
+if [[ "${LOCAL_HEAD}" != "${REMOTE_HEAD}" ]]; then
+  echo "❌ 本地 main 与 origin/main 不一致，拒绝发布"
+  echo "本地: ${LOCAL_HEAD}"
+  echo "远程: ${REMOTE_HEAD}"
+  exit 1
+fi
+
 echo "[1/6] 本地构建前端..."
 cd frontend-react
 npm ci --silent

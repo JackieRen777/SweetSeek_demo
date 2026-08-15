@@ -164,6 +164,8 @@ chat_service = services.chat_service
 
 from services.md_builder_api import create_md_builder_blueprint
 app.register_blueprint(create_md_builder_blueprint(lambda: llm_client))
+from services.docking_api import create_docking_blueprint
+app.register_blueprint(create_docking_blueprint())
 
 # 双蛋白 RAG 系统（独立实例）
 from persistent_storage import PersistentRAGSystem

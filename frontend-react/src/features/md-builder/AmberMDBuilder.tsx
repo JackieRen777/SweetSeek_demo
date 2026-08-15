@@ -1,20 +1,23 @@
 import { useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import {
   AlertTriangle, Bot, Check, ChevronDown, Download, FileArchive, FileCode2,
-  Loader2, Plus, RefreshCw, Send, Upload, WandSparkles, X,
+  Loader2, RefreshCw, Send, Upload, WandSparkles, X,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './amber-md-builder.css';
+import StructureViewer from './StructureViewer';
+import Docking from '../docking/Docking';
+import type { SelectedDockingPose } from '../docking/Docking';
 
-type SystemChoice = 'auto' | 'single_protein' | 'protein_protein' | 'protein_ligand';
-type Tab = 'setup' | 'files' | 'expert';
+type SystemChoice = 'single_protein' | 'protein_protein' | 'protein_ligand';
+type Tab = 'setup' | 'files' | 'expert' | 'docking';
 type ChainGroup = 'partner1' | 'partner2' | 'excluded';
 
 interface ChainInfo { id: string; residues: number; name: string }
 interface Inspection {
   filename: string;
-  format: 'pdb' | 'mol2';
+  format: 'pdb' | 'mol2' | 'sdf';
   atoms: number;
   residues: number;
   chains: ChainInfo[];
@@ -93,14 +96,8 @@ const GENERATED_FILES = [
 
 function resolvedSetup(choice: SystemChoice, structures: StructureEntry[]) {
   const pdbs = structures.filter(item => item.inspection.format === 'pdb');
-  const mol2s = structures.filter(item => item.inspection.format === 'mol2');
-  let system = choice;
-  if (choice === 'auto') {
-    if (pdbs.length === 1 && mol2s.length === 1) system = 'protein_ligand';
-    else if (pdbs.length === 2) system = 'protein_protein';
-    else if (pdbs.length === 1 && pdbs[0].inspection.chains.length > 1) system = 'protein_protein';
-    else system = 'single_protein';
-  }
+  const mol2s = structures.filter(item => item.inspection.format === 'mol2' || item.inspection.format === 'sdf');
+  const system = choice;
   const inputMode = system === 'protein_protein'
     ? (pdbs.length === 2 ? 'two_partners' : 'single_complex')
     : 'single_structure';
@@ -109,14 +106,11 @@ function resolvedSetup(choice: SystemChoice, structures: StructureEntry[]) {
 
 export default function AmberMDBuilder() {
   const [tab, setTab] = useState<Tab>('setup');
-  const [systemChoice, setSystemChoice] = useState<SystemChoice>('auto');
+  const [systemChoice, setSystemChoice] = useState<SystemChoice>('single_protein');
   const [structures, setStructures] = useState<StructureEntry[]>([]);
   const [chainGroups, setChainGroups] = useState<Record<string, ChainGroup>>({});
   const [parameters, setParameters] = useState<Parameters>(DEFAULT_PARAMETERS);
   const [lockedFields, setLockedFields] = useState<Set<string>>(new Set());
-  const [pdbId, setPdbId] = useState('');
-  const [unit, setUnit] = useState<'asymmetric' | 'assembly'>('asymmetric');
-  const [assemblyId, setAssemblyId] = useState(1);
   const [busy, setBusy] = useState<'inspect' | 'generate' | null>(null);
   const [chatBusy, setChatBusy] = useState(false);
   const [expertInput, setExpertInput] = useState('');
@@ -124,8 +118,13 @@ export default function AmberMDBuilder() {
   const [suggestedUpdates, setSuggestedUpdates] = useState<Partial<Parameters> | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [viewerContents, setViewerContents] = useState<Array<{ name: string; format: string; text: string }>>([]);
   const [download, setDownload] = useState<{ url: string; name: string } | null>(null);
+  const [dockingPose, setDockingPose] = useState<SelectedDockingPose | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const partner1InputRef = useRef<HTMLInputElement>(null);
+  const partner2InputRef = useRef<HTMLInputElement>(null);
+  const ligandInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const setup = useMemo(() => resolvedSetup(systemChoice, structures), [systemChoice, structures]);
   const complexChains = setup.inputMode === 'single_complex' ? setup.pdbs[0]?.inspection.chains ?? [] : [];
@@ -136,8 +135,14 @@ export default function AmberMDBuilder() {
   }, [download]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ block: 'end' });
+    if (typeof chatEndRef.current?.scrollIntoView === 'function') chatEndRef.current.scrollIntoView({ block: 'end' });
   }, [expertMessages, chatBusy]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(structures.filter(item => item.file).map(async item => ({ name: item.filename, format: item.inspection.format, text: await item.file!.text() }))).then(items => { if (!cancelled) setViewerContents(items); });
+    return () => { cancelled = true; };
+  }, [structures]);
 
   const scrollPanel = (event: WheelEvent<HTMLElement>) => {
     const panel = event.currentTarget;
@@ -164,9 +169,9 @@ export default function AmberMDBuilder() {
     setStructures(previous => {
       const combined = [...previous, ...entries].slice(0, 3);
       const pdbs = combined.filter(item => item.inspection.format === 'pdb');
-      const mol2s = combined.filter(item => item.inspection.format === 'mol2');
+      const mol2s = combined.filter(item => item.inspection.format === 'mol2' || item.inspection.format === 'sdf');
       if (pdbs.length > 2 || mol2s.length > 1) {
-        setError('Use at most two PDB files and one MOL2 file.');
+        setError('Use at most two PDB files and one MOL2 or SDF file.');
         return previous;
       }
       if (pdbs.length === 1 && pdbs[0].inspection.chains.length === 2) {
@@ -186,33 +191,24 @@ export default function AmberMDBuilder() {
     Array.from(files).forEach(file => form.append('files', file));
     try {
       const response = await fetch('/api/md-builder/inspect', { method: 'POST', body: form });
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: { structures?: Inspection[]; error?: string };
+      try {
+        data = JSON.parse(responseText) as { structures?: Inspection[]; error?: string };
+      } catch {
+        throw new Error(responseText.trim().startsWith('<!doctype') || responseText.trim().startsWith('<html')
+          ? 'MD backend is not serving this route. Restart the Flask backend on port 5001 and try again.'
+          : `MD backend returned an invalid response (${response.status}).`);
+      }
       if (!response.ok) throw new Error(data.error || 'Could not inspect the files.');
       const selectedFiles = Array.from(files);
-      addEntries(data.structures.map((inspection: Inspection, index: number) => ({
+      addEntries((data.structures || []).map((inspection: Inspection, index: number) => ({
         source: 'upload', filename: inspection.filename, inspection,
         file: selectedFiles[index],
       })));
       setNotice('Structures inspected. Review the detected system and chains.');
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'Inspection failed.'); }
     finally { setBusy(null); if (fileInputRef.current) fileInputRef.current.value = ''; }
-  };
-
-  const inspectPdbId = async () => {
-    if (!pdbId.trim()) return;
-    setBusy('inspect'); setError(''); setNotice('');
-    try {
-      const response = await fetch('/api/md-builder/inspect-pdb-id', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pdb_id: pdbId, unit, assembly_id: assemblyId }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Could not retrieve this PDB entry.');
-      addEntries([{ ...data.source, inspection: data.structures[0] }]);
-      setPdbId('');
-      setNotice('RCSB structure inspected. Review the detected system and chains.');
-    } catch (caught) { setError(caught instanceof Error ? caught.message : 'RCSB request failed.'); }
-    finally { setBusy(null); }
   };
 
   const normalizeUpdates = (value: unknown) => {
@@ -317,7 +313,7 @@ export default function AmberMDBuilder() {
     if (structures.some(item => !item.inspection.valid)) return 'Remove unsupported structures before generation.';
     if (setup.system === 'single_protein' && (setup.pdbs.length !== 1 || setup.mol2s.length)) return 'Single protein requires one PDB file.';
     if (setup.system === 'protein_protein' && setup.pdbs.length < 1) return 'Protein-protein requires one complex or two PDB files.';
-    if (setup.system === 'protein_ligand' && (setup.pdbs.length !== 1 || setup.mol2s.length !== 1)) return 'Protein-ligand requires one PDB and one MOL2 file.';
+    if (setup.system === 'protein_ligand' && (setup.pdbs.length !== 1 || setup.mol2s.length !== 1)) return 'Protein-ligand requires one PDB and one MOL2 or SDF file.';
     if (setup.system === 'protein_ligand' && parameters.charge_method === 'existing' && !canUseExistingCharges) return 'No usable atomic charges were detected in the MOL2 file.';
     if (setup.inputMode === 'single_complex') {
       const p1 = Object.values(chainGroups).some(value => value === 'partner1');
@@ -335,6 +331,7 @@ export default function AmberMDBuilder() {
     const partner2 = Object.entries(chainGroups).filter(([, group]) => group === 'partner2').map(([chain]) => chain);
     const config = {
       ...parameters,
+      docking_pose: dockingPose ? { id: dockingPose.id, rank: dockingPose.rank, score: dockingPose.score, job_id: dockingPose.jobId } : null,
       system_type: setup.system,
       input_mode: setup.inputMode,
       structures: structures.map(({ source, filename, pdb_id, unit: sourceUnit, assembly_id }) => ({
@@ -346,6 +343,7 @@ export default function AmberMDBuilder() {
     const form = new FormData();
     form.append('config', JSON.stringify(config));
     structures.forEach(item => { if (item.file) form.append('files', item.file, item.filename); });
+    if (dockingPose) form.append('docking_pose', new File([dockingPose.structure], 'docked_pose.pdb', { type: 'chemical/x-pdb' }));
     try {
       const response = await fetch('/api/md-builder/generate', { method: 'POST', body: form });
       if (!response.ok) {
@@ -361,15 +359,15 @@ export default function AmberMDBuilder() {
   };
 
   const parameterPanel = (
-    <div className="mdp-parameters">
+    <div className="mdp-parameters mdp-parameters-inline">
       <div className="mdp-section-heading"><div><span>03</span><h2>Review parameters</h2></div><span className="mdp-lock-count">{lockedFields.size} edited</span></div>
-      <label>Project name<input value={parameters.project_name} onChange={event => updateParameter('project_name', event.target.value)} /></label>
-      <div className="mdp-field-grid">
+      <div className="mdp-parameter-row">
+        <label className="mdp-project-field">Project name<input value={parameters.project_name} onChange={event => updateParameter('project_name', event.target.value)} /></label>
         <label>Production (ns)<input type="number" min="0.1" value={parameters.simulation_time_ns} onChange={event => updateParameter('simulation_time_ns', Number(event.target.value))} /></label>
         <label>Temperature (K)<input type="number" value={parameters.temperature_k} onChange={event => updateParameter('temperature_k', Number(event.target.value))} /></label>
+        <label className="mdp-preset-field">Protocol preset<select value={parameters.preset} onChange={event => updateParameter('preset', event.target.value as Parameters['preset'])}><option value="standard">Standard · ff19SB + OPC</option><option value="compatibility">Compatibility · ff14SB + TIP3P</option></select></label>
+        <label>Salt<select value={parameters.salt_molar} onChange={event => updateParameter('salt_molar', Number(event.target.value))}><option value={0}>Neutralize only</option><option value={0.15}>Approx. 0.15 M NaCl</option></select></label>
       </div>
-      <label>Protocol preset<select value={parameters.preset} onChange={event => updateParameter('preset', event.target.value as Parameters['preset'])}><option value="standard">Standard · ff19SB + OPC</option><option value="compatibility">Compatibility · ff14SB + TIP3P</option></select></label>
-      <label>Salt<select value={parameters.salt_molar} onChange={event => updateParameter('salt_molar', Number(event.target.value))}><option value={0}>Neutralize only</option><option value={0.15}>Approx. 0.15 M NaCl</option></select></label>
       {setup.system === 'protein_ligand' && <div className="mdp-ligand-fields">
         <label>Ligand charges<select value={parameters.charge_method} onChange={event => updateParameter('charge_method', event.target.value as Parameters['charge_method'])}><option value="am1bcc">AM1-BCC (recommended)</option><option value="resp">RESP · requires Gaussian</option><option value="existing" disabled={!canUseExistingCharges}>Use existing MOL2 charges{canUseExistingCharges ? '' : ' · not detected'}</option></select></label>
         <div className="mdp-field-grid"><label>Net charge<input type="number" value={parameters.ligand_net_charge} onChange={event => updateParameter('ligand_net_charge', Number(event.target.value))} /></label><label>Multiplicity<input type="number" min="1" value={parameters.ligand_multiplicity} onChange={event => updateParameter('ligand_multiplicity', Number(event.target.value))} /></label></div>
@@ -391,30 +389,44 @@ export default function AmberMDBuilder() {
   );
 
   return <div className="mdp-shell" aria-label="AMBER MD Builder">
-    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['setup', 'files', 'expert'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
+    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['docking', 'setup', 'files', 'expert'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
     {(error || notice) && <div className={`mdp-banner ${error ? 'error' : 'success'}`}>{error ? <AlertTriangle size={16} /> : <Check size={16} />}<span>{error || notice}</span><button onClick={() => { setError(''); setNotice(''); }}><X size={15} /></button></div>}
-    <div className="mdp-workspace">
+    {tab === 'docking' ? <div className="mdp-docking-inline"><Docking onPoseSelected={setDockingPose} /></div> : <div className="mdp-workspace">
       <main className={`mdp-main overflow-y-auto ${tab !== 'setup' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
         <section className="mdp-section">
           <div className="mdp-section-heading"><div><span>01</span><h2>Select system</h2></div><span className="mdp-detected">Detected: {String(setup.system).replaceAll('_', ' ')}</span></div>
-          <div className="mdp-segments">{([['auto', 'Auto'], ['single_protein', 'Single protein'], ['protein_protein', 'Protein-protein'], ['protein_ligand', 'Protein-ligand']] as [SystemChoice, string][]).map(([value, label]) => <button key={value} className={systemChoice === value ? 'active' : ''} onClick={() => setSystemChoice(value)}>{label}</button>)}</div>
+          <div className="mdp-segments">{([['single_protein', 'Single protein'], ['protein_protein', 'Protein-protein'], ['protein_ligand', 'Protein-ligand']] as [SystemChoice, string][]).map(([value, label]) => <button key={value} className={systemChoice === value ? 'active' : ''} onClick={() => setSystemChoice(value)}>{label}</button>)}</div>
         </section>
 
         <section className="mdp-section">
           <div className="mdp-section-heading"><div><span>02</span><h2>Provide structures</h2></div><span>{structures.length}/3 inputs</span></div>
           <div className="mdp-input-actions">
-            <button className="mdp-upload" onClick={() => fileInputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload PDB or MOL2</strong><small>Files stay in memory for this request only</small></span></button>
-            <input ref={fileInputRef} type="file" multiple accept=".pdb,.ent,.mol2" hidden onChange={event => inspectFiles(event.target.files)} />
-            <div className="mdp-pdb-entry"><div className="mdp-pdb-line"><input value={pdbId} maxLength={4} placeholder="PDB ID" onChange={event => setPdbId(event.target.value.toUpperCase())} /><button onClick={inspectPdbId} disabled={busy !== null || pdbId.length !== 4}>{busy === 'inspect' ? <Loader2 className="mdp-spin" size={16} /> : <Plus size={16} />} Add</button></div><div className="mdp-unit-row"><select value={unit} onChange={event => setUnit(event.target.value as typeof unit)}><option value="asymmetric">Asymmetric unit</option><option value="assembly">Biological assembly</option></select>{unit === 'assembly' && <input aria-label="Assembly ID" type="number" min="1" max="99" value={assemblyId} onChange={event => setAssemblyId(Number(event.target.value))} />}</div></div>
+            {systemChoice === 'single_protein' && <>
+              <button className="mdp-upload" onClick={() => fileInputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload PDB</strong><small>Files stay in memory for this request only</small></span></button>
+              <input ref={fileInputRef} type="file" multiple accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
+            </>}
+            {systemChoice === 'protein_protein' && <div className="mdp-upload-pair">
+              <button className="mdp-upload" onClick={() => partner1InputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload receptor protein</strong><small>PDB file</small></span></button>
+              <input ref={partner1InputRef} type="file" accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
+              <button className="mdp-upload" onClick={() => partner2InputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload ligand protein</strong><small>PDB file</small></span></button>
+              <input ref={partner2InputRef} type="file" accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
+            </div>}
+            {systemChoice === 'protein_ligand' && <div className="mdp-upload-pair">
+              <button className="mdp-upload" onClick={() => partner1InputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload receptor protein</strong><small>PDB file</small></span></button>
+              <input ref={partner1InputRef} type="file" accept=".pdb,.ent" hidden onChange={event => inspectFiles(event.target.files)} />
+              <button className="mdp-upload" onClick={() => ligandInputRef.current?.click()} disabled={busy !== null}><Upload size={18} /><span><strong>Upload ligand molecule</strong><small>MOL2 or SDF file</small></span></button>
+              <input ref={ligandInputRef} type="file" accept=".mol2,.sdf" hidden onChange={event => inspectFiles(event.target.files)} />
+            </div>}
           </div>
           <div className="mdp-structure-list">{structures.map((item, index) => <div className="mdp-structure-row" key={`${item.filename}-${index}`}><FileCode2 size={18} /><div><strong>{item.filename}</strong><span>{item.inspection.format.toUpperCase()} · {item.inspection.atoms.toLocaleString()} atoms · {item.inspection.chains.length || 1} {item.inspection.format === 'pdb' ? 'chains' : 'molecule'}</span>{item.inspection.warnings.map(warning => <small key={warning}>{warning}</small>)}</div><button title="Remove structure" onClick={() => setStructures(previous => previous.filter((_, row) => row !== index))}><X size={16} /></button></div>)}</div>
+          <StructureViewer contents={viewerContents} />
           {complexChains.length > 1 && <div className="mdp-chain-table"><div className="mdp-chain-header"><span>Chain</span><span>Residues</span><span>Assignment</span></div>{complexChains.map(chain => <div className="mdp-chain-row" key={chain.id}><strong>{chain.id === '_' ? 'Blank' : chain.id}</strong><span>{chain.residues}</span><select aria-label={`Assign chain ${chain.id}`} value={chainGroups[chain.id] || 'excluded'} onChange={event => setChainGroups(previous => ({ ...previous, [chain.id]: event.target.value as ChainGroup }))}><option value="partner1">Partner 1</option><option value="partner2">Partner 2</option><option value="excluded">Excluded</option></select></div>)}</div>}
         </section>
 
-        <section className="mdp-section mdp-parameter-section">{parameterPanel}</section>
       </main>
 
       <section className={`mdp-files-panel overflow-y-auto ${tab !== 'files' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
+        <section className="mdp-section mdp-parameter-section">{parameterPanel}</section>
         <div className="mdp-section-heading"><div><span>04</span><h2>Generate & download</h2></div></div>
         <div className="mdp-protocol-summary"><strong>{parameters.preset === 'standard' ? 'Standard soluble-protein protocol' : 'Compatibility protocol'}</strong><span>{parameters.protein_force_field} · {parameters.water_model.replace('BOX', '')} · {parameters.simulation_time_ns} ns NPT</span></div>
         <div className="mdp-file-tree">{[...GENERATED_FILES, ...(setup.system === 'protein_ligand' && parameters.charge_method !== 'existing' ? ['prepare_lig.sh'] : [])].map(file => <div key={file}><FileCode2 size={14} />{file}</div>)}</div>
@@ -441,6 +453,6 @@ export default function AmberMDBuilder() {
         {suggestedUpdates && <div className="mdp-suggested-updates"><div><strong>Suggested parameter changes</strong><span>{Object.entries(suggestedUpdates).map(([key, value]) => `${PARAMETER_LABELS[key as keyof Parameters] || key}: ${value}`).join(' · ')}</span></div><button onClick={() => applyExpertUpdates(suggestedUpdates, true)}>Apply changes</button></div>}
         <div className="mdp-expert-composer"><textarea aria-label="Ask MD Expert" value={expertInput} maxLength={12000} placeholder="Ask about setup, logs, instability, unbinding, or AMBER input files..." onChange={event => setExpertInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void sendExpertMessage(); } }} /><button aria-label="Send to MD Expert" title="Send message" onClick={() => void sendExpertMessage()} disabled={chatBusy || !expertInput.trim()}>{chatBusy ? <Loader2 className="mdp-spin" size={17} /> : <Send size={17} />}</button></div>
       </aside>
-    </div>
+    </div>}
   </div>;
 }
