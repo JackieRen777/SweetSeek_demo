@@ -489,8 +489,7 @@ class PersistentRAGSystem:
                 if self.index is None:
                     self.index = VectorStoreIndex.from_documents(documents)
                 else:
-                    for doc in documents:
-                        self.index.insert(doc)
+                    self._insert_document_batch(documents)
 
             if self.index is None:
                 msg = "文档读取完成但未生成有效索引"
@@ -515,6 +514,22 @@ class PersistentRAGSystem:
             if self.last_build_report:
                 self.last_build_report["status"] = "failed"
             return False
+
+    def _insert_document_batch(self, documents: List[Any]) -> None:
+        """Transform and embed one file batch together to avoid per-document model calls."""
+        if self.index is None:
+            raise ValueError("索引未初始化")
+
+        from llama_index.core.ingestion import run_transformations
+
+        nodes = run_transformations(
+            documents,
+            self.index._transformations,
+            show_progress=False,
+        )
+        self.index.insert_nodes(nodes)
+        for document in documents:
+            self.index.docstore.set_document_hash(document.id_, document.hash)
 
     def load_existing_index(self) -> bool:
         """仅加载已有索引；不存在时返回 False。"""
