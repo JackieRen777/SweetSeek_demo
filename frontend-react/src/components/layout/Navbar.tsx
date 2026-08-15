@@ -37,15 +37,10 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
       ],
     },
     {
-      label: 'Encapsulation',
-      items: [
-        { label: 'Encapsulation Q&A', index: 7, feature: 'encapsulation' },
-      ],
-    },
-    {
       label: 'Proteoglycan',
       items: [
         { label: 'Proteoglycan Q&A', index: 9, feature: 'proteoglycan' },
+        { label: 'Encapsulation Q&A', index: 7, feature: 'encapsulation' },
       ],
     },
   ];
