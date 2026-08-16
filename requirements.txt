@@ -7,6 +7,7 @@ llama-index-llms-openai>=0.6.25
 
 # 向量数据库
 faiss-cpu==1.13.2
+ijson>=3.3,<4
 
 # LLM依赖
 openai>=1.12.0

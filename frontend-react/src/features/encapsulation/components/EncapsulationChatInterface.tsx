@@ -28,7 +28,24 @@ const EncapsulationChatInterface: React.FC<{ config?: ResearchQAConfig }> = ({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    fetch(`${config.apiBase}/prewarm`, { method: 'POST' }).catch(() => undefined);
+    const prepareKnowledgeBase = async () => {
+      try {
+        const healthResponse = await fetch(`${config.apiBase}/health`);
+        const health = await healthResponse.json().catch(() => ({}));
+        if (health.status === 'maintenance' || health.enabled === false) {
+          setError(health.error || '该功能维护中');
+          return;
+        }
+        const response = await fetch(`${config.apiBase}/prewarm`, { method: 'POST' });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          setError(payload.error || '知识库暂时不可用');
+        }
+      } catch {
+        setError('知识库服务暂时不可用');
+      }
+    };
+    void prepareKnowledgeBase();
   }, [config.apiBase]);
 
   useEffect(() => {
