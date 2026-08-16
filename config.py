@@ -101,6 +101,16 @@ class DualRAGConfig(RAGConfig):
         )
 
 
+@dataclass
+class ProteoglycanRAGConfig(RAGConfig):
+    """Protein-polysaccharide defaults sized for the production ECS."""
+
+    target_min: int = 8
+    target_max: int = 16
+    max_top_k: int = 80
+    hard_top_k: int = 120
+
+
 class Config:
     """Base configuration."""
     # Base Paths
@@ -184,4 +194,4 @@ config = DevelopmentConfig() if os.getenv('FLASK_ENV') == 'development' else Pro
 # RAG parameter configs (single source of truth)
 sweet_rag_config = RAGConfig.from_env(prefix="SWEET")
 dual_rag_config = DualRAGConfig.from_env()
-proteoglycan_rag_config = RAGConfig.from_env(prefix="PROTEOGLYCAN")
+proteoglycan_rag_config = ProteoglycanRAGConfig.from_env(prefix="PROTEOGLYCAN")

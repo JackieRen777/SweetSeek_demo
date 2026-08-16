@@ -112,7 +112,17 @@ const EncapsulationChatInterface: React.FC<{ config?: ResearchQAConfig }> = ({
       let buffer = '';
 
       while (true) {
-        const { done, value } = await reader.read();
+        let timeoutId: number | undefined;
+        const result = await Promise.race([
+          reader.read(),
+          new Promise<never>((_, reject) => {
+            timeoutId = window.setTimeout(
+              () => reject(new Error('问答服务响应超时，请稍后重试')),
+              240_000,
+            );
+          }),
+        ]).finally(() => window.clearTimeout(timeoutId));
+        const { done, value } = result;
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
         const events = buffer.split('\n\n');
@@ -125,6 +135,7 @@ const EncapsulationChatInterface: React.FC<{ config?: ResearchQAConfig }> = ({
           if (data.type === 'status') setStatus(data.message || '正在生成答案...');
           if (data.type === 'answer_start') setStatus('');
           if (data.type === 'references') {
+            setStatus('正在生成答案...');
             updateAssistant((message) => ({
               ...message,
               references: (data.references || []) as EncapsulationReference[],

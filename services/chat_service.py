@@ -207,7 +207,15 @@ class ChatService:
             yield self._event("start", message="开始检索文献...")
             expanded_query = self._expand_query(question)
             yield self._event("status", message="正在检索相关文献...")
+            retrieval_started = time.perf_counter()
             retrieval = self.pipeline.retrieve(expanded_query, similarity_threshold, max_results, question)
+            self.logger.info(
+                "%s retrieval completed in %.2fs: %s chunks, %s references",
+                self.mode,
+                time.perf_counter() - retrieval_started,
+                retrieval.stats.get("after_threshold", 0),
+                retrieval.stats.get("final_references", 0),
+            )
             if not retrieval.retrieved_chunks:
                 yield self._event("references", references=[])
                 yield self._event(
@@ -220,9 +228,12 @@ class ChatService:
 
             stats = retrieval.stats
             yield self._event("status", message=f"找到 {stats['after_threshold']} 个相关文本块")
-            yield self._event("status", message=f"去重后找到 {stats['unique_papers']} 篇唯一文献")
+            yield self._event("status", message=f"筛选出 {stats['final_references']} 篇核心文献")
             rich_references = serialize_encapsulation_references(
-                retrieval.references, retrieval.unique_papers_dict
+                retrieval.references,
+                retrieval.unique_papers_dict,
+                max_chunks=1 if self.mode == "proteoglycan" else None,
+                text_limit=800 if self.mode == "proteoglycan" else 1600,
             )
             yield self._event("references", references=rich_references)
             yield self._event("retrieval_stats", stats=stats, warning=retrieval.warning)

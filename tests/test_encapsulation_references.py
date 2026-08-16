@@ -75,6 +75,20 @@ def test_reference_payload_contains_primary_chunk_without_pdf_delivery_fields():
     assert "pdf_url" not in payload[0]
 
 
+def test_reference_payload_can_be_compacted_for_streaming():
+    path = "/papers/example.pdf"
+    refs = [{"ref_id": "ref_1", "file_path": path, "title": "Example"}]
+    payload = serialize_encapsulation_references(
+        refs,
+        {path: {"chunks": [DummyChunk(), DummyChunk()]}},
+        max_chunks=1,
+        text_limit=20,
+    )
+
+    assert len(payload[0]["chunks"]) == 1
+    assert len(payload[0]["primary_chunk"]["text"]) <= 20
+
+
 def test_resolve_document_path_rejects_invalid_id_and_stays_in_root(tmp_path: Path):
     root = tmp_path / "papers"
     root.mkdir()

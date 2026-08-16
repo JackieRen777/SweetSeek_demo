@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import app as app_module
-from config import RAGConfig, proteoglycan_rag_config
+from config import ProteoglycanRAGConfig, RAGConfig, proteoglycan_rag_config
 from query_expander import ProteoglycanQueryExpander
 from services.chat_service import ChatService
 
@@ -26,6 +26,12 @@ def test_proteoglycan_config_uses_its_own_prefix(monkeypatch):
 
     service = ChatService(MagicMock(), ProteoglycanQueryExpander(), MagicMock(), None, mode="proteoglycan")
     assert service.qa_max_tokens == proteoglycan_rag_config.qa_max_tokens
+
+
+def test_proteoglycan_defaults_keep_stream_payload_bounded():
+    config = ProteoglycanRAGConfig()
+    assert config.target_max == 16
+    assert config.hard_top_k == 120
 
 
 def test_query_expansion_and_expert_prompt_are_domain_specific():

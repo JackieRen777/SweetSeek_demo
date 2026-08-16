@@ -68,7 +68,7 @@ def format_gbt7714(metadata: Dict[str, Any]) -> str:
     return re.sub(r"\s+", " ", citation).strip()
 
 
-def _chunk_payload(chunk: Any, index: int) -> Dict[str, Any]:
+def _chunk_payload(chunk: Any, index: int, text_limit: int = 1600) -> Dict[str, Any]:
     metadata = getattr(chunk, "metadata", {}) or {}
     text = re.sub(r"\s+", " ", str(getattr(chunk, "text", "") or "")).strip()
     node_id = getattr(chunk, "node_id", None) or getattr(getattr(chunk, "node", None), "node_id", None)
@@ -88,21 +88,30 @@ def _chunk_payload(chunk: Any, index: int) -> Dict[str, Any]:
     return {
         "chunk_id": chunk_id,
         "page": page,
-        "text": text[:1600],
+        "text": text[:text_limit],
         "score": score,
         "rank": index,
     }
 
 
 def serialize_research_references(
-    references: Iterable[Dict[str, Any]], unique_papers: Dict[str, Any]
+    references: Iterable[Dict[str, Any]],
+    unique_papers: Dict[str, Any],
+    *,
+    max_chunks: Optional[int] = None,
+    text_limit: int = 1600,
 ) -> List[Dict[str, Any]]:
     payload: List[Dict[str, Any]] = []
     for ref in references:
         file_path = str(ref.get("file_path") or "")
         paper = unique_papers.get(file_path, {})
-        chunks = [_chunk_payload(chunk, idx) for idx, chunk in enumerate(paper.get("chunks", []), 1)]
+        chunks = [
+            _chunk_payload(chunk, idx, text_limit)
+            for idx, chunk in enumerate(paper.get("chunks", []), 1)
+        ]
         chunks.sort(key=lambda item: item["score"], reverse=True)
+        if max_chunks is not None:
+            chunks = chunks[:max(0, max_chunks)]
         item = {
             "ref_id": ref.get("ref_id", "ref_0"),
             "title": _clean(ref.get("title")) or _clean(ref.get("filename")) or "Untitled",
