@@ -93,8 +93,10 @@ rsync -az --delete \
   --exclude="SweetSeek_paper_database" \
   --exclude="sweet_related_paper" \
   --exclude="Dual_Protein_related_paper/papers" \
+  --exclude="Dual_Protein_related_paper/metadata.json" \
   --exclude="Dual_Protein_related_paper/metadata.json.*" \
   --exclude="Encapsulation_related_paper/papers" \
+  --exclude="Encapsulation_related_paper/metadata.json" \
   --exclude="Encapsulation_related_paper/metadata.json.*" \
   ./ "${SSH_TARGET}:${SERVER_PATH%/}/"
 
