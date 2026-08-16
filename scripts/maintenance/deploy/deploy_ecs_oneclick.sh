@@ -68,7 +68,7 @@ cd "${PROJECT_ROOT}"
 
 echo "[2/6] 同步代码到新 ECS..."
 echo "rsync 目标: ${SSH_TARGET}:${SERVER_PATH%/}/"
-"${SSH_BASE[@]}" "mkdir -p /www/backups/sweetseek; if [[ -d '${SERVER_PATH}' ]]; then tar --exclude=venv --exclude=models --exclude=SweetSeek_paper_database --exclude=storage_proteoglycan --exclude=storage_encapsulation --exclude=storage_dual_protein --exclude=faiss_db -czf '/www/backups/sweetseek/code-$(date +%Y%m%dT%H%M%S).tar.gz' -C '${SERVER_PATH}' .; fi"
+"${SSH_BASE[@]}" "mkdir -p /www/backups/sweetseek; if [[ -d '${SERVER_PATH}' ]]; then tar --exclude=venv --exclude=models --exclude=SweetSeek_paper_database --exclude=storage_proteoglycan --exclude=storage_encapsulation --exclude=storage_dual_protein --exclude=faiss_db --exclude=.git --exclude=frontend-react/node_modules --exclude=frontend-react/dist --exclude=data --exclude=tmp --exclude=outputs --exclude=logs -czf '/www/backups/sweetseek/code-$(date +%Y%m%dT%H%M%S).tar.gz' -C '${SERVER_PATH}' .; fi"
 rsync -az --delete \
   --rsync-path="mkdir -p '${SERVER_PATH%/}' && rsync" \
   --exclude=".git" \
