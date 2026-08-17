@@ -131,6 +131,12 @@ class Config:
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
     DEEPSEEK_BASE_URL = _normalize_openai_base_url(os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com/v1'))
     DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-reasoner')
+
+    # GLM API (推荐使用: 免费且速度更快的9B模型)
+    USE_GLM = os.getenv('USE_GLM', 'false').lower() in ('true', '1', 'yes')
+    GLM_API_KEY = os.getenv('GLM_API_KEY', os.getenv('DEEPSEEK_API_KEY'))  # 兼容
+    GLM_BASE_URL = os.getenv('GLM_BASE_URL', 'https://open.bigmodel.cn/api/paas/v4')
+    GLM_MODEL = os.getenv('GLM_MODEL', 'glm-z1-9b-0414')  # 9B小模型,免费且快速
     
     # RAG Settings
     DATA_DIR = str(_SWEETNESS_PATHS.papers)
@@ -155,7 +161,11 @@ class Config:
     )
     
     COLLECTION_NAME = "sweetseek_papers"
-    
+
+    # 混合索引模式 (FAISS + SQLite)
+    USE_HYBRID_INDEX = os.getenv('USE_HYBRID_INDEX', 'false').lower() in ('true', '1', 'yes')
+    HYBRID_INDEX_DIR = "hybrid"  # 相对于persist_dir的子目录
+
     # RAG Retrieval & Generation Settings (Tunable)
     # RAG Top K
     RAG_TOP_K = int(os.getenv("RAG_TOP_K", 5))

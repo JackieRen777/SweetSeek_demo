@@ -17,6 +17,7 @@ const SUGGESTIONS = [
 ];
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const sleep = (milliseconds: number) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
@@ -55,10 +56,22 @@ const ChatInterface: React.FC = () => {
       const message = String(payload.error || response.statusText);
       if (message.includes('未初始化') || message.toLowerCase().includes('not initialized')) {
         setStatus('正在初始化甜味知识库...');
-        const initialization = await fetch('/api/init', { method: 'POST', signal });
-        const initializationPayload = await initialization.json().catch(() => ({}));
-        if (!initialization.ok || !initializationPayload.success) {
-          throw new Error(initializationPayload.error || initializationPayload.message || '甜味知识库初始化失败');
+        const deadline = Date.now() + 10 * 60 * 1000;
+        let initialized = false;
+        while (Date.now() < deadline) {
+          const initialization = await fetch('/api/init', { method: 'POST', signal });
+          const initializationPayload = await initialization.json().catch(() => ({}));
+          if (!initialization.ok && initialization.status !== 202) {
+            throw new Error(initializationPayload.error || initializationPayload.message || '甜味知识库初始化失败');
+          }
+          if (initializationPayload.ready || initializationPayload.status === 'ready') {
+            initialized = true;
+            break;
+          }
+          await sleep(1000);
+        }
+        if (!initialized) {
+          throw new Error('甜味知识库初始化超时，请稍后重试');
         }
         response = await ask();
       } else {

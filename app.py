@@ -153,6 +153,7 @@ dual_protein_dim_fix_lock = threading.Lock()
 dual_protein_last_dim_fix_ts = 0.0
 main_rag_initializing = False
 rag_load_lock = threading.Lock()
+main_rag_init_lock = threading.Lock()
 conversations = []
 
 services = build_services()
@@ -300,6 +301,27 @@ def initialize_rag_system():
         return False
     finally:
         main_rag_initializing = False
+
+
+def start_main_rag_initialization() -> str:
+    """Start exactly one background initialization and return its state."""
+    global main_rag_initializing
+
+    if system_ready:
+        return "ready"
+
+    with main_rag_init_lock:
+        if main_rag_initializing:
+            return "initializing"
+        # Set the flag before starting the thread so concurrent requests cannot
+        # enqueue multiple expensive index loads.
+        main_rag_initializing = True
+
+        def _initialize() -> None:
+            initialize_rag_system()
+
+        threading.Thread(target=_initialize, daemon=True, name="main-rag-init").start()
+    return "initializing"
 
 def initialize_dual_protein_rag():
     """初始化双蛋白RAG系统"""
@@ -537,8 +559,7 @@ def api_list_compounds():
 @handle_api_errors
 @monitor_performance
 def api_init():
-    """初始化系统"""
-    global system_ready
+    """Start RAG initialization without occupying an HTTP worker."""
     
     app_logger.info("收到系统初始化请求")
     
@@ -547,27 +568,20 @@ def api_init():
         app_logger.info(f"系统已初始化，文档数: {stats['total_documents']}")
         return jsonify({
             'success': True,
+            'ready': True,
+            'status': 'ready',
             'message': '系统已经初始化',
             'documents_count': stats['total_documents']
         })
     
-    success = initialize_rag_system()
-    stats = rag_system.get_stats() if success else {}
-
-    if success:
-        app_logger.info(f"系统初始化成功，文档数: {stats.get('total_documents', 0)}")
-    else:
-        app_logger.error("系统初始化失败")
-
-    # 返回详细错误信息以便前端和调用方可见
-    error_msg = getattr(rag_system, 'last_error', None)
-
+    status = start_main_rag_initialization()
     return jsonify({
-        'success': success,
-        'message': '系统初始化成功' if success else '系统初始化失败',
-        'documents_count': stats.get('total_documents', 0),
-        'error': error_msg
-    })
+        'success': True,
+        'ready': status == 'ready',
+        'status': status,
+        'message': '系统已经初始化' if status == 'ready' else '系统正在后台初始化',
+        'documents_count': 0,
+    }), 200 if status == 'ready' else 202
 
 @app.route('/api/ask', methods=['POST'])
 @handle_api_errors
@@ -1187,7 +1201,7 @@ if __name__ != '__main__' and os.getenv('RAG_EAGER_INIT', '').strip().lower() in
     def _background_init_main_rag():
         try:
             app_logger.info("检测到非主程序运行模式，后台初始化 RAG 系统...")
-            initialize_rag_system()
+            start_main_rag_initialization()
         except Exception as e:
             app_logger.error(f"自动初始化失败: {e}")
 
