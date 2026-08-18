@@ -76,6 +76,7 @@ logs/
 # 输出文件
 rag_outputs/
 output/
+outputs/
 temp/
 evaluation/reports/*.json
 evaluation/contexts/*.json
