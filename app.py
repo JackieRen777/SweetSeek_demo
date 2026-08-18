@@ -10,12 +10,18 @@ AI-powered research Q&A system
 import os as _os
 _os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 _os.environ.setdefault("OMP_NUM_THREADS", "1")
+_os.environ.setdefault("MKL_NUM_THREADS", "1")
+_os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+_os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+_os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+_os.environ.setdefault("KMP_BLOCKTIME", "0")
 
 from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
 import time
 from datetime import datetime
+from pathlib import Path
 from persistent_storage import rag_system
 from query_expander import SweetnessQueryExpander, DualProteinQueryExpander, ProteoglycanQueryExpander
 from evidence_ranker import EvidenceRanker
@@ -27,7 +33,6 @@ from config import config
 from logger import setup_logger
 from services.dependencies import build_services
 from knowledge_paths import get_domain_paths
-from services.compact_index import CompactRAGSystem, resolve_current_release
 
 # NOTE: 文件中的函数多数通过 Flask 的 @app.route 装饰器在运行时被调用。
 # 静态分析工具（如 vulture）会将这些运行时注册的路由误判为未使用，
@@ -123,26 +128,6 @@ def _get_json_dict() -> dict:
     """Safely parse JSON body and always return a dict."""
     data = request.get_json(silent=True)
     return data if isinstance(data, dict) else {}
-
-
-def _env_enabled(name: str, default: bool) -> bool:
-    return os.getenv(name, str(default).lower()).strip().lower() in {"1", "true", "yes"}
-
-
-SWEETNESS_ENABLED = _env_enabled("SWEETNESS_ENABLED", True)
-DUAL_PROTEIN_ENABLED = _env_enabled("DUAL_PROTEIN_ENABLED", False)
-ENCAPSULATION_ENABLED = _env_enabled("ENCAPSULATION_ENABLED", False)
-PROTEOGLYCAN_ENABLED = _env_enabled("PROTEOGLYCAN_ENABLED", True)
-
-
-def _maintenance_response(feature: str):
-    return jsonify({
-        "success": False,
-        "status": "maintenance",
-        "error": f"{feature}功能维护中",
-        "error_type": "Maintenance",
-        "retryable": False,
-    }), 503
 
 def _parse_retrieval_params(data: dict, default_threshold: float, default_max_results: int) -> tuple[float, int]:
     similarity_threshold = data.get('similarity_threshold', default_threshold)
@@ -253,10 +238,11 @@ PROTEOGLYCAN_EMPTY_MESSAGE = "Proteoglycan 知识库尚未建立，请先导入 
 
 proteoglycan_system_ready = False
 proteoglycan_initializing = False
-proteoglycan_rag = CompactRAGSystem(
+proteoglycan_rag = PersistentRAGSystem(
     data_dir=PROTEOGLYCAN_DATA_DIR,
     persist_dir=PROTEOGLYCAN_PERSIST_DIR,
     metadata_path=PROTEOGLYCAN_METADATA_PATH,
+    allow_auto_build=False,
 )
 proteoglycan_chat_service = ChatService(
     rag_system=proteoglycan_rag,
@@ -267,7 +253,11 @@ proteoglycan_chat_service = ChatService(
 )
 
 def proteoglycan_index_exists() -> bool:
-    return resolve_current_release(PROTEOGLYCAN_PERSIST_DIR) is not None
+    current = Path(PROTEOGLYCAN_PERSIST_DIR) / "current"
+    if all((current / name).is_file() for name in ("index.faiss", "index.ids.txt", "metadata.db")):
+        return True
+    required = ("docstore.json", "index_store.json", "default__vector_store.json")
+    return all(os.path.isfile(os.path.join(PROTEOGLYCAN_PERSIST_DIR, name)) for name in required)
 
 def initialize_proteoglycan_rag():
     global proteoglycan_system_ready, proteoglycan_initializing
@@ -430,6 +420,51 @@ def _ensure_dual_protein_dim_consistent() -> bool:
         app_logger.error(f"dual-protein 维度一致性检查失败: {e}")
         return False
 
+
+def _index_exists(rag) -> bool:
+    hybrid = getattr(rag, "_hybrid_index_dir", lambda: None)()
+    if hybrid:
+        return True
+    required = ("docstore.json", "index_store.json", "default__vector_store.json")
+    return all(os.path.isfile(os.path.join(rag.persist_dir, name)) for name in required)
+
+
+from services.rag_runtime import RAGRuntimeCoordinator
+
+rag_runtime = RAGRuntimeCoordinator()
+rag_runtime.register("sweetness", rag_system, initialize_rag_system, lambda: _index_exists(rag_system))
+rag_runtime.register(
+    "dual_protein", dual_protein_rag, initialize_dual_protein_rag,
+    lambda: _index_exists(dual_protein_rag),
+)
+rag_runtime.register(
+    "encapsulation", encapsulation_rag, initialize_encapsulation_rag,
+    lambda: _index_exists(encapsulation_rag),
+)
+rag_runtime.register(
+    "proteoglycan", proteoglycan_rag, initialize_proteoglycan_rag,
+    lambda: _index_exists(proteoglycan_rag),
+)
+
+
+def _prewarm_response(domain: str):
+    payload = rag_runtime.prewarm(domain)
+    payload["message"] = "系统已经初始化" if payload["ready"] else "系统正在后台初始化"
+    return jsonify(payload), 200 if payload["ready"] else 202
+
+
+def _not_ready_stream(domain: str):
+    from flask import Response
+    import json
+
+    payload = rag_runtime.snapshot(domain)
+
+    def events():
+        yield f"event: status\ndata: {json.dumps({'message': f'{domain} 知识库尚未就绪', **payload}, ensure_ascii=False)}\n\n"
+        yield f"event: error\ndata: {json.dumps({'error': '知识库未初始化，请先调用 prewarm 接口'}, ensure_ascii=False)}\n\n"
+
+    return Response(events(), status=202, mimetype="text/event-stream")
+
 # 路由
 @app.route('/')
 def index():
@@ -579,30 +614,14 @@ def api_list_compounds():
 @monitor_performance
 def api_init():
     """Start RAG initialization without occupying an HTTP worker."""
-    if not SWEETNESS_ENABLED:
-        return _maintenance_response("普通甜味问答")
     
     app_logger.info("收到系统初始化请求")
     
     if system_ready:
-        stats = rag_system.get_stats()
-        app_logger.info(f"系统已初始化，文档数: {stats['total_documents']}")
-        return jsonify({
-            'success': True,
-            'ready': True,
-            'status': 'ready',
-            'message': '系统已经初始化',
-            'documents_count': stats['total_documents']
-        })
-    
-    status = start_main_rag_initialization()
-    return jsonify({
-        'success': True,
-        'ready': status == 'ready',
-        'status': status,
-        'message': '系统已经初始化' if status == 'ready' else '系统正在后台初始化',
-        'documents_count': 0,
-    }), 200 if status == 'ready' else 202
+        rag_runtime.mark_ready("sweetness", True)
+    else:
+        rag_runtime.mark_unloaded("sweetness")
+    return _prewarm_response("sweetness")
 
 @app.route('/api/ask', methods=['POST'])
 @handle_api_errors
@@ -611,8 +630,6 @@ def api_ask():
     """
     处理问答请求
     """
-    if not SWEETNESS_ENABLED:
-        return _maintenance_response("普通甜味问答")
     if not system_ready:
         return jsonify({
             'success': False,
@@ -640,67 +657,24 @@ def api_ask():
 @handle_api_errors
 @monitor_performance
 def api_dual_protein_init():
-    """初始化双蛋白系统"""
-    if not DUAL_PROTEIN_ENABLED:
-        return _maintenance_response("双蛋白问答")
-    global dual_protein_system_ready, dual_protein_docs_count_cache
-    if not _ensure_dual_protein_dim_consistent():
-        return jsonify({
-            'success': False,
-            'message': '双蛋白系统初始化失败（索引维度不一致且自动修复失败）',
-            'documents_count': 0
-        }), 500
+    """Compatibility alias for non-blocking dual-protein prewarm."""
     if dual_protein_system_ready:
-        return jsonify({
-            'success': True,
-            'message': '双蛋白系统已经初始化',
-            'documents_count': dual_protein_docs_count_cache
-        })
-    success = initialize_dual_protein_rag()
-    stats = dual_protein_rag.get_stats() if success else {}
-    if success:
-        dual_protein_docs_count_cache = stats.get('total_documents', 0)
-    return jsonify({
-        'success': success,
-        'message': '双蛋白系统初始化成功' if success else '双蛋白系统初始化失败',
-        'documents_count': dual_protein_docs_count_cache if success else 0
-    })
+        rag_runtime.mark_ready("dual_protein", True)
+    return _prewarm_response("dual_protein")
 
 @app.route('/api/dual-protein/prewarm', methods=['POST'])
 @handle_api_errors
 def api_dual_protein_prewarm():
     """触发双蛋白系统后台预热（非阻塞）。"""
-    if not DUAL_PROTEIN_ENABLED:
-        return _maintenance_response("双蛋白问答")
-    global dual_protein_system_ready, dual_protein_initializing
     if dual_protein_system_ready:
-        return jsonify({'success': True, 'status': 'ready'})
-    if dual_protein_initializing:
-        return jsonify({'success': True, 'status': 'initializing'})
-
-    def _warm():
-        try:
-            _ensure_dual_protein_dim_consistent()
-        except Exception as e:
-            app_logger.warning(f"dual-protein 后台预热失败: {e}")
-
-    threading.Thread(target=_warm, daemon=True).start()
-    return jsonify({'success': True, 'status': 'warming'})
+        rag_runtime.mark_ready("dual_protein", True)
+    return _prewarm_response("dual_protein")
 
 @app.route('/api/dual-protein/ask', methods=['POST'])
 @handle_api_errors
 @monitor_performance
 def api_dual_protein_ask():
     """处理双蛋白问答请求"""
-    if not DUAL_PROTEIN_ENABLED:
-        return _maintenance_response("双蛋白问答")
-    if not _ensure_dual_protein_dim_consistent():
-        return jsonify({
-            'success': False,
-            'error': '双蛋白索引维度不一致，且自动修复失败',
-            'error_type': 'DimGuardFailed'
-        }), 500
-
     if not dual_protein_system_ready:
         return jsonify({
             'success': False,
@@ -720,34 +694,13 @@ def api_dual_protein_ask():
         dual_default_max_results,
     )
 
-    try:
-        result = dual_protein_chat_service.ask(question, similarity_threshold, max_results)
-        return jsonify(result)
-    except Exception as e:
-        err = str(e)
-        if "not aligned" in err:
-            app_logger.warning("检测到 dual-protein 向量维度不一致，自动重建索引并重试一次")
-            success = dual_protein_rag.rebuild_index()
-            if success:
-                initialize_dual_protein_rag()
-                result = dual_protein_chat_service.ask(question, similarity_threshold, max_results)
-                return jsonify(result)
-            return jsonify({
-                'success': False,
-                'error': '检测到索引维度不一致，自动重建失败，请稍后重试',
-                'error_type': 'AutoRebuildFailed'
-            }), 500
-        raise
+    result = dual_protein_chat_service.ask(question, similarity_threshold, max_results)
+    return jsonify(result)
 
 @app.route('/api/dual-protein/health', methods=['GET'])
 @handle_api_errors
 def api_dual_protein_health():
     """双蛋白系统健康检查"""
-    if not DUAL_PROTEIN_ENABLED:
-        return jsonify({
-            'success': True, 'status': 'maintenance', 'system_ready': False,
-            'enabled': False, 'error_type': 'Maintenance', 'retryable': False,
-        })
     global dual_protein_docs_count_cache
     stats = dual_protein_rag.get_stats()
     if dual_protein_system_ready and dual_protein_docs_count_cache == 0:
@@ -756,8 +709,10 @@ def api_dual_protein_health():
         dual_metadata_count = len(dual_protein_rag.metadata_storage.get_all_metadata())
     except Exception:
         dual_metadata_count = 0
-    return jsonify({
-        'success': True,
+    if dual_protein_system_ready:
+        rag_runtime.mark_ready("dual_protein", True)
+    payload = rag_runtime.snapshot("dual_protein")
+    return jsonify({**payload,
         'system_ready': dual_protein_system_ready,
         'initializing': dual_protein_initializing,
         'dual_protein_docs_count': dual_protein_docs_count_cache if dual_protein_system_ready else 0,
@@ -770,17 +725,15 @@ def api_dual_protein_health():
 @app.route('/api/embedding/health', methods=['GET'])
 @handle_api_errors
 def api_encapsulation_health():
-    if not ENCAPSULATION_ENABLED:
-        return jsonify({
-            'success': True, 'status': 'maintenance', 'system_ready': False,
-            'enabled': False, 'error_type': 'Maintenance', 'retryable': False,
-        })
     stats = encapsulation_rag.get_stats()
     try:
         count = len(encapsulation_rag.metadata_storage.get_all_metadata())
     except Exception:
         count = 0
-    return jsonify({'success': True, 'system_ready': encapsulation_system_ready, 'initializing': encapsulation_initializing,
+    if encapsulation_system_ready:
+        rag_runtime.mark_ready("encapsulation", True)
+    payload = rag_runtime.snapshot("encapsulation")
+    return jsonify({**payload, 'system_ready': encapsulation_system_ready, 'initializing': encapsulation_initializing,
                     'documents_count': count, 'index_exists': stats.get('index_exists', False),
                     'persist_dir': stats.get('persist_dir', ENCAPSULATION_PERSIST_DIR),
                     'last_error': encapsulation_rag.last_error})
@@ -789,24 +742,17 @@ def api_encapsulation_health():
 @app.route('/api/embedding/prewarm', methods=['POST'])
 @handle_api_errors
 def api_encapsulation_prewarm():
-    if not ENCAPSULATION_ENABLED:
-        return _maintenance_response("包埋问答")
-    if encapsulation_system_ready or encapsulation_initializing:
-        return jsonify({'success': True, 'status': 'ready' if encapsulation_system_ready else 'initializing'})
-    threading.Thread(target=initialize_encapsulation_rag, daemon=True).start()
-    return jsonify({'success': True, 'status': 'warming'})
+    if encapsulation_system_ready:
+        rag_runtime.mark_ready("encapsulation", True)
+    return _prewarm_response("encapsulation")
 
 @app.route('/api/encapsulation/ask_stream', methods=['POST'])
 @app.route('/api/embedding/ask_stream', methods=['POST'])
 @handle_api_errors
 def api_encapsulation_ask_stream():
     from flask import Response, stream_with_context
-    if not ENCAPSULATION_ENABLED:
-        return _maintenance_response("包埋问答")
     if not encapsulation_system_ready:
-        initialize_encapsulation_rag()
-    if not encapsulation_system_ready:
-        return jsonify({'success': False, 'error': 'Encapsulation 知识库未初始化，请先上传 PDF 或稍后重试'}), 400
+        return _not_ready_stream("encapsulation")
     data = _get_json_dict(); question = data.get('question', '').strip()
     if not question:
         return jsonify({'success': False, 'error': '问题不能为空'}), 400
@@ -838,30 +784,18 @@ def api_encapsulation_upload():
 @app.route('/api/proteoglycan/health', methods=['GET'])
 @handle_api_errors
 def api_proteoglycan_health():
-    if not PROTEOGLYCAN_ENABLED:
-        return jsonify({
-            'success': True, 'status': 'maintenance', 'system_ready': False,
-            'enabled': False, 'index_format': 'compact-faiss-sqlite',
-            'error_type': 'Maintenance', 'retryable': False,
-        })
-    stats = proteoglycan_rag.get_stats()
+    try:
+        count = len(proteoglycan_rag.metadata_storage.get_all_metadata())
+    except Exception:
+        count = 0
     if proteoglycan_system_ready:
-        status = 'ready'
-    elif proteoglycan_index_exists() and proteoglycan_rag.last_error:
-        status = 'invalid'
-    else:
-        status = 'unavailable'
-    return jsonify({
-        'success': True,
-        'status': status,
-        'enabled': True,
+        rag_runtime.mark_ready("proteoglycan", True)
+    payload = rag_runtime.snapshot("proteoglycan")
+    return jsonify({**payload,
         'system_ready': proteoglycan_system_ready,
         'initializing': proteoglycan_initializing,
-        'documents_count': stats.get('documents_count', 0),
-        'vector_count': stats.get('vector_count', 0),
+        'documents_count': count,
         'index_exists': proteoglycan_index_exists(),
-        'index_format': stats.get('index_format', 'compact-faiss-sqlite'),
-        'index_version': stats.get('index_version'),
         'persist_dir': PROTEOGLYCAN_PERSIST_DIR,
         'last_error': proteoglycan_rag.last_error,
     })
@@ -869,27 +803,22 @@ def api_proteoglycan_health():
 @app.route('/api/proteoglycan/prewarm', methods=['POST'])
 @handle_api_errors
 def api_proteoglycan_prewarm():
-    if not PROTEOGLYCAN_ENABLED:
-        return _maintenance_response("蛋白多糖问答")
-    if proteoglycan_system_ready or proteoglycan_initializing:
-        return jsonify({'success': True, 'status': 'ready' if proteoglycan_system_ready else 'initializing'})
     if not proteoglycan_index_exists():
-        return jsonify({'success': True, 'status': 'not_indexed'})
-    threading.Thread(target=initialize_proteoglycan_rag, daemon=True).start()
-    return jsonify({'success': True, 'status': 'warming'})
+        payload = rag_runtime.snapshot("proteoglycan")
+        payload.update(state="not_built", status="not_indexed", ready=False, index_exists=False)
+        return jsonify(payload), 202
+    if proteoglycan_system_ready:
+        rag_runtime.mark_ready("proteoglycan", True)
+    return _prewarm_response("proteoglycan")
 
 @app.route('/api/proteoglycan/ask_stream', methods=['POST'])
 @handle_api_errors
 def api_proteoglycan_ask_stream():
     from flask import Response, stream_with_context
-    if not PROTEOGLYCAN_ENABLED:
-        return _maintenance_response("蛋白多糖问答")
     if not proteoglycan_index_exists():
         return jsonify({'success': False, 'error': PROTEOGLYCAN_EMPTY_MESSAGE}), 503
     if not proteoglycan_system_ready:
-        initialize_proteoglycan_rag()
-    if not proteoglycan_system_ready:
-        return jsonify({'success': False, 'error': PROTEOGLYCAN_EMPTY_MESSAGE}), 503
+        return _not_ready_stream("proteoglycan")
     data = _get_json_dict()
     question = data.get('question', '').strip()
     if not question:
@@ -1079,6 +1008,16 @@ def api_clear_conversations():
         'message': '对话历史已清空'
     })
 
+@app.route('/api/live', methods=['GET'])
+def api_live():
+    """Process liveness endpoint that never initializes RAG state."""
+    return jsonify({
+        'status': 'alive',
+        'timestamp': datetime.now().isoformat(),
+        'pid': os.getpid(),
+    })
+
+
 @app.route('/api/health', methods=['GET'])
 def api_health():
     """系统健康检查"""
@@ -1163,6 +1102,14 @@ def api_health():
     except Exception:
         health_status['dual_protein_docs_count'] = 0
     
+    if system_ready:
+        rag_runtime.mark_ready("sweetness", True)
+    health_status["domains"] = {
+        domain: rag_runtime.snapshot(domain)
+        for domain in ("sweetness", "dual_protein", "encapsulation", "proteoglycan")
+    }
+    if not all(item.get("ready") for item in health_status["domains"].values()):
+        health_status['status'] = 'degraded'
     status_code = 200 if health_status['status'] == 'healthy' else 503
     app_logger.debug(f"健康检查: {health_status['status']}")
     return jsonify(health_status), status_code
@@ -1177,8 +1124,6 @@ def api_ask_stream():
     from flask import Response, stream_with_context
     import json
     
-    if not SWEETNESS_ENABLED:
-        return _maintenance_response("普通甜味问答")
     if not system_ready:
         return jsonify({
             'success': False,
@@ -1207,21 +1152,8 @@ def api_dual_protein_ask_stream():
     """双蛋白流式问答 API（Server-Sent Events）"""
     from flask import Response, stream_with_context
 
-    if not DUAL_PROTEIN_ENABLED:
-        return _maintenance_response("双蛋白问答")
-
-    if not _ensure_dual_protein_dim_consistent():
-        return jsonify({
-            'success': False,
-            'error': '双蛋白索引维度不一致，且自动修复失败',
-            'error_type': 'DimGuardFailed'
-        }), 500
-
     if not dual_protein_system_ready:
-        return jsonify({
-            'success': False,
-            'error': '双蛋白系统未初始化，请先调用 /api/dual-protein/init'
-        }), 400
+        return _not_ready_stream("dual_protein")
 
     data = _get_json_dict()
     question = data.get('question', '').strip()
@@ -1236,22 +1168,8 @@ def api_dual_protein_ask_stream():
         dual_default_max_results,
     )
 
-    def _safe_stream():
-        try:
-            yield from dual_protein_chat_service.ask_stream(question, similarity_threshold, max_results)
-        except Exception as e:
-            err = str(e)
-            if "not aligned" in err:
-                app_logger.warning("检测到 dual-protein 向量维度不一致，自动重建索引并重试一次（stream）")
-                success = dual_protein_rag.rebuild_index()
-                if success:
-                    initialize_dual_protein_rag()
-                    yield from dual_protein_chat_service.ask_stream(question, similarity_threshold, max_results)
-                    return
-            raise
-
     return Response(
-        stream_with_context(_safe_stream()),
+        stream_with_context(dual_protein_chat_service.ask_stream(question, similarity_threshold, max_results)),
         mimetype='text/event-stream'
     )
 
@@ -1262,28 +1180,28 @@ def serve_static(filename):
     # 兼容旧路径，或直接返回404
     return jsonify({'error': 'Static files not served by backend'}), 404
 
-# 自动初始化（针对 Gunicorn 等 WSGI 容器）。每个知识域必须独立启用。
-if __name__ != '__main__':
+# 自动初始化（针对 Gunicorn 等 WSGI 容器）
+if __name__ != '__main__' and os.getenv('RAG_EAGER_INIT', '').strip().lower() in {'1', 'true', 'yes'}:
     def _background_init_main_rag():
         try:
             app_logger.info("检测到非主程序运行模式，后台初始化 RAG 系统...")
-            start_main_rag_initialization()
+            rag_runtime.prewarm("sweetness")
         except Exception as e:
             app_logger.error(f"自动初始化失败: {e}")
 
     def _background_init_dual_protein_rag():
         try:
             app_logger.info("检测到非主程序运行模式，后台初始化双蛋白 RAG 系统...")
-            initialize_dual_protein_rag()
+            rag_runtime.prewarm("dual_protein")
         except Exception as e:
             app_logger.error(f"双蛋白自动初始化失败: {e}")
 
-    if SWEETNESS_ENABLED and _env_enabled("RAG_EAGER_INIT_MAIN", False):
-        threading.Thread(target=_background_init_main_rag, daemon=True).start()
-    if DUAL_PROTEIN_ENABLED and _env_enabled("RAG_EAGER_INIT_DUAL_PROTEIN", False):
-        threading.Thread(target=_background_init_dual_protein_rag, daemon=True).start()
-    if PROTEOGLYCAN_ENABLED and _env_enabled("RAG_EAGER_INIT_PROTEOGLYCAN", False):
-        threading.Thread(target=initialize_proteoglycan_rag, daemon=True).start()
+    # 低内存生产机按需加载。显式启用时也串行初始化，避免多个大索引同时产生峰值。
+    def _background_init_all_rag():
+        _background_init_main_rag()
+        _background_init_dual_protein_rag()
+
+    threading.Thread(target=_background_init_all_rag, daemon=True).start()
 
 # ============================================================
 # ML 甜味预测 API

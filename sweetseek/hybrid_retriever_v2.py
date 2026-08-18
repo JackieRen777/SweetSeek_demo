@@ -51,7 +51,8 @@ class HybridRetriever:
         self,
         faiss_index_path: str,
         sqlite_db_path: str,
-        embedding_dim: int = 768
+        embedding_dim: int = 768,
+        read_only: bool = False,
     ):
         """
         Args:
@@ -67,7 +68,9 @@ class HybridRetriever:
         self.embedding_dim = embedding_dim
 
         # 初始化SQLite
-        self.metadata_db = MetadataDB(str(sqlite_db_path))
+        self.metadata_db = MetadataDB(
+            str(sqlite_db_path), read_only=read_only, immutable=read_only
+        )
 
         # FAISS索引(延迟加载)
         self.faiss_index: Optional[faiss.Index] = None

@@ -90,6 +90,33 @@ class PersistentRAGSystem:
         self.embedding_dim: int = 768
         self.embedding_mode: str = "unknown"
         self.last_build_report: Dict[str, Any] = {}
+        self.index_format: str = "legacy_llamaindex"
+
+    def _hybrid_index_dir(self) -> Optional[Path]:
+        candidates = [Path(self.persist_dir) / "current"]
+        if os.getenv("USE_HYBRID_INDEX", "").strip().lower() in {"1", "true", "yes"}:
+            candidates.append(Path(self.persist_dir) / "hybrid")
+        for candidate in candidates:
+            if all((candidate / name).is_file() for name in ("index.faiss", "index.ids.txt", "metadata.db")):
+                return candidate
+        return None
+
+    def _load_hybrid_index(self) -> bool:
+        hybrid_dir = self._hybrid_index_dir()
+        if hybrid_dir is None:
+            return False
+        self._configure_models()
+        from llama_index.core import Settings
+        from sweetseek.hybrid_adapter import HybridIndexAdapter
+
+        self.index = HybridIndexAdapter(hybrid_dir, Settings.embed_model)
+        if self.embedding_dim and self.index.embedding_dim != self.embedding_dim:
+            raise ValueError(
+                f"混合索引维度 {self.index.embedding_dim} 与模型维度 {self.embedding_dim} 不一致"
+            )
+        self.embedding_dim = self.index.embedding_dim
+        self.index_format = "faiss_sqlite"
+        return True
 
     def _uses_faiss_store(self) -> bool:
         vector_store_path = os.path.join(self.persist_dir, "default__vector_store.json")
@@ -356,6 +383,14 @@ class PersistentRAGSystem:
         """尝试加载已存在索引，失败则构建新索引。"""
         # reset last error on each attempt
         self.last_error = None
+        try:
+            if self._load_hybrid_index():
+                logging.info("混合索引加载成功: %s", self._hybrid_index_dir())
+                return True
+        except Exception as exc:
+            self.last_error = f"加载混合索引失败: {exc}"
+            logging.error(self.last_error)
+            return False
         required_index_files = (
             "default__vector_store.json",
             "docstore.json",
@@ -380,6 +415,7 @@ class PersistentRAGSystem:
                 else:
                     storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
                 self.index = load_index_from_storage(storage_context)
+                self.index_format = "legacy_faiss" if self._uses_faiss_store() else "legacy_json"
                 # 自动校验索引向量维度与当前模型维度是否一致，不一致则自动重建
                 try:
                     model_dim = int(getattr(self, "embedding_dim", 0) or 0)
@@ -394,9 +430,14 @@ class PersistentRAGSystem:
                         need_rebuild = True
                     if need_rebuild:
                         logging.warning(
-                            f"检测到索引维度异常: index_dims={sorted(index_dims)}, model_dim={model_dim}，自动重建索引"
+                            f"检测到索引维度异常: index_dims={sorted(index_dims)}, model_dim={model_dim}"
                         )
                         self.index = None
+                        self.last_error = (
+                            f"索引维度与模型不一致: index_dims={sorted(index_dims)}, model_dim={model_dim}"
+                        )
+                        if not self.allow_auto_build:
+                            return False
                         return self.rebuild_index()
                 except Exception as dim_e:
                     logging.warning(f"索引维度校验失败（忽略并继续）: {dim_e}")
@@ -538,6 +579,8 @@ class PersistentRAGSystem:
             self.last_error = f"索引目录不存在: {self.persist_dir}"
             return False
         try:
+            if self._load_hybrid_index():
+                return True
             self._configure_models()
             if self._uses_faiss_store():
                 if FaissVectorStore is None:
@@ -550,6 +593,7 @@ class PersistentRAGSystem:
             else:
                 storage_context = StorageContext.from_defaults(persist_dir=self.persist_dir)
             self.index = load_index_from_storage(storage_context)
+            self.index_format = "legacy_faiss" if self._uses_faiss_store() else "legacy_json"
             return True
         except Exception as e:
             self.last_error = f"加载已有索引失败: {e}"
@@ -633,7 +677,19 @@ class PersistentRAGSystem:
     def get_stats(self) -> dict:
         """返回索引统计信息。"""
         if self.index is None:
-            return {"status": "未初始化", "persist_dir": self.persist_dir, "index_exists": os.path.exists(self.persist_dir)}
+            return {
+                "status": "未初始化",
+                "persist_dir": self.persist_dir,
+                "index_exists": bool(self._hybrid_index_dir()) or os.path.exists(self.persist_dir),
+                "index_format": "faiss_sqlite" if self._hybrid_index_dir() else "legacy_llamaindex",
+                "total_documents": 0,
+                "chunk_count": 0,
+                "embedding_dimension": self.embedding_dim,
+            }
+
+        if hasattr(self.index, "stats"):
+            stats = self.index.stats()
+            return {**stats, "status": "已初始化", "persist_dir": self.persist_dir, "index_exists": True}
 
         try:
             store = self.index.storage_context.docstore
@@ -641,7 +697,15 @@ class PersistentRAGSystem:
         except Exception:
             total = 0
 
-        return {"status": "已初始化", "total_documents": total, "persist_dir": self.persist_dir, "index_exists": os.path.exists(self.persist_dir)}
+        return {
+            "status": "已初始化",
+            "total_documents": total,
+            "chunk_count": total,
+            "persist_dir": self.persist_dir,
+            "index_exists": os.path.exists(self.persist_dir),
+            "index_format": self.index_format,
+            "embedding_dimension": self.embedding_dim,
+        }
 
 
 try:

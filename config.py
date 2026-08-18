@@ -142,7 +142,7 @@ class Config:
     DATA_DIR = str(_SWEETNESS_PATHS.papers)
     PERSIST_DIR = str(_SWEETNESS_PATHS.index)
     # 索引构建批次大小（降低内存峰值）
-    INDEX_BUILD_BATCH_SIZE = int(os.getenv('INDEX_BUILD_BATCH_SIZE', 25))
+    INDEX_BUILD_BATCH_SIZE = int(os.getenv('INDEX_BUILD_BATCH_SIZE', 5))
 
     EMBED_MODEL_TYPE = os.getenv("EMBED_MODEL_TYPE", "modelscope").lower()
     # Path to local model snapshot or HuggingFace ID
