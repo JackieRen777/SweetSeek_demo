@@ -427,29 +427,71 @@ def create_md_builder_blueprint(llm_client_getter: Callable):
         try:
             raw_config = request.form.get("config", "")
             config_data = json.loads(raw_config)
+            selection = config_data.get("docking_pose") if isinstance(config_data.get("docking_pose"), dict) else None
+            docking_pose = None
+            extra_inputs = {}
+            if selection and selection.get("job_id") and selection.get("id"):
+                from services.docking import DockingError, docking_manager
+
+                job = docking_manager.get(str(selection["job_id"]))
+                pose_id = str(selection["id"])
+                if job is None or job.status != "complete" or not any(item["id"] == pose_id for item in job.poses):
+                    raise MDBuilderError("The selected docking pose is unavailable or expired")
+                try:
+                    complex_path = docking_manager.pose_artifact(job.id, pose_id, "complex")
+                    docking_pose = complex_path.read_bytes()
+                    pose_manifest = (complex_path.parent / "manifest.json").read_bytes()
+                    if job.kind == "protein_ligand":
+                        receptor_path = docking_manager.input_artifact(job.id, "receptor")
+                        ligand_path = docking_manager.pose_artifact(job.id, pose_id, "ligand")
+                        inputs = [
+                            inspect_input("receptor.pdb", receptor_path.read_bytes()),
+                            inspect_input("docked_ligand.mol2", ligand_path.read_bytes()),
+                        ]
+                        config_data.update(system_type="protein_ligand", input_mode="single_structure", structures=[
+                            {"source": "docking", "filename": "receptor.pdb"},
+                            {"source": "docking", "filename": "docked_ligand.mol2"},
+                        ])
+                    else:
+                        complex_item = inspect_input("docked_complex.pdb", docking_pose)
+                        docking_manifest_path = docking_manager.job_dir(job.id) / "docking_manifest.json"
+                        docking_manifest = json.loads(docking_manifest_path.read_text(encoding="utf-8")) if docking_manifest_path.is_file() else {}
+                        groups = docking_manifest.get("chain_groups", {})
+                        chains = [item["id"] for item in complex_item.inspection.get("chains", [])]
+                        partner1 = [chain for chain in groups.get("partner1", []) if chain in chains]
+                        partner2 = [chain for chain in groups.get("partner2", []) if chain in chains]
+                        if not partner1 or not partner2:
+                            raise MDBuilderError("Docked protein complex is missing partner chain assignments")
+                        inputs = [complex_item]
+                        config_data.update(system_type="protein_protein", input_mode="single_complex",
+                            structures=[{"source": "docking", "filename": "docked_complex.pdb"}],
+                            partner1_chains=partner1, partner2_chains=partner2)
+                    extra_inputs = {"docked_complex.pdb": docking_pose, "docking_manifest.json": pose_manifest}
+                except DockingError as exc:
+                    raise MDBuilderError(str(exc)) from exc
+            else:
+                config_for_sources = MDConfig.model_validate(config_data)
+                inputs = []
+                uploads = {upload.filename: upload for upload in request.files.getlist("files")}
+                total = 0
+                for source in config_for_sources.structures:
+                    if source.get("source") == "rcsb":
+                        item = fetch_rcsb_pdb(source.get("pdb_id", ""), source.get("unit", "asymmetric"), int(source.get("assembly_id", 1)))
+                    else:
+                        filename = source.get("filename", "")
+                        upload = uploads.get(filename)
+                        if upload is None:
+                            raise MDBuilderError(f"Missing uploaded file: {filename}")
+                        content = upload.read(MAX_UPLOAD_BYTES + 1)
+                        total += len(content)
+                        if total > MAX_UPLOAD_BYTES:
+                            raise MDBuilderError("Combined input size exceeds 20 MB")
+                        item = inspect_input(filename, content)
+                    inputs.append(item)
+                pose_upload = request.files.get("docking_pose")
+                docking_pose = pose_upload.read(MAX_UPLOAD_BYTES + 1) if pose_upload else None
             config = MDConfig.model_validate(config_data)
-            inputs = []
-            uploads = {upload.filename: upload for upload in request.files.getlist("files")}
-            total = 0
-            for source in config.structures:
-                if source.get("source") == "rcsb":
-                    item = fetch_rcsb_pdb(source.get("pdb_id", ""), source.get("unit", "asymmetric"), int(source.get("assembly_id", 1)))
-                else:
-                    filename = source.get("filename", "")
-                    upload = uploads.get(filename)
-                    if upload is None:
-                        raise MDBuilderError(f"Missing uploaded file: {filename}")
-                    content = upload.read(MAX_UPLOAD_BYTES + 1)
-                    total += len(content)
-                    if total > MAX_UPLOAD_BYTES:
-                        raise MDBuilderError("Combined input size exceeds 20 MB")
-                    item = inspect_input(filename, content)
-                inputs.append(item)
-            pose_upload = request.files.get("docking_pose")
-            docking_pose = pose_upload.read(MAX_UPLOAD_BYTES + 1) if pose_upload else None
-            if docking_pose and len(docking_pose) > MAX_UPLOAD_BYTES:
-                raise MDBuilderError("Docking pose exceeds the 20 MB limit")
-            archive = build_zip(config, inputs, docking_pose=docking_pose)
+            archive = build_zip(config, inputs, docking_pose=docking_pose, extra_inputs=extra_inputs)
             return send_file(
                 archive,
                 mimetype="application/zip",

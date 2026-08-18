@@ -24,7 +24,6 @@ const EncapsulationChatInterface = lazy(() => import('./features/encapsulation/c
 const ProteoglycanChatInterface = lazy(() => import('./features/proteoglycan/components/ProteoglycanChatInterface'));
 const MLPredictSection = lazy(() => import('./features/ml-predict/MLPredictSection'));
 const AmberMDBuilder = lazy(() => import('./features/md-builder/AmberMDBuilder'));
-const Docking = lazy(() => import('./features/docking/Docking'));
 
 const SCREEN_COUNT = 5;
 
@@ -100,7 +99,7 @@ function App() {
       else if (index === 7) { setActiveFeature('encapsulation'); return; }
       else if (index === 8) { setActiveFeature('md-builder'); return; }
       else if (index === 9) { setActiveFeature('proteoglycan'); return; }
-      else if (index === 10) { setActiveFeature('docking'); return; }
+      else if (index === 10) { setActiveFeature('md-builder'); return; }
 
       // Also scroll to that section in the background
       navigateTo(index);
@@ -219,8 +218,8 @@ function App() {
                     </Suspense>
                   </div>
                 ) : (
-                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'proteoglycan' || activeFeature === 'md-builder' || activeFeature === 'docking' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
-                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'proteoglycan' || activeFeature === 'md-builder' || activeFeature === 'docking' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
+                  <div className={`flex-1 w-full mx-auto overflow-hidden ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'proteoglycan' || activeFeature === 'md-builder' ? 'max-w-none px-0 pb-0' : 'max-w-[1600px] px-4 md:px-8 pb-4 md:pb-8'}`}>
+                    <div className={`w-full h-full bg-white overflow-hidden relative ${activeFeature === 'qa' || activeFeature === 'dual-protein' || activeFeature === 'encapsulation' || activeFeature === 'proteoglycan' || activeFeature === 'md-builder' ? '' : 'rounded-2xl shadow-lg border border-slate-200'}`}>
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
                         {activeFeature === 'qa' && <ChatInterface />}
                         {activeFeature === 'equation' && <SweetTasteEquation />}
@@ -230,7 +229,6 @@ function App() {
                         {activeFeature === 'encapsulation' && <EncapsulationChatInterface />}
                         {activeFeature === 'proteoglycan' && <ProteoglycanChatInterface />}
                         {activeFeature === 'md-builder' && <AmberMDBuilder />}
-                        {activeFeature === 'docking' && <Docking />}
                       </Suspense>
                     </div>
                   </div>

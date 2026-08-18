@@ -129,6 +129,17 @@ def _get_json_dict() -> dict:
     data = request.get_json(silent=True)
     return data if isinstance(data, dict) else {}
 
+
+def _env_enabled(name: str, default: bool = True) -> bool:
+    return os.getenv(name, str(default).lower()).strip().lower() in {"1", "true", "yes"}
+
+
+SWEETNESS_ENABLED = _env_enabled("SWEETNESS_ENABLED")
+DUAL_PROTEIN_ENABLED = _env_enabled("DUAL_PROTEIN_ENABLED")
+ENCAPSULATION_ENABLED = _env_enabled("ENCAPSULATION_ENABLED")
+PROTEOGLYCAN_ENABLED = _env_enabled("PROTEOGLYCAN_ENABLED")
+
+
 def _parse_retrieval_params(data: dict, default_threshold: float, default_max_results: int) -> tuple[float, int]:
     similarity_threshold = data.get('similarity_threshold', default_threshold)
     try:
