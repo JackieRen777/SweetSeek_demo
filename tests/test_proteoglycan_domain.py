@@ -82,6 +82,7 @@ def test_documents_empty_and_upload_disabled(monkeypatch):
 
 
 def test_dual_health_reports_disk_index_before_prewarm(monkeypatch):
+    monkeypatch.setattr(app_module, "DUAL_PROTEIN_ENABLED", True)
     monkeypatch.setattr(app_module, "dual_protein_system_ready", False)
     monkeypatch.setattr(
         app_module.dual_protein_rag,

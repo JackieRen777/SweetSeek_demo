@@ -29,7 +29,20 @@ const DualProteinChatInterface: React.FC = () => {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    fetch('/api/dual-protein/prewarm', { method: 'POST' }).catch(() => undefined);
+    const checkAvailability = async () => {
+      try {
+        const response = await fetch('/api/dual-protein/health');
+        const payload = await response.json().catch(() => ({}));
+        if (payload.status === 'maintenance' || payload.enabled === false) {
+          setError(payload.error || '双蛋白问答功能维护中');
+          return;
+        }
+        await fetch('/api/dual-protein/prewarm', { method: 'POST' });
+      } catch {
+        setError('双蛋白问答服务暂时不可用');
+      }
+    };
+    void checkAvailability();
   }, []);
 
   const updateAssistant = (update: (message: Message) => Message) => {

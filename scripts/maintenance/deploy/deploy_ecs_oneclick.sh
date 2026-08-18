@@ -43,9 +43,10 @@ if [[ "${CURRENT_BRANCH}" != "main" ]]; then
   exit 1
 fi
 
-if [[ -n "$(git status --porcelain --untracked-files=normal)" ]]; then
+DIRTY_STATUS="$(git status --porcelain --untracked-files=normal | grep -v '^?? outputs/' || true)"
+if [[ -n "${DIRTY_STATUS}" ]]; then
   echo "❌ 工作区存在未提交修改，拒绝发布"
-  git status --short
+  echo "${DIRTY_STATUS}"
   exit 1
 fi
 
@@ -62,11 +63,12 @@ fi
 echo "[1/6] 本地构建前端..."
 cd frontend-react
 npm ci --silent
-npm run build
+npx vite build
 cd "${PROJECT_ROOT}"
 
 echo "[2/6] 同步代码到新 ECS..."
 echo "rsync 目标: ${SSH_TARGET}:${SERVER_PATH%/}/"
+"${SSH_BASE[@]}" "mkdir -p /www/backups/sweetseek; if [[ -d '${SERVER_PATH}' ]]; then tar --exclude=venv --exclude=models --exclude=SweetSeek_paper_database --exclude=storage_proteoglycan --exclude=storage_encapsulation --exclude=storage_dual_protein --exclude=faiss_db --exclude=.git --exclude=frontend-react/node_modules --exclude=frontend-react/dist --exclude=data --exclude=tmp --exclude=outputs --exclude=logs -czf '/www/backups/sweetseek/code-$(date +%Y%m%dT%H%M%S).tar.gz' -C '${SERVER_PATH}' .; fi"
 rsync -az --delete \
   --rsync-path="mkdir -p '${SERVER_PATH%/}' && rsync" \
   --exclude=".git" \
@@ -115,19 +117,50 @@ pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/ || pi
 pip install gunicorn gevent -i https://mirrors.aliyun.com/pypi/simple/ || true
 EOF
 
-echo "[4/6] 远程重启后端 (仅 gunicorn)..."
+echo "[4/6] 配置 systemd 并启动单 worker Gunicorn..."
 "${SSH_BASE[@]}" <<EOF
 set -e
 cd "${SERVER_PATH}"
 source venv/bin/activate
 
-# 只保留 gunicorn，避免 app.py 前台进程冲突
+# 先终止旧的 nohup 进程，随后全部交给 systemd 管理。
 pkill -f "${SERVER_PATH}/venv/bin/python app.py" || true
 pkill -f "gunicorn.*app:app" || true
 sleep 1
 
-nohup venv/bin/gunicorn -c gunicorn_config.py app:app > /www/wwwlogs/sweetseek_backend.log 2>&1 &
-sleep 2
+cat > /etc/systemd/system/sweetseek.service <<UNIT
+[Unit]
+Description=SweetSeek web and RAG service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=${SERVER_USER}
+WorkingDirectory=${SERVER_PATH}
+EnvironmentFile=-${SERVER_PATH}/.env
+Environment=SWEETNESS_ENABLED=true
+Environment=PROTEOGLYCAN_ENABLED=true
+Environment=DUAL_PROTEIN_ENABLED=false
+Environment=ENCAPSULATION_ENABLED=false
+Environment=RAG_EAGER_INIT_MAIN=true
+Environment=RAG_EAGER_INIT_PROTEOGLYCAN=false
+Environment=RAG_EAGER_INIT_DUAL_PROTEIN=false
+ExecStart=${SERVER_PATH}/venv/bin/gunicorn -c ${SERVER_PATH}/gunicorn_config.py app:app
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+MemoryHigh=2400M
+MemoryMax=2800M
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now sweetseek.service
+sleep 3
+systemctl --no-pager --full status sweetseek.service | head -n 30
 
 ss -lntp | grep 5001
 EOF
