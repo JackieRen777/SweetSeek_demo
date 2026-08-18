@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm';
 import './amber-md-builder.css';
 import StructureViewer from './StructureViewer';
 import Docking from '../docking/Docking';
-import type { SelectedDockingPose } from '../docking/Docking';
+import type { DockingHandoff, SelectedDockingPose } from '../docking/Docking';
 
 type SystemChoice = 'single_protein' | 'protein_protein' | 'protein_ligand';
 type Tab = 'setup' | 'files' | 'expert' | 'docking';
@@ -105,7 +105,7 @@ function resolvedSetup(choice: SystemChoice, structures: StructureEntry[]) {
 }
 
 export default function AmberMDBuilder() {
-  const [tab, setTab] = useState<Tab>('setup');
+  const [tab, setTab] = useState<Tab>('docking');
   const [systemChoice, setSystemChoice] = useState<SystemChoice>('single_protein');
   const [structures, setStructures] = useState<StructureEntry[]>([]);
   const [chainGroups, setChainGroups] = useState<Record<string, ChainGroup>>({});
@@ -129,6 +129,47 @@ export default function AmberMDBuilder() {
   const setup = useMemo(() => resolvedSetup(systemChoice, structures), [systemChoice, structures]);
   const complexChains = setup.inputMode === 'single_complex' ? setup.pdbs[0]?.inspection.chains ?? [] : [];
   const canUseExistingCharges = setup.mol2s[0]?.inspection.has_charges === true;
+
+  const clearDownload = () => {
+    setDownload(previous => {
+      if (previous) URL.revokeObjectURL(previous.url);
+      return null;
+    });
+  };
+
+  const dockingChanged = () => {
+    if (dockingPose) setStructures([]);
+    setDockingPose(null);
+    clearDownload();
+    setNotice('');
+  };
+
+  const acceptDockingPose = async (handoff: DockingHandoff) => {
+    setBusy('inspect'); setError(''); setNotice(''); clearDownload();
+    try {
+      const selectedFiles = handoff.pose.kind === 'protein_protein'
+        ? [new File([handoff.complex], 'docked_complex.pdb', { type: 'chemical/x-pdb' })]
+        : handoff.files;
+      const form = new FormData();
+      selectedFiles.forEach(file => form.append('files', file, file.name));
+      const response = await fetch('/api/md-builder/inspect', { method: 'POST', body: form });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not inspect the selected docking pose.');
+      const entries = (data.structures || []).map((inspection: Inspection, index: number) => ({
+        source: 'upload' as const, filename: inspection.filename, inspection, file: selectedFiles[index],
+      }));
+      setStructures(entries);
+      setSystemChoice(handoff.pose.kind);
+      setDockingPose(handoff.pose);
+      if (handoff.pose.kind === 'protein_protein') {
+        const chains = entries[0]?.inspection.chains || [];
+        setChainGroups(Object.fromEntries(chains.map((chain: ChainInfo, index: number) => [chain.id, (index === 0 ? 'partner1' : 'partner2') as ChainGroup])));
+      } else setChainGroups({});
+      setNotice(`${handoff.pose.id} selected. Review the inherited structure and MD parameters.`);
+      setTab('setup');
+    } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not continue to MD setup.'); }
+    finally { setBusy(null); }
+  };
 
   useEffect(() => () => {
     if (download) URL.revokeObjectURL(download.url);
@@ -343,7 +384,6 @@ export default function AmberMDBuilder() {
     const form = new FormData();
     form.append('config', JSON.stringify(config));
     structures.forEach(item => { if (item.file) form.append('files', item.file, item.filename); });
-    if (dockingPose) form.append('docking_pose', new File([dockingPose.structure], 'docked_pose.pdb', { type: 'chemical/x-pdb' }));
     try {
       const response = await fetch('/api/md-builder/generate', { method: 'POST', body: form });
       if (!response.ok) {
@@ -389,9 +429,11 @@ export default function AmberMDBuilder() {
   );
 
   return <div className="mdp-shell" aria-label="AMBER MD Builder">
-    <nav className="mdp-mobile-tabs" aria-label="Builder views">{(['docking', 'setup', 'files', 'expert'] as Tab[]).map(item => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{item}</button>)}</nav>
+    <nav className="mdp-mobile-tabs mdp-workflow-tabs" aria-label="Builder workflow">{([
+      ['docking', '1 Docking'], ['setup', '2 MD Setup'], ['files', '3 Scripts'], ['expert', 'MD Expert'],
+    ] as [Tab, string][]).map(([item, label]) => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{label}</button>)}</nav>
     {(error || notice) && <div className={`mdp-banner ${error ? 'error' : 'success'}`}>{error ? <AlertTriangle size={16} /> : <Check size={16} />}<span>{error || notice}</span><button onClick={() => { setError(''); setNotice(''); }}><X size={15} /></button></div>}
-    {tab === 'docking' ? <div className="mdp-docking-inline"><Docking onPoseSelected={setDockingPose} /></div> : <div className="mdp-workspace">
+    {tab === 'docking' ? <div className="mdp-docking-inline"><Docking onConfirm={handoff => void acceptDockingPose(handoff)} onSkip={() => { dockingChanged(); setStructures([]); setTab('setup'); }} onDirty={dockingChanged} /></div> : <div className="mdp-workspace">
       <main className={`mdp-main overflow-y-auto ${tab !== 'setup' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
         <section className="mdp-section">
           <div className="mdp-section-heading"><div><span>01</span><h2>Select system</h2></div><span className="mdp-detected">Detected: {String(setup.system).replaceAll('_', ' ')}</span></div>

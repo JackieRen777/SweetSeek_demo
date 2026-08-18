@@ -15,8 +15,10 @@ describe('Proteoglycan Q&A', () => {
     vi.unstubAllGlobals();
   });
 
-  it('uses the Proteoglycan copy and fills a suggestion without sending', () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  it('uses the Proteoglycan copy and fills a suggestion without sending', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'unavailable', enabled: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'warming' }) });
     vi.stubGlobal('fetch', fetchMock);
     render(<ProteoglycanChatInterface />);
 
@@ -26,13 +28,15 @@ describe('Proteoglycan Q&A', () => {
     fireEvent.click(suggestion);
     expect((screen.getByLabelText('Proteoglycan question') as HTMLTextAreaElement).value)
       .toBe('蛋白质与多糖通过哪些相互作用形成复合物？');
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(fetchMock).toHaveBeenCalledWith('/api/proteoglycan/health');
     expect(fetchMock).toHaveBeenCalledWith('/api/proteoglycan/prewarm', { method: 'POST' });
   });
 
   it('renders the empty knowledge-base error returned by the API', async () => {
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce({ ok: true })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'ready', enabled: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'ready' }) })
       .mockResolvedValueOnce({
         ok: false,
         statusText: 'Service Unavailable',

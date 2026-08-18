@@ -1,0 +1,30 @@
+[Unit]
+Description=SweetSeek web and RAG service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www
+Group=www
+WorkingDirectory=/www/sweetseek/current
+EnvironmentFile=-/www/wwwroot/FCN_SweetSeek/.env
+EnvironmentFile=-/www/sweetseek/shared/config/release.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=OMP_NUM_THREADS=1
+Environment=OPENBLAS_NUM_THREADS=1
+Environment=MKL_NUM_THREADS=1
+ExecStart=/www/sweetseek/current/venv/bin/gunicorn -c /www/sweetseek/current/gunicorn_config.py app:app
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=60
+TimeoutStopSec=30
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+MemoryHigh=2200M
+MemoryMax=2600M
+ReadWritePaths=/www/sweetseek/shared/docking /www/wwwlogs
+
+[Install]
+WantedBy=multi-user.target

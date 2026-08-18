@@ -10,9 +10,12 @@ afterEach(() => {
 });
 
 describe('AmberMDBuilder', () => {
-  it('renders the four-step setup and editable protocol controls', () => {
+  it('starts at docking and allows the user to skip to MD setup', () => {
     const { container } = render(<AmberMDBuilder />);
     expect(screen.getByLabelText('AMBER MD Builder')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Docking' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Run docking' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Skip docking' }));
     expect(screen.queryByText('Describe your simulation')).toBeNull();
     expect(screen.getByRole('button', { name: 'Single protein' })).toBeTruthy();
     expect(screen.getByLabelText('Production (ns)')).toBeTruthy();
@@ -24,6 +27,8 @@ describe('AmberMDBuilder', () => {
   });
 
   it('applies setup conditions from expert chat without overwriting manually edited fields', async () => {
+    render(<AmberMDBuilder />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip docking' }));
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -32,7 +37,6 @@ describe('AmberMDBuilder', () => {
       }),
     });
     vi.stubGlobal('fetch', fetchMock);
-    render(<AmberMDBuilder />);
     fireEvent.change(screen.getByLabelText('Temperature (K)'), { target: { value: '315' } });
     fireEvent.change(screen.getByLabelText('Ask MD Expert'), { target: { value: 'Set up 100 ns at 280 K with 0.15 M NaCl' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send to MD Expert' }));
@@ -48,6 +52,8 @@ describe('AmberMDBuilder', () => {
   });
 
   it('requires confirmation before applying troubleshooting suggestions', async () => {
+    render(<AmberMDBuilder />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip docking' }));
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -55,7 +61,6 @@ describe('AmberMDBuilder', () => {
         parameter_updates: { timestep_fs: 1 }, diagnostic_checks: ['Run cpptraj autoimage.'],
       }),
     }));
-    render(<AmberMDBuilder />);
     fireEvent.change(screen.getByLabelText('Ask MD Expert'), { target: { value: 'My ligand left the binding site' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send to MD Expert' }));
     expect(await screen.findByText('Run cpptraj autoimage.')).toBeTruthy();

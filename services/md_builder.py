@@ -418,15 +418,27 @@ def render_project(config: MDConfig, inputs: list[InputFile]) -> dict[str, str]:
     return files
 
 
-def build_zip(config: MDConfig, inputs: list[InputFile], docking_pose: bytes | None = None) -> io.BytesIO:
+def build_zip(
+    config: MDConfig,
+    inputs: list[InputFile],
+    docking_pose: bytes | None = None,
+    extra_inputs: dict[str, bytes] | None = None,
+) -> io.BytesIO:
     files = render_project(config, inputs)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         root = config.project_name
+        written_inputs = set()
         for item in inputs:
             archive.writestr(f"{root}/inputs/{item.filename}", item.content)
-        if docking_pose:
-            archive.writestr(f"{root}/inputs/docked_pose.pdb", docking_pose)
+            written_inputs.add(item.filename)
+        if docking_pose and "docked_complex.pdb" not in written_inputs:
+            archive.writestr(f"{root}/inputs/docked_complex.pdb", docking_pose)
+            written_inputs.add("docked_complex.pdb")
+        for name, content in (extra_inputs or {}).items():
+            if name not in written_inputs:
+                archive.writestr(f"{root}/inputs/{safe_filename(name, allowed={'.pdb', '.json', '.mol2'})}", content)
+                written_inputs.add(name)
         for path, content in files.items():
             info = zipfile.ZipInfo(f"{root}/{path}")
             info.external_attr = (0o755 if path.endswith(".sh") else 0o644) << 16

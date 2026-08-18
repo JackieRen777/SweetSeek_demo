@@ -131,9 +131,9 @@ def test_selected_docking_pose_is_included_in_zip():
     config = MDConfig(simulation_time_ns=5, structures=[source(protein)], docking_pose={"id": "pose-2", "score": -7.4})
     archive = build_zip(config, [protein], docking_pose=b"ATOM      1  CA  ALA A   1       1.000   1.000   1.000\nEND\n")
     with zipfile.ZipFile(archive) as zipped:
-        assert "amber_md_project/inputs/docked_pose.pdb" in zipped.namelist()
+        assert "amber_md_project/inputs/docked_complex.pdb" in zipped.namelist()
         assert "pose-2" in zipped.read("amber_md_project/parameters.json").decode()
-        assert "docked_pose.pdb" in zipped.read("amber_md_project/README.md").decode()
+        assert "docked_complex.pdb" in zipped.read("amber_md_project/README.md").decode()
 
 
 def test_single_complex_and_two_partner_templates_are_distinct():
@@ -218,6 +218,41 @@ def test_blueprint_inspect_and_generate_without_persistence():
     )
     assert generated.status_code == 200
     assert generated.mimetype == "application/zip"
+
+
+def test_docking_selection_drives_md_inputs_and_archive(tmp_path, monkeypatch):
+    from services.docking import DockingManager
+
+    manager = DockingManager(tmp_path / "docking")
+    job = manager.create("protein_ligand", {"mode": "rigid", "poses": 1}, {
+        "receptor": ("receptor.pdb", pdb_bytes()),
+        "ligand": ("ligand.mol2", mol2_bytes()),
+    })
+    pose_dir = manager.job_dir(job.id) / "poses/pose-1"
+    pose_dir.mkdir(parents=True)
+    pose_dir.joinpath("complex.pdb").write_bytes(pdb_bytes(hetero="C"))
+    pose_dir.joinpath("docked_ligand.mol2").write_bytes(mol2_bytes())
+    pose_dir.joinpath("manifest.json").write_text(json.dumps({"id": "pose-1", "score": -7.4}))
+    manager.update(job.id, status="complete", poses=[{"id": "pose-1", "rank": 1, "score": -7.4}])
+    monkeypatch.setattr("services.docking.docking_manager", manager)
+
+    app = Flask(__name__)
+    app.register_blueprint(create_md_builder_blueprint(lambda: None))
+    response = app.test_client().post("/api/md-builder/generate", data={
+        "config": json.dumps({
+            "simulation_time_ns": 5,
+            "charge_method": "existing",
+            "docking_pose": {"job_id": job.id, "id": "pose-1", "rank": 1, "score": -7.4},
+        }),
+    })
+    assert response.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(response.data)) as zipped:
+        names = zipped.namelist()
+        assert "amber_md_project/inputs/docked_ligand.mol2" in names
+        assert "amber_md_project/inputs/docked_complex.pdb" in names
+        assert "amber_md_project/inputs/docking_manifest.json" in names
+        run_script = zipped.read("amber_md_project/run_md.sh").decode()
+        assert "docked_ligand.mol2" in run_script
 
 
 def test_explicit_parameter_values_are_not_lost_by_llm_extraction():

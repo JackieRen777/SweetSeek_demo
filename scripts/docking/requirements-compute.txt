@@ -1,0 +1,5 @@
+# Linux/Python 3.11 compute environment. Update only after all engine smoke tests pass.
+vina==1.2.7
+meeko==0.6.1
+lightdock==0.9.4
+

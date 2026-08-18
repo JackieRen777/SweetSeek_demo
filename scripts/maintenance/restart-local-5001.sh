@@ -2,48 +2,82 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-cd "$ROOT_DIR"
+LABEL="com.sweetseek.local"
+DOMAIN="gui/$(id -u)"
+PLIST_DIR="$HOME/Library/LaunchAgents"
+PLIST="$PLIST_DIR/$LABEL.plist"
+TEMPLATE="$ROOT_DIR/scripts/maintenance/$LABEL.plist.template"
+PYTHON_BIN="$ROOT_DIR/venv/bin/python"
+COMMAND="${1:-restart}"
 
-LOG_FILE="$ROOT_DIR/logs/local_5001.log"
-mkdir -p "$ROOT_DIR/logs"
-
-if [ -f "venv/bin/activate" ]; then
-  source venv/bin/activate
-elif [ -f ".venv/bin/activate" ]; then
-  source .venv/bin/activate
-else
-  echo "❌ 未找到可用虚拟环境（.venv 或 venv）"
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  echo "Missing project runtime: $PYTHON_BIN" >&2
   exit 1
 fi
 
-echo "=========================================="
-echo "  本地后端一键重启 (127.0.0.1:5001)"
-echo "=========================================="
+render_plist() {
+  mkdir -p "$PLIST_DIR" "$ROOT_DIR/logs"
+  sed -e "s|__ROOT__|$ROOT_DIR|g" -e "s|__PYTHON__|$PYTHON_BIN|g" "$TEMPLATE" > "$PLIST"
+  plutil -lint "$PLIST" >/dev/null
+}
 
-echo "[1/4] 停止旧进程..."
-pkill -f "app.run(host='127.0.0.1', port=5001" 2>/dev/null || true
-pkill -f "python app.py" 2>/dev/null || true
-sleep 1
+is_loaded() {
+  launchctl print "$DOMAIN/$LABEL" >/dev/null 2>&1
+}
 
-echo "[2/4] 启动新进程..."
-nohup python -c "from app import app; app.run(host='127.0.0.1', port=5001, debug=False)" > "$LOG_FILE" 2>&1 &
+wait_ready() {
+  for _ in {1..30}; do
+    if curl -fsS --max-time 2 "http://127.0.0.1:5001/api/health" >/dev/null 2>&1; then
+      echo "SweetSeek ready: http://127.0.0.1:5001"
+      return 0
+    fi
+    sleep 1
+  done
+  echo "SweetSeek did not become ready within 30 seconds" >&2
+  tail -n 20 "$ROOT_DIR/logs/local_5001.error.log" 2>/dev/null || true
+  return 1
+}
 
-echo "[3/4] 等待服务就绪..."
-for i in {1..20}; do
-  if curl -sSf "http://127.0.0.1:5001/api/health" >/dev/null 2>&1; then
-    break
-  fi
-  sleep 1
-done
-
-echo "[4/4] 健康检查..."
-if curl -sSf "http://127.0.0.1:5001/api/health" >/dev/null 2>&1; then
-  echo "✅ 本地后端已就绪: http://127.0.0.1:5001"
-  echo "日志文件: $LOG_FILE"
-  echo "最近日志:"
-  tail -n 12 "$LOG_FILE" || true
-else
-  echo "❌ 启动失败，请检查日志: $LOG_FILE"
-  tail -n 50 "$LOG_FILE" || true
-  exit 1
-fi
+case "$COMMAND" in
+  install|start)
+    render_plist
+    if ! is_loaded; then
+      launchctl bootstrap "$DOMAIN" "$PLIST"
+    else
+      launchctl kickstart "$DOMAIN/$LABEL"
+    fi
+    wait_ready
+    ;;
+  restart)
+    render_plist
+    if is_loaded; then
+      launchctl bootout "$DOMAIN/$LABEL"
+      for _ in {1..20}; do
+        is_loaded || break
+        sleep 0.25
+      done
+    fi
+    for attempt in {1..3}; do
+      if launchctl bootstrap "$DOMAIN" "$PLIST"; then break; fi
+      if [[ "$attempt" == 3 ]]; then exit 1; fi
+      sleep 1
+    done
+    wait_ready
+    ;;
+  stop)
+    if is_loaded; then launchctl bootout "$DOMAIN/$LABEL"; fi
+    echo "SweetSeek stopped"
+    ;;
+  status)
+    launchctl print "$DOMAIN/$LABEL" 2>/dev/null | sed -n '1,35p' || true
+    echo "Runtime status:"
+    test -f "$ROOT_DIR/logs/runtime_status.json" && sed -n '1,80p' "$ROOT_DIR/logs/runtime_status.json" || true
+    echo "Health:"
+    curl -sS --max-time 3 "http://127.0.0.1:5001/api/health" || true
+    echo
+    ;;
+  *)
+    echo "Usage: $0 {install|start|restart|stop|status}" >&2
+    exit 2
+    ;;
+esac

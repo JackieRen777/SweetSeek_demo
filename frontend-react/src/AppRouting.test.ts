@@ -5,7 +5,7 @@ describe('feature routing', () => {
   it('supports all research and structural-computation routes', () => {
     expect(featureFromPath('/proteoglycan')).toBe('proteoglycan');
     expect(featureFromPath('/proteoglycan/')).toBe('proteoglycan');
-    expect(featureFromPath('/docking')).toBe('docking');
+    expect(featureFromPath('/docking')).toBe('md-builder');
     expect(featureFromPath('/encapsulation')).toBe('encapsulation');
     expect(featureFromPath('/embedding')).toBe('encapsulation');
   });

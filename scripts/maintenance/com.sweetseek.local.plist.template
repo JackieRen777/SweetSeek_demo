@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.sweetseek.local</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>cd '__ROOT__' &amp;&amp; exec '__PYTHON__' '__ROOT__/scripts/run_local_server.py'</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>RAG_EAGER_INIT</key><string>0</string>
+    <key>RAG_ALLOW_AUTO_BUILD</key><string>0</string>
+    <key>INDEX_BUILD_BATCH_SIZE</key><string>5</string>
+    <key>EMBED_BATCH_SIZE</key><string>8</string>
+    <key>EMBED_NUM_THREADS</key><string>1</string>
+    <key>EMBED_DEVICE</key><string>cpu</string>
+    <key>OMP_NUM_THREADS</key><string>1</string>
+    <key>MKL_NUM_THREADS</key><string>1</string>
+    <key>VECLIB_MAXIMUM_THREADS</key><string>1</string>
+    <key>OPENBLAS_NUM_THREADS</key><string>1</string>
+    <key>TOKENIZERS_PARALLELISM</key><string>false</string>
+    <key>KMP_BLOCKTIME</key><string>0</string>
+    <key>PYTHONUNBUFFERED</key><string>1</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key><string>/tmp/sweetseek-local.log</string>
+  <key>StandardErrorPath</key><string>/tmp/sweetseek-local.error.log</string>
+</dict>
+</plist>

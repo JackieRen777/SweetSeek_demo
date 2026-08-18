@@ -8,3 +8,11 @@ def test_health_endpoint_schema():
     data = resp.get_json()
     assert "status" in data
     assert "components" in data
+
+
+def test_liveness_does_not_require_rag_readiness():
+    import app as app_module
+
+    response = app_module.app.test_client().get("/api/live")
+    assert response.status_code == 200
+    assert response.get_json()["status"] == "alive"

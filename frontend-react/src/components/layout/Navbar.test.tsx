@@ -21,7 +21,7 @@ describe('Navbar', () => {
     expect(screen.queryByRole('button', { name: 'Encapsulation' })).toBeNull();
   });
 
-  it('places AMBER MD Builder and Docking under Dual-Protein', () => {
+  it('uses AMBER MD Builder as the single structural workflow entry', () => {
     const onNavigate = vi.fn();
     render(<Navbar activeScreen={0} activeFeature="md-builder" onNavigate={onNavigate} />);
 
@@ -29,9 +29,7 @@ describe('Navbar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'AMBER MD Builder' }));
     expect(onNavigate).toHaveBeenCalledWith(8);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Dual-Protein' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Docking' }));
-    expect(onNavigate).toHaveBeenCalledWith(10);
+    expect(screen.queryByRole('button', { name: 'Docking' })).toBeNull();
   });
 
   it('provides both Q&A entries under Proteoglycan in the mobile navigation', () => {
