@@ -6,6 +6,7 @@ import zipfile
 import pytest
 from flask import Flask
 
+from services.llm_client import ChatDelta
 from services.md_builder import (
     MDBuilderError,
     MDConfig,
@@ -16,9 +17,11 @@ from services.md_builder import (
     safe_filename,
     suggest_system,
 )
-from services.md_builder_api import create_md_builder_blueprint
-from services.md_builder_api import _expert_intent_hint, _extract_explicit_values
-from services.llm_client import ChatDelta
+from services.md_builder_api import (
+    _expert_intent_hint,
+    _extract_explicit_values,
+    create_md_builder_blueprint,
+)
 
 
 def pdb_bytes(chains=("A",), hetero=None):
@@ -126,6 +129,21 @@ def test_single_protein_zip_contains_inputs_and_valid_shell(tmp_path):
                 subprocess.run(["bash", "-n", str(target)], check=True)
 
 
+def test_custom_project_name_is_used_as_zip_root():
+    protein = inspect_input("protein.pdb", pdb_bytes())
+    config = MDConfig(
+        project_name="custom_project",
+        simulation_time_ns=1,
+        structures=[source(protein)],
+    )
+
+    with zipfile.ZipFile(build_zip(config, [protein])) as zipped:
+        names = set(zipped.namelist())
+
+    assert "custom_project/inputs/protein.pdb" in names
+    assert "custom_project/run_md.sh" in names
+
+
 def test_selected_docking_pose_is_included_in_zip():
     protein = inspect_input("protein.pdb", pdb_bytes())
     config = MDConfig(simulation_time_ns=5, structures=[source(protein)], docking_pose={"id": "pose-2", "score": -7.4})
@@ -218,6 +236,16 @@ def test_blueprint_inspect_and_generate_without_persistence():
     )
     assert generated.status_code == 200
     assert generated.mimetype == "application/zip"
+
+
+def test_builder_only_release_rejects_docking_pose_inputs():
+    app = Flask(__name__)
+    app.register_blueprint(create_md_builder_blueprint(lambda: None, docking_enabled=False))
+    response = app.test_client().post("/api/md-builder/generate", data={
+        "config": json.dumps({"docking_pose": {"job_id": "job-1", "id": "pose-1"}}),
+    })
+    assert response.status_code == 400
+    assert "Docking is not enabled" in response.get_json()["error"]
 
 
 def test_docking_selection_drives_md_inputs_and_archive(tmp_path, monkeypatch):

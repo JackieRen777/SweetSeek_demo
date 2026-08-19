@@ -142,6 +142,8 @@ data/models/
 reports/*.xlsx
 reports/local-*.json
 reports/local-observation-*/
+reports/citation-catalogs.json
+data/citations/crossref-cache.json
 
 # Runtime PID files
 *.pid

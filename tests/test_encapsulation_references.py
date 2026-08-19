@@ -2,6 +2,7 @@ from pathlib import Path
 
 from services.encapsulation_references import (
     format_gbt7714,
+    normalize_doi,
     resolve_document_path,
     serialize_encapsulation_references,
     stable_document_id,
@@ -63,6 +64,32 @@ def test_format_gbt7714_keeps_exactly_three_authors_without_et_al():
     })
     assert citation.startswith("Smith J, Lee K, Wang P. ")
     assert "et al" not in citation
+
+
+def test_format_gbt7714_uses_filename_without_unknown_placeholders():
+    citation = format_gbt7714({
+        "title": "Unknown Title",
+        "journal": "Unknown Journal",
+        "year": "N/A",
+        "doi": "Not Available",
+        "filename": "fallback-paper.pdf",
+    })
+    assert citation == "fallback-paper.pdf[J]."
+    assert "Unknown" not in citation
+
+
+def test_malformed_doi_suffix_is_removed_before_formatting():
+    citation = format_gbt7714({
+        "title": "Example",
+        "doi": "https://doi.org/10.1007/example-1234).",
+    })
+    assert citation.endswith("DOI: 10.1007/example-1234.")
+
+
+def test_pdf_extraction_artifacts_are_removed_from_doi():
+    assert normalize_doi("10.1152/ajpendo.00163.2012.—The") == "10.1152/ajpendo.00163.2012"
+    assert normalize_doi("10.1093/chemse/bjaa009/5740230") == "10.1093/chemse/bjaa009"
+    assert normalize_doi("10.1073/pnas.2021516118/-/DCSupplemental") == "10.1073/pnas.2021516118"
 
 
 def test_reference_payload_contains_primary_chunk_without_pdf_delivery_fields():

@@ -32,7 +32,7 @@ import threading
 from config import config
 from logger import setup_logger
 from services.dependencies import build_services
-from knowledge_paths import get_domain_paths
+from knowledge_paths import get_domain_paths, get_runtime_metadata_path
 
 # NOTE: 文件中的函数多数通过 Flask 的 @app.route 装饰器在运行时被调用。
 # 静态分析工具（如 vulture）会将这些运行时注册的路由误判为未使用，
@@ -100,11 +100,15 @@ def validate_config():
 
 app = Flask(__name__)
 
-STRUCTURE_TOOLS_ENABLED = os.getenv("STRUCTURE_TOOLS_ENABLED", "false").strip().lower() in {
+_legacy_structure_tools = os.getenv("STRUCTURE_TOOLS_ENABLED", "false").strip().lower() in {
     "1", "true", "yes"
 }
+MD_BUILDER_ENABLED = os.getenv(
+    "MD_BUILDER_ENABLED", str(_legacy_structure_tools).lower()
+).strip().lower() in {"1", "true", "yes"}
+DOCKING_ENABLED = os.getenv("DOCKING_ENABLED", "false").strip().lower() in {"1", "true", "yes"}
 
-if STRUCTURE_TOOLS_ENABLED:
+if MD_BUILDER_ENABLED:
     from services.md_builder_api import InMemoryUploadRequest
 
     app.request_class = InMemoryUploadRequest
@@ -186,11 +190,14 @@ llm_client = services.llm_client
 compound_service = services.compound_service
 chat_service = services.chat_service
 
-if STRUCTURE_TOOLS_ENABLED:
+if MD_BUILDER_ENABLED:
     from services.md_builder_api import create_md_builder_blueprint
+
+    app.register_blueprint(create_md_builder_blueprint(lambda: llm_client, docking_enabled=DOCKING_ENABLED))
+
+if DOCKING_ENABLED:
     from services.docking_api import create_docking_blueprint
 
-    app.register_blueprint(create_md_builder_blueprint(lambda: llm_client))
     app.register_blueprint(create_docking_blueprint())
 
 # 双蛋白 RAG 系统（独立实例）
@@ -198,7 +205,7 @@ from persistent_storage import PersistentRAGSystem
 from services.chat_service import ChatService
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 DUAL_PROTEIN_PATHS = get_domain_paths("dual_protein")
-DUAL_PROTEIN_METADATA_PATH = str(DUAL_PROTEIN_PATHS.metadata)
+DUAL_PROTEIN_METADATA_PATH = str(get_runtime_metadata_path("dual_protein"))
 dual_protein_rag = PersistentRAGSystem(
     data_dir=str(DUAL_PROTEIN_PATHS.papers),
     persist_dir=str(DUAL_PROTEIN_PATHS.index),
@@ -215,7 +222,7 @@ dual_protein_chat_service = ChatService(
 ENCAPSULATION_PATHS = get_domain_paths("encapsulation")
 ENCAPSULATION_DATA_DIR = str(ENCAPSULATION_PATHS.papers)
 ENCAPSULATION_PERSIST_DIR = str(ENCAPSULATION_PATHS.index)
-ENCAPSULATION_METADATA_PATH = str(ENCAPSULATION_PATHS.metadata)
+ENCAPSULATION_METADATA_PATH = str(get_runtime_metadata_path("encapsulation"))
 
 # Encapsulation（包埋）独立知识域：与现有 Sweetness/Dual-Protein 索引隔离。
 encapsulation_system_ready = False
@@ -252,8 +259,8 @@ def initialize_encapsulation_rag():
 PROTEOGLYCAN_PATHS = get_domain_paths("proteoglycan")
 PROTEOGLYCAN_DATA_DIR = str(PROTEOGLYCAN_PATHS.papers)
 PROTEOGLYCAN_PERSIST_DIR = str(PROTEOGLYCAN_PATHS.index)
-PROTEOGLYCAN_METADATA_PATH = str(PROTEOGLYCAN_PATHS.metadata)
-PROTEOGLYCAN_EMPTY_MESSAGE = "Proteoglycan 知识库尚未建立，请先导入 PDF 并构建索引"
+PROTEOGLYCAN_METADATA_PATH = str(get_runtime_metadata_path("proteoglycan"))
+PROTEOGLYCAN_EMPTY_MESSAGE = "Pro-glycan 知识库尚未建立，请先导入 PDF 并构建索引"
 
 proteoglycan_system_ready = False
 proteoglycan_initializing = False
@@ -1043,7 +1050,11 @@ def api_health():
     health_status = {
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
-        'components': {}
+        'components': {},
+        'features': {
+            'md_builder': MD_BUILDER_ENABLED,
+            'docking': DOCKING_ENABLED,
+        },
     }
     
     # 主甜味系统文档统计
@@ -1113,6 +1124,31 @@ def api_health():
             'error': str(e)
         }
         health_status['main_metadata_count'] = 0
+
+    health_status['citation_catalogs'] = {}
+    for domain, domain_rag in (
+        ('sweetness', rag_system),
+        ('dual_protein', dual_protein_rag),
+        ('encapsulation', encapsulation_rag),
+        ('proteoglycan', proteoglycan_rag),
+    ):
+        try:
+            catalog_path = Path(domain_rag.metadata_storage.storage_path)
+            catalog_count = len(domain_rag.metadata_storage.get_all_metadata())
+            health_status['citation_catalogs'][domain] = {
+                'ready': catalog_count > 0,
+                'count': catalog_count,
+                'path': str(catalog_path),
+            }
+            if catalog_count <= 0:
+                health_status['status'] = 'degraded'
+        except Exception as exc:
+            health_status['citation_catalogs'][domain] = {
+                'ready': False,
+                'count': 0,
+                'error': str(exc),
+            }
+            health_status['status'] = 'degraded'
 
     # Dual-Protein 文档统计（独立于主甜味系统）
     try:

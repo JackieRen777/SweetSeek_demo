@@ -2,10 +2,10 @@ import type { ResearchQAConfig } from '../encapsulation/researchQAConfig';
 
 export const proteoglycanQAConfig: ResearchQAConfig = {
   apiBase: '/api/proteoglycan',
-  title: 'Explore protein-polysaccharide science',
-  subtitle: 'from molecular interactions to functional systems',
+  title: 'Pro-glycan Q&A',
+  subtitle: 'Protein-polysaccharide interactions and functional systems',
   placeholder: 'Ask anything about protein-polysaccharide systems',
-  ariaLabel: 'Proteoglycan question',
+  ariaLabel: 'Pro-glycan question',
   welcomeTestId: 'proteoglycan-welcome',
   compactMobileTitle: true,
   presetQuestions: [

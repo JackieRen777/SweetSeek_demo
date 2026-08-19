@@ -12,12 +12,22 @@ run_questions() {
     --questions-per-domain 1 --output "$report/rag-$1.json" >/dev/null
 }
 
+run_builder() {
+  "$release/venv/bin/python" "$release/scripts/verify_md_builder_runtime.py" \
+    --output "$report/md-builder-$1.json" >/dev/null
+}
+
 for sample in 0 1 2 3 4; do
   if [[ "$sample" == 0 ]]; then
     if [[ -s "$report/activation-rag.json" ]]; then
       cp "$report/activation-rag.json" "$report/rag-start.json"
     else
       run_questions start
+    fi
+    if [[ -s "$report/activation-md-builder.json" ]]; then
+      cp "$report/activation-md-builder.json" "$report/md-builder-start.json"
+    else
+      run_builder start
     fi
   fi
   if ! "$release/venv/bin/python" "$release/scripts/maintenance/deploy/record_release_observation.py" \
@@ -27,7 +37,7 @@ for sample in 0 1 2 3 4; do
     exit 1
   fi
   if [[ "$sample" == 4 ]]; then
-    if ! run_questions finish; then
+    if ! run_questions finish || ! run_builder finish; then
       "$release/scripts/maintenance/deploy/rollback_git_release.sh" "$commit" || true
       echo "OBSERVATION_FAILED questions=finish" > "$report/FAILED"
       exit 1

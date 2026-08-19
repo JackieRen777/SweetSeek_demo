@@ -17,6 +17,8 @@ print('STRUCTURE_TOOLS_DISABLED_OK')
     environment = {
         **os.environ,
         "STRUCTURE_TOOLS_ENABLED": "false",
+        "MD_BUILDER_ENABLED": "false",
+        "DOCKING_ENABLED": "false",
         "RAG_EAGER_INIT": "false",
         "RAG_ALLOW_AUTO_BUILD": "false",
     }
@@ -31,3 +33,30 @@ print('STRUCTURE_TOOLS_DISABLED_OK')
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "STRUCTURE_TOOLS_DISABLED_OK" in result.stdout
+
+
+def test_md_builder_can_be_enabled_without_importing_or_registering_docking():
+    script = """
+import sys
+sys.modules['services.docking_api'] = None
+sys.modules['services.docking'] = None
+from app import app
+routes = {rule.rule for rule in app.url_map.iter_rules()}
+assert any(route.startswith('/api/md-builder') for route in routes), routes
+assert not any(route.startswith('/api/docking') for route in routes), routes
+print('MD_BUILDER_ONLY_OK')
+"""
+    environment = {
+        **os.environ,
+        "STRUCTURE_TOOLS_ENABLED": "false",
+        "MD_BUILDER_ENABLED": "true",
+        "DOCKING_ENABLED": "false",
+        "RAG_EAGER_INIT": "false",
+        "RAG_ALLOW_AUTO_BUILD": "false",
+    }
+    result = subprocess.run(
+        [sys.executable, "-c", script], cwd=os.getcwd(), env=environment,
+        text=True, capture_output=True, timeout=60, check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "MD_BUILDER_ONLY_OK" in result.stdout

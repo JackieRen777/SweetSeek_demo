@@ -8,9 +8,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
-from path_utils import normalize_for_storage
 from services.rag_types import stable_chunk_id, stable_document_id
-
 
 MISSING_VALUES = {"", "n/a", "not available", "unknown", "unknown journal", "unknown title", "none"}
 
@@ -28,7 +26,13 @@ def normalize_doi(value: Any) -> str:
     doi = unicodedata.normalize("NFKC", _clean(value))
     doi = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", doi, flags=re.IGNORECASE)
     doi = re.sub(r"^doi\s*:\s*", "", doi, flags=re.IGNORECASE)
-    return doi.rstrip(".,; ")
+    match = re.search(r"10\.\d{4,9}/[-._;()/:A-Z0-9]+", doi, flags=re.IGNORECASE)
+    if not match:
+        return ""
+    normalized = match.group(0).rstrip(".,;:)]}")
+    normalized = re.sub(r"/-/DCSupplemental$", "", normalized, flags=re.IGNORECASE)
+    oup = re.match(r"^(10\.1093/[^/]+/[^/]+)/\d+$", normalized, flags=re.IGNORECASE)
+    return oup.group(1) if oup else normalized
 
 
 def format_gbt7714(metadata: Dict[str, Any]) -> str:

@@ -24,7 +24,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 MemoryHigh=1900M
 MemoryMax=2300M
-ReadWritePaths=/www/wwwlogs
+ReadWritePaths=/www/sweetseek/shared/logs
 
 [Install]
 WantedBy=multi-user.target

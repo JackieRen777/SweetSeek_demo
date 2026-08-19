@@ -39,7 +39,8 @@ describe('AnswerContent', () => {
     fireEvent.click(inlineLink);
     expect(open).toHaveBeenCalledWith('https://doi.org/10.1000/example', '_blank');
     expect(popup.opener).toBeNull();
-    expect(screen.getByText(reference.title)).toBeTruthy();
+    expect(screen.getAllByText(reference.citation).length).toBeGreaterThan(0);
+    expect(screen.getByText((_, element) => element?.textContent === 'Matched evidence · Page 4')).toBeTruthy();
     expect(screen.getByText(reference.primary_chunk!.text)).toBeTruthy();
     expect(screen.getByRole('heading', { name: '参考文献' })).toBeTruthy();
     const journal = screen.getByText(reference.journal);

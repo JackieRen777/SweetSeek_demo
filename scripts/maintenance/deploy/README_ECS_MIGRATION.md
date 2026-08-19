@@ -16,8 +16,8 @@ Gate 1/Gate 2 upload workflow is not used.
 
 ## Workbench command
 
-Run the version of the deployer from the exact commit being deployed. The
-first invocation is read-only; only a successful preflight may start the
+Run the version of the deployer from the exact commit being deployed. This
+single command performs the read-only preflight before it starts the durable
 background deployment:
 
 ```bash
@@ -26,7 +26,6 @@ curl -fL --retry 3 \
   "https://raw.githubusercontent.com/JackieRen777/SweetSeek_demo/${COMMIT}/scripts/maintenance/deploy/deploy_from_git.sh" \
   -o "/tmp/sweetseek-deploy-${COMMIT}.sh" && \
 chmod 700 "/tmp/sweetseek-deploy-${COMMIT}.sh" && \
-bash "/tmp/sweetseek-deploy-${COMMIT}.sh" --commit "${COMMIT}" --preflight-only && \
 bash "/tmp/sweetseek-deploy-${COMMIT}.sh" --commit "${COMMIT}" --background
 ```
 
@@ -39,9 +38,10 @@ journalctl -u "sweetseek-deploy-${COMMIT:0:12}.service" --no-pager -n 40
 ```
 
 The script downloads and verifies the CI assets, creates or reuses the Linux
-web environment, validates the four indexes, runs the canary and fixed RAG
-questions, then atomically switches production. Structure tools remain
-disabled and no Docking worker or engine is installed.
+web environment, validates the citation catalogs and four indexes, runs the
+canary, fixed RAG questions, and an MD Builder ZIP smoke test, then atomically
+switches production. MD Builder is enabled; Docking and its worker remain
+disabled, and no docking engine is installed.
 
 After activation, a background two-hour observation records five samples at
 30-minute intervals. Any 502, OOM, RAG failure, or service restart triggers

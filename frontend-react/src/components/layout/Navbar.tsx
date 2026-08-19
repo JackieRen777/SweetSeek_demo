@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Menu, X } from 'lucide-react';
 import type { FeatureType } from '../../routing';
-import { STRUCTURE_TOOLS_ENABLED } from '../../featureFlags';
+import { MD_BUILDER_ENABLED } from '../../featureFlags';
 
 interface NavbarProps {
   activeScreen: number;
   onNavigate: (index: number) => void;
   activeFeature: FeatureType;
-  structureToolsEnabled?: boolean;
+  mdBuilderEnabled?: boolean;
 }
 
 interface NavCategory {
@@ -20,7 +20,7 @@ const Navbar: React.FC<NavbarProps> = ({
   activeScreen,
   onNavigate,
   activeFeature,
-  structureToolsEnabled = STRUCTURE_TOOLS_ENABLED,
+  mdBuilderEnabled = MD_BUILDER_ENABLED,
 }) => {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,15 +39,15 @@ const Navbar: React.FC<NavbarProps> = ({
       label: 'Dual-Protein',
       items: [
         { label: 'Dual-Protein Q&A', index: 5, feature: 'dual-protein' },
-        ...(structureToolsEnabled
+        ...(mdBuilderEnabled
           ? [{ label: 'AMBER MD Builder', index: 8, feature: 'md-builder' }]
           : []),
       ],
     },
     {
-      label: 'Proteoglycan',
+      label: 'Pro-glycan',
       items: [
-        { label: 'Proteoglycan Q&A', index: 9, feature: 'proteoglycan' },
+        { label: 'Pro-glycan Q&A', index: 9, feature: 'proteoglycan' },
         { label: 'Encapsulation Q&A', index: 7, feature: 'encapsulation' },
       ],
     },

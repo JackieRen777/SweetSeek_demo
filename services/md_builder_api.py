@@ -215,7 +215,7 @@ def _expert_intent_hint(text: str) -> str:
     return "general"
 
 
-def create_md_builder_blueprint(llm_client_getter: Callable):
+def create_md_builder_blueprint(llm_client_getter: Callable, *, docking_enabled: bool = True):
     blueprint = Blueprint("md_builder", __name__, url_prefix="/api/md-builder")
 
     @blueprint.post("/inspect")
@@ -428,6 +428,8 @@ def create_md_builder_blueprint(llm_client_getter: Callable):
             raw_config = request.form.get("config", "")
             config_data = json.loads(raw_config)
             selection = config_data.get("docking_pose") if isinstance(config_data.get("docking_pose"), dict) else None
+            if not docking_enabled and (selection or request.files.get("docking_pose")):
+                raise MDBuilderError("Docking is not enabled for this release; upload an existing structure instead")
             docking_pose = None
             extra_inputs = {}
             if selection and selection.get("job_id") and selection.get("id"):

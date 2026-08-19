@@ -35,7 +35,7 @@ CANARY_UNIT="sweetseek-git-canary.service"
 activated=false
 
 preflight() {
-  local free_kb mem_available_kb swap_free_kb load_one active_jobs remote_head
+  local free_kb mem_available_kb swap_free_kb load_one active_jobs remote_head previous_release
   free_kb="$(df -Pk "$BASE" | awk 'NR==2 {print $4}')"
   mem_available_kb="$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)"
   swap_free_kb="$(awk '/^SwapFree:/ {print $2}' /proc/meminfo)"
@@ -84,6 +84,13 @@ PY
 )"
   [[ "$active_jobs" == 0 ]] || { echo "preflight: $active_jobs structure jobs are active" >&2; return 1; }
   [[ ! -e "$STATE" ]] || { echo "preflight: deployment state already exists for commit" >&2; return 1; }
+  if [[ -s "$BASE/state/active-release" ]]; then
+    previous_release="$(cat "$BASE/state/active-release")"
+    [[ -f "$BASE/shared/reports/$previous_release/PASSED" ]] || {
+      echo "preflight: previous release observation has not passed: $previous_release" >&2
+      return 1
+    }
+  fi
 
   remote_head="$(git ls-remote "$REPOSITORY_URL" refs/heads/main | awk '{print $1}')"
   [[ "$remote_head" == "$COMMIT" ]] || {
@@ -164,7 +171,9 @@ python3.11 - "$INCOMING/manifest.json" "$COMMIT" <<'PY'
 import json, sys
 payload = json.load(open(sys.argv[1]))
 assert payload["commit"] == sys.argv[2], payload
-assert payload["structure_tools_enabled"] is False, payload
+assert payload["md_builder_enabled"] is True, payload
+assert payload["docking_enabled"] is False, payload
+assert payload["citation_style"] == "GB/T 7714-2015", payload
 PY
 
 if [[ ! -d "$RELEASE/.git" && ! -f "$RELEASE/.git" ]]; then
@@ -192,6 +201,10 @@ if [[ ! -f "$VENV/.install-complete" ]]; then
   touch "$VENV/.install-complete"
 fi
 ln -sfn "$VENV" "$RELEASE/venv"
+"$VENV/bin/python" "$RELEASE/scripts/verify_citation_catalogs.py" >/dev/null
+expected_catalog_sha="$(python3.11 -c 'import json,sys; print(json.load(open(sys.argv[1]))["citation_catalog_manifest_sha256"])' "$INCOMING/manifest.json")"
+actual_catalog_sha="$(sha256sum "$RELEASE/data/citations/manifest.json" | awk '{print $1}')"
+[[ "$actual_catalog_sha" == "$expected_catalog_sha" ]] || { echo "citation catalog manifest checksum mismatch" >&2; exit 1; }
 
 for domain in sweetness dual_protein encapsulation proteoglycan; do
   target="$BASE/indexes/$domain/releases/$INDEX_RELEASE"
@@ -226,29 +239,31 @@ else
   : > "$STATE/frontend-target"
 fi
 
+install -d -o www -g www -m 0750 "$BASE/shared/logs"
 cat > "$STATE/release.env.next" <<ENV
 PERSIST_DIR=$BASE/indexes/sweetness
 DUAL_PROTEIN_PERSIST_DIR=$BASE/indexes/dual_protein
 ENCAPSULATION_PERSIST_DIR=$BASE/indexes/encapsulation
 PROTEOGLYCAN_PERSIST_DIR=$BASE/indexes/proteoglycan
 DATA_DIR=$LEGACY/sweet_related_paper/papers
-METADATA_PATH=$LEGACY/sweet_related_paper/metadata.json
+METADATA_PATH=$RELEASE/data/citations/sweetness.json
 DUAL_PROTEIN_DATA_DIR=$LEGACY/Dual_Protein_related_paper/papers
-DUAL_PROTEIN_METADATA_PATH=$LEGACY/Dual_Protein_related_paper/metadata.json
+DUAL_PROTEIN_METADATA_PATH=$RELEASE/data/citations/dual_protein.json
 ENCAPSULATION_DATA_DIR=$LEGACY/Encapsulation_related_paper/papers
-ENCAPSULATION_METADATA_PATH=$LEGACY/Encapsulation_related_paper/metadata.json
+ENCAPSULATION_METADATA_PATH=$RELEASE/data/citations/encapsulation.json
 PROTEOGLYCAN_DATA_DIR=$LEGACY/SweetSeek_paper_database/proteoglycan/papers
-PROTEOGLYCAN_METADATA_PATH=$LEGACY/SweetSeek_paper_database/proteoglycan/metadata.json
+PROTEOGLYCAN_METADATA_PATH=$RELEASE/data/citations/proteoglycan.json
 EMBED_MODEL_NAME=$LEGACY/models/modelscope_cache/BAAI/bge-small-zh-v1___5
 EMBED_MODEL_SOURCE=modelscope
 EMBED_DEVICE=cpu
 EMBED_BATCH_SIZE=8
 EMBED_NUM_THREADS=1
 EMBED_DISABLE_TORCH_DYNAMO=true
-LOG_DIR=/www/wwwlogs
+LOG_DIR=$BASE/shared/logs
 RAG_EAGER_INIT=false
 RAG_ALLOW_AUTO_BUILD=false
 STRUCTURE_TOOLS_ENABLED=false
+MD_BUILDER_ENABLED=true
 DOCKING_ENABLED=false
 ENV
 
@@ -322,6 +337,8 @@ wait_domain proteoglycan /api/proteoglycan/prewarm
 curl -fsS http://127.0.0.1:5002/api/health >/dev/null
 "$VENV/bin/python" "$RELEASE/scripts/verify_rag_runtime.py" --base-url http://127.0.0.1:5002 \
   --questions-per-domain 1 --output "$REPORT/canary-rag.json" >/dev/null
+"$VENV/bin/python" "$RELEASE/scripts/verify_md_builder_runtime.py" --base-url http://127.0.0.1:5002 \
+  --output "$REPORT/canary-md-builder.json" >/dev/null
 cleanup_canary
 for _ in {1..30}; do
   mem_available_kb="$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)"
@@ -375,6 +392,8 @@ wait_production_domain proteoglycan /api/proteoglycan/prewarm
 curl -fsS http://127.0.0.1:5001/api/health >/dev/null
 "$VENV/bin/python" "$RELEASE/scripts/verify_rag_runtime.py" --questions-per-domain 1 \
   --output "$REPORT/activation-rag.json" >/dev/null
+"$VENV/bin/python" "$RELEASE/scripts/verify_md_builder_runtime.py" \
+  --output "$REPORT/activation-md-builder.json" >/dev/null
 
 printf '%s\n' "$COMMIT" > "$BASE/state/active-release"
 systemd-run --unit="sweetseek-observe-${COMMIT:0:12}" --collect \

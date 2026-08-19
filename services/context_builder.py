@@ -2,8 +2,9 @@
 
 import math
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
+from services.encapsulation_references import format_gbt7714
 from services.metadata_service import MetadataService
 from services.rag_types import stable_document_id
 
@@ -14,7 +15,6 @@ class ContextBuilder:
         self.mode = mode
 
     def build_references_raw(self, unique_papers_list) -> List[Dict[str, Any]]:
-        import os
         references_raw = []
         for paper_index, paper_info in enumerate(unique_papers_list, 1):
             file_path = paper_info['file_path']
@@ -137,7 +137,11 @@ class ContextBuilder:
                 'year': ref.get('year', 'N/A'),
                 'authors': ref.get('authors', []) if isinstance(ref.get('authors', []), list) else [ref.get('authors')] if ref.get('authors') else [],
                 'doi': ref.get('doi', 'Not Available'),
+                'volume': ref.get('volume', ''),
+                'issue': ref.get('issue', ''),
+                'pages': ref.get('pages', ref.get('page', '')),
                 'filename': ref.get('filename', ''),
+                'citation': format_gbt7714(ref),
                 'score': 0.0,
             }
             try:

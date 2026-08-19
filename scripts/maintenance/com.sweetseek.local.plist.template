@@ -13,6 +13,9 @@
   <dict>
     <key>RAG_EAGER_INIT</key><string>0</string>
     <key>RAG_ALLOW_AUTO_BUILD</key><string>0</string>
+    <key>STRUCTURE_TOOLS_ENABLED</key><string>false</string>
+    <key>MD_BUILDER_ENABLED</key><string>true</string>
+    <key>DOCKING_ENABLED</key><string>false</string>
     <key>INDEX_BUILD_BATCH_SIZE</key><string>5</string>
     <key>EMBED_BATCH_SIZE</key><string>8</string>
     <key>EMBED_NUM_THREADS</key><string>1</string>

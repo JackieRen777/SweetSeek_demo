@@ -33,13 +33,17 @@ jobs:
       - name: Backend tests
         env:
           STRUCTURE_TOOLS_ENABLED: "false"
+          MD_BUILDER_ENABLED: "true"
+          DOCKING_ENABLED: "false"
           RAG_EAGER_INIT: "false"
           RAG_ALLOW_AUTO_BUILD: "false"
         run: python -m pytest -q
+      - name: Citation catalogs
+        run: python scripts/verify_citation_catalogs.py
       - name: Static checks
         if: matrix.python-version == '3.11'
         run: |
-          ruff check services/rag_runtime.py scripts/verify_rag_runtime.py scripts/maintenance/deploy/record_release_observation.py tests/test_structure_feature_gate.py tests/test_deploy_scripts.py
+          ruff check services/rag_runtime.py services/citation_catalog.py scripts/verify_rag_runtime.py scripts/verify_md_builder_runtime.py scripts/verify_citation_catalogs.py scripts/maintenance/deploy/record_release_observation.py tests/test_structure_feature_gate.py tests/test_deploy_scripts.py
           mypy services/rag_runtime.py
       - name: Capture resolved server requirements
         if: matrix.python-version == '3.11'
@@ -63,6 +67,8 @@ jobs:
         working-directory: frontend-react
         env:
           VITE_STRUCTURE_TOOLS_ENABLED: "false"
+          VITE_MD_BUILDER_ENABLED: "true"
+          VITE_DOCKING_ENABLED: "false"
         run: |
           npm ci
           npm test -- --reporter=dot
@@ -80,6 +86,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: frontend-dist
@@ -90,8 +97,9 @@ jobs:
           path: release
       - name: Build checksums and manifest
         run: |
+          CATALOG_SHA="$(sha256sum data/citations/manifest.json | awk '{print $1}')"
           cd release
-          printf '{"schema_version":1,"commit":"%s","structure_tools_enabled":false}\n' "$GITHUB_SHA" > manifest.json
+          printf '{"schema_version":2,"commit":"%s","md_builder_enabled":true,"docking_enabled":false,"citation_style":"GB/T 7714-2015","citation_catalog_manifest_sha256":"%s"}\n' "$GITHUB_SHA" "$CATALOG_SHA" > manifest.json
           sha256sum sweetseek-frontend-${GITHUB_SHA}.tar.gz requirements-resolved-py311-linux.txt manifest.json > SHA256SUMS
       - name: Publish immutable deployment assets
         env:
@@ -100,4 +108,4 @@ jobs:
           gh release create "deploy-${GITHUB_SHA}" release/* \
             --repo "$GITHUB_REPOSITORY" --prerelease \
             --title "Deploy ${GITHUB_SHA}" \
-            --notes "CI-verified SweetSeek web/RAG deployment assets. Structure tools are disabled."
+            --notes "CI-verified SweetSeek web/RAG deployment assets. MD Builder enabled; Docking disabled."

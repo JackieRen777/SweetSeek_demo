@@ -9,6 +9,7 @@ import './amber-md-builder.css';
 import StructureViewer from './StructureViewer';
 import Docking from '../docking/Docking';
 import type { DockingHandoff, SelectedDockingPose } from '../docking/Docking';
+import { DOCKING_ENABLED } from '../../featureFlags';
 
 type SystemChoice = 'single_protein' | 'protein_protein' | 'protein_ligand';
 type Tab = 'setup' | 'files' | 'expert' | 'docking';
@@ -105,7 +106,7 @@ function resolvedSetup(choice: SystemChoice, structures: StructureEntry[]) {
 }
 
 export default function AmberMDBuilder() {
-  const [tab, setTab] = useState<Tab>('docking');
+  const [tab, setTab] = useState<Tab>(DOCKING_ENABLED ? 'docking' : 'setup');
   const [systemChoice, setSystemChoice] = useState<SystemChoice>('single_protein');
   const [structures, setStructures] = useState<StructureEntry[]>([]);
   const [chainGroups, setChainGroups] = useState<Record<string, ChainGroup>>({});
@@ -129,6 +130,9 @@ export default function AmberMDBuilder() {
   const setup = useMemo(() => resolvedSetup(systemChoice, structures), [systemChoice, structures]);
   const complexChains = setup.inputMode === 'single_complex' ? setup.pdbs[0]?.inspection.chains ?? [] : [];
   const canUseExistingCharges = setup.mol2s[0]?.inspection.has_charges === true;
+  const workflowTabs: Array<[Tab, string]> = DOCKING_ENABLED
+    ? [['docking', '1 Docking'], ['setup', '2 MD Setup'], ['files', '3 Scripts'], ['expert', 'MD Expert']]
+    : [['setup', '1 MD Setup'], ['files', '2 Scripts'], ['expert', 'MD Expert']];
 
   const clearDownload = () => {
     setDownload(previous => {
@@ -429,11 +433,9 @@ export default function AmberMDBuilder() {
   );
 
   return <div className="mdp-shell" aria-label="AMBER MD Builder">
-    <nav className="mdp-mobile-tabs mdp-workflow-tabs" aria-label="Builder workflow">{([
-      ['docking', '1 Docking'], ['setup', '2 MD Setup'], ['files', '3 Scripts'], ['expert', 'MD Expert'],
-    ] as [Tab, string][]).map(([item, label]) => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{label}</button>)}</nav>
+    <nav className="mdp-mobile-tabs mdp-workflow-tabs" aria-label="Builder workflow">{workflowTabs.map(([item, label]) => <button key={item} className={tab === item ? 'active' : ''} onClick={() => setTab(item)}>{label}</button>)}</nav>
     {(error || notice) && <div className={`mdp-banner ${error ? 'error' : 'success'}`}>{error ? <AlertTriangle size={16} /> : <Check size={16} />}<span>{error || notice}</span><button onClick={() => { setError(''); setNotice(''); }}><X size={15} /></button></div>}
-    {tab === 'docking' ? <div className="mdp-docking-inline"><Docking onConfirm={handoff => void acceptDockingPose(handoff)} onSkip={() => { dockingChanged(); setStructures([]); setTab('setup'); }} onDirty={dockingChanged} /></div> : <div className="mdp-workspace">
+    {DOCKING_ENABLED && tab === 'docking' ? <div className="mdp-docking-inline"><Docking onConfirm={handoff => void acceptDockingPose(handoff)} onSkip={() => { dockingChanged(); setStructures([]); setTab('setup'); }} onDirty={dockingChanged} /></div> : <div className="mdp-workspace">
       <main className={`mdp-main overflow-y-auto ${tab !== 'setup' ? 'mdp-mobile-hidden' : ''}`} onWheel={scrollPanel}>
         <section className="mdp-section">
           <div className="mdp-section-heading"><div><span>01</span><h2>Select system</h2></div><span className="mdp-detected">Detected: {String(setup.system).replaceAll('_', ' ')}</span></div>

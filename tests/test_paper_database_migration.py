@@ -4,15 +4,28 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from knowledge_paths import PAPER_DATABASE_ROOT, get_domain_paths
+from knowledge_paths import (
+    CITATION_CATALOG_ROOT,
+    PAPER_DATABASE_ROOT,
+    get_domain_paths,
+    get_runtime_metadata_path,
+)
 from scripts.maintenance import migrate_paper_database as migration
 
 
-def test_domain_paths_share_the_unified_root():
+def test_domain_paths_keep_writable_metadata_separate_from_release_catalogs():
     for domain in ("sweetness", "dual_protein", "encapsulation", "proteoglycan"):
         paths = get_domain_paths(domain)
         assert paths.papers.parent.parent == PAPER_DATABASE_ROOT
         assert paths.metadata.parent == paths.papers.parent
+        assert paths.citation_catalog == CITATION_CATALOG_ROOT / f"{domain}.json"
+
+
+def test_runtime_prefers_catalog_but_respects_explicit_metadata_override(tmp_path, monkeypatch):
+    assert get_runtime_metadata_path("dual_protein") == CITATION_CATALOG_ROOT / "dual_protein.json"
+    override = tmp_path / "metadata.json"
+    monkeypatch.setenv("DUAL_PROTEIN_METADATA_PATH", str(override))
+    assert get_runtime_metadata_path("dual_protein") == override
 
 
 def test_legacy_paths_are_canonicalized():

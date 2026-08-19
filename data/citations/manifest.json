@@ -1,0 +1,74 @@
+{
+  "citation_style": "GB/T 7714-2015",
+  "domains": {
+    "dual_protein": {
+      "domain": "dual_protein",
+      "duplicate_filename_count": 0,
+      "missing": {
+        "authors": 18,
+        "doi": 29,
+        "issue": 174,
+        "journal": 5,
+        "pages": 41,
+        "title": 0,
+        "volume": 36,
+        "year": 0
+      },
+      "record_count": 489,
+      "sha256": "e8f6e93fb08877b61ceb1dfe3177078a592ca22ab2587a83aa0d9b554f613180",
+      "unique_filename_count": 489
+    },
+    "encapsulation": {
+      "domain": "encapsulation",
+      "duplicate_filename_count": 0,
+      "missing": {
+        "authors": 0,
+        "doi": 0,
+        "issue": 474,
+        "journal": 0,
+        "pages": 3,
+        "title": 0,
+        "volume": 2,
+        "year": 0
+      },
+      "record_count": 677,
+      "sha256": "9320632a1b3fcb95a2212b281d113bbfb14b1fa05ca77e172d0848686757f1ff",
+      "unique_filename_count": 677
+    },
+    "proteoglycan": {
+      "domain": "proteoglycan",
+      "duplicate_filename_count": 0,
+      "missing": {
+        "authors": 29,
+        "doi": 38,
+        "issue": 827,
+        "journal": 13,
+        "pages": 79,
+        "title": 0,
+        "volume": 65,
+        "year": 1
+      },
+      "record_count": 1389,
+      "sha256": "6c5a56ab7bd98e462908d27d0131149caa73fac73ed4e5757322979321613d69",
+      "unique_filename_count": 1389
+    },
+    "sweetness": {
+      "domain": "sweetness",
+      "duplicate_filename_count": 0,
+      "missing": {
+        "authors": 83,
+        "doi": 148,
+        "issue": 385,
+        "journal": 12,
+        "pages": 220,
+        "title": 0,
+        "volume": 228,
+        "year": 1
+      },
+      "record_count": 1314,
+      "sha256": "d7b07a219da89512af1ceb395d0e88f24ea1813502e35a88745720b52cf01cc3",
+      "unique_filename_count": 1314
+    }
+  },
+  "schema_version": 1
+}

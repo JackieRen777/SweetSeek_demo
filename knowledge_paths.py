@@ -21,6 +21,11 @@ def _resolve(value: str | Path) -> Path:
     return path.resolve()
 
 
+CITATION_CATALOG_ROOT = _resolve(
+    os.getenv("CITATION_CATALOG_ROOT", PROJECT_ROOT / "data" / "citations")
+)
+
+
 PAPER_DATABASE_ROOT = _resolve(
     os.getenv("PAPER_DATABASE_ROOT", PROJECT_ROOT / "SweetSeek_paper_database")
 )
@@ -30,6 +35,7 @@ PAPER_DATABASE_ROOT = _resolve(
 class KnowledgeDomainPaths:
     papers: Path
     metadata: Path
+    citation_catalog: Path
     index: Path
 
 
@@ -63,5 +69,15 @@ def get_domain_paths(domain: str) -> KnowledgeDomainPaths:
     return KnowledgeDomainPaths(
         papers=_env_path(data_env, domain_root / "papers"),
         metadata=_env_path(metadata_env, domain_root / "metadata.json"),
+        citation_catalog=CITATION_CATALOG_ROOT / f"{domain}.json",
         index=_env_path(index_env, PROJECT_ROOT / index_folder),
     )
+
+
+def get_runtime_metadata_path(domain: str) -> Path:
+    """Return explicit metadata override or the release-local read-only catalog."""
+    paths = get_domain_paths(domain)
+    metadata_env = _DOMAIN_DEFAULTS[domain][3]
+    if os.getenv(metadata_env):
+        return paths.metadata
+    return paths.citation_catalog if paths.citation_catalog.is_file() else paths.metadata

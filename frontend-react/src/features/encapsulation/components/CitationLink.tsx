@@ -36,11 +36,11 @@ const CitationLink: React.FC<CitationLinkProps> = ({ number, reference }) => {
         </span>
       )}
       <span className="pointer-events-none invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-opacity absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-[min(360px,calc(100vw-32px))] rounded-md border border-slate-200 bg-white p-3 text-left normal-case tracking-normal shadow-xl">
-        <span className="block text-xs font-semibold leading-5 text-slate-800 line-clamp-2">{reference.title}</span>
-        <span className="mt-1 block text-[11px] font-normal leading-4 text-slate-500">
-          {chunk?.page ? `Page ${chunk.page} · ` : ''}{reference.filename}
+        <span className="block text-xs font-semibold leading-5 text-slate-800">{reference.citation}</span>
+        <span className="mt-2 block border-t border-slate-100 pt-2 text-[11px] font-medium leading-4 text-slate-500">
+          Matched evidence{chunk?.page ? ` · Page ${chunk.page}` : ''}
         </span>
-        <span className="mt-2 block max-h-28 overflow-hidden text-xs font-normal leading-5 text-slate-600">
+        <span className="mt-1 block max-h-28 overflow-hidden text-xs font-normal leading-5 text-slate-600">
           {chunk?.text || 'No matched text block is available for this reference.'}
         </span>
         <span className={`mt-2 flex items-center gap-1 text-[11px] font-medium ${publisherUrl ? 'text-blue-600' : 'text-slate-400'}`}>

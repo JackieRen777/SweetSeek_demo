@@ -1,2 +1,7 @@
-export const STRUCTURE_TOOLS_ENABLED =
-  import.meta.env.VITE_STRUCTURE_TOOLS_ENABLED === 'true';
+const LEGACY_STRUCTURE_TOOLS_ENABLED = import.meta.env.VITE_STRUCTURE_TOOLS_ENABLED === 'true';
+
+export const MD_BUILDER_ENABLED =
+  import.meta.env.VITE_MD_BUILDER_ENABLED === 'true' || LEGACY_STRUCTURE_TOOLS_ENABLED;
+
+export const DOCKING_ENABLED =
+  MD_BUILDER_ENABLED && import.meta.env.VITE_DOCKING_ENABLED === 'true';

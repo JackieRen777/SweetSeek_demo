@@ -10,12 +10,12 @@ afterEach(() => {
 });
 
 describe('AmberMDBuilder', () => {
-  it('starts at docking and allows the user to skip to MD setup', () => {
+  it('starts at MD setup when docking is disabled', () => {
     const { container } = render(<AmberMDBuilder />);
     expect(screen.getByLabelText('AMBER MD Builder')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Docking' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Run docking' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Skip docking' }));
+    expect(screen.queryByRole('heading', { name: 'Docking' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Run docking' })).toBeNull();
+    expect(screen.getByRole('button', { name: '1 MD Setup' })).toBeTruthy();
     expect(screen.queryByText('Describe your simulation')).toBeNull();
     expect(screen.getByRole('button', { name: 'Single protein' })).toBeTruthy();
     expect(screen.getByLabelText('Production (ns)')).toBeTruthy();
@@ -28,7 +28,6 @@ describe('AmberMDBuilder', () => {
 
   it('applies setup conditions from expert chat without overwriting manually edited fields', async () => {
     render(<AmberMDBuilder />);
-    fireEvent.click(screen.getByRole('button', { name: 'Skip docking' }));
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -53,7 +52,6 @@ describe('AmberMDBuilder', () => {
 
   it('requires confirmation before applying troubleshooting suggestions', async () => {
     render(<AmberMDBuilder />);
-    fireEvent.click(screen.getByRole('button', { name: 'Skip docking' }));
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({

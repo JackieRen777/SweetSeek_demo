@@ -74,9 +74,9 @@ class PersistentRAGSystem:
         allow_auto_build: Optional[bool] = None,
     ):
         if metadata_path is None:
-            from knowledge_paths import get_domain_paths
+            from knowledge_paths import get_runtime_metadata_path
 
-            metadata_path = str(get_domain_paths("sweetness").metadata)
+            metadata_path = str(get_runtime_metadata_path("sweetness"))
         self.data_dir = _project_path(data_dir)
         self.persist_dir = _project_path(persist_dir)
         self.metadata_storage = MetadataStorage(storage_path=_project_path(metadata_path))

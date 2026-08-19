@@ -30,7 +30,13 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "127.0.0.1:5002" in deploy
     assert "-c $RELEASE/gunicorn_config.py --bind 127.0.0.1:5002" in deploy
     assert "rollback_git_release.sh" in deploy
-    assert "STRUCTURE_TOOLS_ENABLED=false" in deploy
+    assert "MD_BUILDER_ENABLED=true" in deploy
+    assert "DOCKING_ENABLED=false" in deploy
+    assert "verify_citation_catalogs.py" in deploy
+    assert "citation catalog manifest checksum mismatch" in deploy
+    assert "verify_md_builder_runtime.py" in deploy
+    assert "data/citations/sweetness.json" in deploy
+    assert "previous release observation has not passed" in deploy
     assert "--preflight-only" in deploy
     assert "awk -v load_value=" in deploy
     assert "awk -v load=" not in deploy
@@ -45,6 +51,7 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "legacy Gunicorn did not stop within 30 seconds" in deploy
     assert "sleep 1800" in observe
     assert "activation-rag.json" in observe
+    assert "run_builder finish" in observe
     assert "release-observation.json" in recorder
     assert "sustained_swap_growth" in recorder
 
@@ -54,6 +61,7 @@ def test_production_service_matches_low_memory_server_budget():
     assert "MemoryHigh=1900M" in service
     assert "MemoryMax=2300M" in service
     assert "--access-logfile - --error-logfile -" in service
+    assert "ReadWritePaths=/www/sweetseek/shared/logs" in service
     assert "--workers 1" not in service  # worker count is fixed in gunicorn_config.py
 
 
