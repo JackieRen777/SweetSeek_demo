@@ -52,7 +52,17 @@ def test_production_service_matches_low_memory_server_budget():
     service = (DEPLOY / "systemd" / "sweetseek.service").read_text(encoding="utf-8")
     assert "MemoryHigh=1900M" in service
     assert "MemoryMax=2300M" in service
+    assert "--access-logfile - --error-logfile -" in service
     assert "--workers 1" not in service  # worker count is fixed in gunicorn_config.py
+
+
+def test_git_rollback_survives_deployment_unit_exit_and_supports_legacy_health():
+    rollback = (DEPLOY / "rollback_git_release.sh").read_text(encoding="utf-8")
+    assert "systemd-run" in rollback
+    assert "sweetseek-legacy-rollback.service" in rollback
+    assert "nohup" not in rollback
+    assert "/api/live" in rollback
+    assert "/api/health" in rollback
 
 
 def test_rollback_restores_index_links_and_service_snapshot():

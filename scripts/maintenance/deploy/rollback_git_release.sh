@@ -56,7 +56,12 @@ else
 fi
 systemctl daemon-reload
 
-if curl -fsS --max-time 5 http://127.0.0.1:5001/api/live >/dev/null 2>&1; then
+production_responding() {
+  curl -fsS --max-time 5 http://127.0.0.1:5001/api/live >/dev/null 2>&1 ||
+    curl -fsS --max-time 5 http://127.0.0.1:5001/api/health >/dev/null 2>&1
+}
+
+if production_responding; then
   echo "ROLLBACK_OK_EXISTING_SERVICE"
   exit 0
 fi
@@ -64,7 +69,7 @@ fi
 if [[ "$(cat "$STATE/service-kind")" == present ]]; then
   systemctl enable --now sweetseek.service
   for _ in {1..60}; do
-    curl -fsS --max-time 3 http://127.0.0.1:5001/api/live >/dev/null && {
+    production_responding && {
       echo "ROLLBACK_OK"
       exit 0
     }
@@ -75,16 +80,22 @@ if [[ "$(cat "$STATE/service-kind")" == present ]]; then
   exit 1
 fi
 
-cd "$LEGACY"
-nohup "$LEGACY/venv/bin/python3" -m gunicorn -c "$LEGACY/gunicorn_config.py" app:app \
-  > /www/wwwlogs/sweetseek_git_rollback.log 2>&1 &
+legacy_unit="sweetseek-legacy-rollback.service"
+systemctl stop "$legacy_unit" 2>/dev/null || true
+systemctl reset-failed "$legacy_unit" 2>/dev/null || true
+systemd-run \
+  --unit="${legacy_unit%.service}" \
+  --property=Restart=on-failure \
+  --property=RestartSec=5 \
+  --property="WorkingDirectory=$LEGACY" \
+  "$LEGACY/venv/bin/python3" -m gunicorn -c "$LEGACY/gunicorn_config.py" app:app
 for _ in {1..60}; do
-  curl -fsS --max-time 3 http://127.0.0.1:5001/api/live >/dev/null && {
+  production_responding && {
     echo "ROLLBACK_OK"
     exit 0
   }
   sleep 1
 done
 echo "ROLLBACK_FAILED" >&2
-tail -n 80 /www/wwwlogs/sweetseek_git_rollback.log >&2 || true
+journalctl -u "$legacy_unit" --no-pager -n 80 >&2 || true
 exit 1

@@ -14,7 +14,7 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=OMP_NUM_THREADS=1
 Environment=OPENBLAS_NUM_THREADS=1
 Environment=MKL_NUM_THREADS=1
-ExecStart=/www/sweetseek/current/venv/bin/python -m gunicorn -c /www/sweetseek/current/gunicorn_config.py app:app
+ExecStart=/www/sweetseek/current/venv/bin/python -m gunicorn -c /www/sweetseek/current/gunicorn_config.py --access-logfile - --error-logfile - app:app
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=60
