@@ -44,14 +44,16 @@ preflight() {
   [[ "$free_kb" -ge 20971520 ]] || { echo "preflight: less than 20 GiB free" >&2; return 1; }
   [[ "$mem_available_kb" -ge 1048576 ]] || { echo "preflight: less than 1 GiB memory available" >&2; return 1; }
   [[ "$swap_free_kb" -ge 2097152 ]] || { echo "preflight: less than 2 GiB swap free" >&2; return 1; }
-  awk -v load="$load_one" 'BEGIN {exit !(load <= 2.0)}' || {
+  awk -v load_value="$load_one" 'BEGIN {exit !(load_value <= 2.0)}' || {
     echo "preflight: one-minute load exceeds 2.0" >&2
     return 1
   }
-  curl -fsS --max-time 10 http://127.0.0.1:5001/api/live >/dev/null || {
-    echo "preflight: current production liveness failed" >&2
-    return 1
-  }
+  if ! curl -fsS --max-time 10 http://127.0.0.1:5001/api/live >/dev/null; then
+    curl -fsS --max-time 10 http://127.0.0.1:5001/api/health >/dev/null || {
+      echo "preflight: current production liveness failed" >&2
+      return 1
+    }
+  fi
   ! systemctl is-active --quiet sweetseek-docking-worker.service || {
     echo "preflight: docking worker is active" >&2
     return 1

@@ -31,6 +31,10 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "rollback_git_release.sh" in deploy
     assert "STRUCTURE_TOOLS_ENABLED=false" in deploy
     assert "--preflight-only" in deploy
+    assert "awk -v load_value=" in deploy
+    assert "awk -v load=" not in deploy
+    assert "http://127.0.0.1:5001/api/live" in deploy
+    assert "http://127.0.0.1:5001/api/health" in deploy
     assert "--background" in deploy
     assert "CPUQuota=120%" in deploy
     assert "MemoryMax=2600M" in deploy
