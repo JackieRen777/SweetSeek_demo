@@ -23,13 +23,20 @@ describe('Navbar', () => {
 
   it('uses AMBER MD Builder as the single structural workflow entry', () => {
     const onNavigate = vi.fn();
-    render(<Navbar activeScreen={0} activeFeature="md-builder" onNavigate={onNavigate} />);
+    render(<Navbar activeScreen={0} activeFeature="md-builder" onNavigate={onNavigate} structureToolsEnabled />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Dual-Protein' }));
     fireEvent.click(screen.getByRole('button', { name: 'AMBER MD Builder' }));
     expect(onNavigate).toHaveBeenCalledWith(8);
 
     expect(screen.queryByRole('button', { name: 'Docking' })).toBeNull();
+  });
+
+  it('hides structure tools in the default production build', () => {
+    render(<Navbar activeScreen={0} activeFeature={null} onNavigate={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dual-Protein' }));
+    expect(screen.queryByRole('button', { name: 'AMBER MD Builder' })).toBeNull();
   });
 
   it('provides both Q&A entries under Proteoglycan in the mobile navigation', () => {

@@ -27,7 +27,7 @@ is_loaded() {
 
 wait_ready() {
   for _ in {1..30}; do
-    if curl -fsS --max-time 2 "http://127.0.0.1:5001/api/health" >/dev/null 2>&1; then
+    if curl -fsS --max-time 2 "http://127.0.0.1:5001/api/live" >/dev/null 2>&1; then
       echo "SweetSeek ready: http://127.0.0.1:5001"
       return 0
     fi

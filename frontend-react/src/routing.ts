@@ -1,5 +1,7 @@
 export type FeatureType = 'qa' | 'equation' | 'database' | 'references' | 'dual-protein' | 'encapsulation' | 'proteoglycan' | 'ml-predict' | 'md-builder' | null;
 
+import { STRUCTURE_TOOLS_ENABLED } from './featureFlags';
+
 const PATH_MAP: Record<string, FeatureType> = {
   '/sweetseek': 'qa',
   '/professionalq&a': 'qa',
@@ -27,8 +29,12 @@ export const REVERSE_PATH_MAP: Record<string, string> = {
   'md-builder': '/amber-md-builder',
 };
 
-export const featureFromPath = (pathname: string): FeatureType => {
+export const featureFromPath = (
+  pathname: string,
+  structureToolsEnabled = STRUCTURE_TOOLS_ENABLED,
+): FeatureType => {
   const path = pathname.toLowerCase();
   const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
-  return PATH_MAP[cleanPath] || (cleanPath === '/qa' ? 'qa' : null);
+  const feature = PATH_MAP[cleanPath] || (cleanPath === '/qa' ? 'qa' : null);
+  return feature === 'md-builder' && !structureToolsEnabled ? null : feature;
 };

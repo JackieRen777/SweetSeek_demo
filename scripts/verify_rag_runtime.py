@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterable, List, Tuple
 
 import requests
 
-BASE_URL = "http://127.0.0.1:5001"
+DEFAULT_BASE_URL = "http://127.0.0.1:5001"
 QUESTIONS = {
     "sweetness": [
         "甜味受体T1R2/T1R3如何感知甜味物质？",
@@ -63,10 +63,13 @@ def parse_sse(lines: Iterable[str]) -> Iterable[Tuple[str, Dict[str, Any]]]:
             data.append(line[5:].strip())
 
 
-def run_question(domain: str, question: str, timeout: int = 180) -> Dict[str, Any]:
+def run_question(
+    domain: str, question: str, base_url: str = DEFAULT_BASE_URL, timeout: int = 180
+) -> Dict[str, Any]:
     started = time.perf_counter()
     response = requests.post(
-        BASE_URL + ENDPOINTS[domain], json={"question": question, "max_results": 80},
+        base_url.rstrip("/") + ENDPOINTS[domain],
+        json={"question": question, "max_results": 80},
         stream=True, timeout=(5, timeout),
     )
     result = {"domain": domain, "question": question, "status_code": response.status_code,
@@ -91,11 +94,11 @@ def run_question(domain: str, question: str, timeout: int = 180) -> Dict[str, An
     return result
 
 
-def run_suite(questions_per_domain: int) -> Dict[str, Any]:
+def run_suite(questions_per_domain: int, base_url: str = DEFAULT_BASE_URL) -> Dict[str, Any]:
     results = []
     for domain, questions in QUESTIONS.items():
         for question in questions[:questions_per_domain]:
-            results.append(run_question(domain, question))
+            results.append(run_question(domain, question, base_url=base_url))
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "results": results,
@@ -106,9 +109,10 @@ def run_suite(questions_per_domain: int) -> Dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--questions-per-domain", type=int, choices=(1, 2, 3), default=1)
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    report = run_suite(args.questions_per_domain)
+    report = run_suite(args.questions_per_domain, base_url=args.base_url)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

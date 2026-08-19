@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Menu, X } from 'lucide-react';
 import type { FeatureType } from '../../routing';
+import { STRUCTURE_TOOLS_ENABLED } from '../../featureFlags';
 
 interface NavbarProps {
   activeScreen: number;
   onNavigate: (index: number) => void;
   activeFeature: FeatureType;
+  structureToolsEnabled?: boolean;
 }
 
 interface NavCategory {
@@ -14,7 +16,12 @@ interface NavCategory {
   items: Array<{ label: string; index: number; feature: string | null }>;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  activeScreen,
+  onNavigate,
+  activeFeature,
+  structureToolsEnabled = STRUCTURE_TOOLS_ENABLED,
+}) => {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -32,7 +39,9 @@ const Navbar: React.FC<NavbarProps> = ({ activeScreen, onNavigate, activeFeature
       label: 'Dual-Protein',
       items: [
         { label: 'Dual-Protein Q&A', index: 5, feature: 'dual-protein' },
-        { label: 'AMBER MD Builder', index: 8, feature: 'md-builder' },
+        ...(structureToolsEnabled
+          ? [{ label: 'AMBER MD Builder', index: 8, feature: 'md-builder' }]
+          : []),
       ],
     },
     {

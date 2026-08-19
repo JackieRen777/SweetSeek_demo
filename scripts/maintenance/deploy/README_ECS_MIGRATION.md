@@ -1,27 +1,49 @@
-# ECS 迁移检查表
+# ECS Git deployment
 
-1. 从 `ecs.env.example` 创建未跟踪的 `ecs.env`，仅允许 SSH 密钥和当前 IP 白名单。
-2. 修复本地 FileProvider 占位文件并确保至少有 20 GiB 可用空间。
-3. Gate 1 从干净且已推送的 `main` 构建，分域上传 512 维索引并完成两小时观察：
+This release path deploys one exact, CI-verified commit from `main`. The legacy
+Gate 1/Gate 2 upload workflow is not used.
 
-   ```bash
-   scripts/maintenance/deploy/deploy_ecs_oneclick.sh gate1
-   ```
+## Preconditions
 
-4. Gate 1 通过后，在 `ecs.env` 配置三组真实 Docking 夹具，再发布 Gate 2：
+- Local Python 3.10 recovery, tests, production frontend build, and the
+  30-minute local observation have passed.
+- The full 40-character commit is on `origin/main`.
+- GitHub Actions has published the prerelease `deploy-<commit>`.
+- Port 5001 remains occupied by the current production service until the
+  port-5002 canary passes.
+- The four verified 512-dimensional indexes already exist under
+  `/www/sweetseek/indexes`; they are not uploaded again.
 
-   ```bash
-   scripts/maintenance/deploy/deploy_ecs_oneclick.sh gate2
-   ```
+## Workbench command
 
-5. 任一阶段需要人工回切时执行：
+Run the version of the deployer from the exact commit being deployed. The
+first invocation is read-only; only a successful preflight may start the
+background deployment:
 
-   ```bash
-   scripts/maintenance/deploy/rollback_release.sh --confirm
-   ```
+```bash
+COMMIT=<40-character-main-sha>
+curl -fL --retry 3 \
+  "https://raw.githubusercontent.com/JackieRen777/SweetSeek_demo/${COMMIT}/scripts/maintenance/deploy/deploy_from_git.sh" \
+  -o "/tmp/sweetseek-deploy-${COMMIT}.sh" && \
+chmod 700 "/tmp/sweetseek-deploy-${COMMIT}.sh" && \
+bash "/tmp/sweetseek-deploy-${COMMIT}.sh" --commit "${COMMIT}" --preflight-only && \
+bash "/tmp/sweetseek-deploy-${COMMIT}.sh" --commit "${COMMIT}" --background
+```
 
-发布脚本仅接受与 `origin/main` 完全一致的干净本地 `main`，功能分支或包含未提交修改的工作区会被拒绝。代码、Web venv、计算环境和四域索引均使用版本目录；生产只通过软链接切换。
-5. 验证九个前端功能、四个知识域健康接口和 SSE 流式回答。
-6. 切换 DNS 后观察至少一个发布周期，再停用旧服务器。
+Workbench may disconnect after `DEPLOYMENT_STARTED` is printed. Inspect the
+background task without attaching to it:
 
-代码部署不会同步或删除论文、元数据、模型、索引和私有环境文件。回退代码使用 Git，数据与索引使用独立备份。
+```bash
+systemctl status "sweetseek-deploy-${COMMIT:0:12}.service" --no-pager -l
+journalctl -u "sweetseek-deploy-${COMMIT:0:12}.service" --no-pager -n 40
+```
+
+The script downloads and verifies the CI assets, creates or reuses the Linux
+web environment, validates the four indexes, runs the canary and fixed RAG
+questions, then atomically switches production. Structure tools remain
+disabled and no Docking worker or engine is installed.
+
+After activation, a background two-hour observation records five samples at
+30-minute intervals. Any 502, OOM, RAG failure, or service restart triggers
+the commit-scoped rollback script. Reports are written to
+`/www/sweetseek/shared/reports/<commit>`.

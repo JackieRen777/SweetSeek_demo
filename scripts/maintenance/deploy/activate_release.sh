@@ -75,10 +75,10 @@ if ! remote "set -euo pipefail
     docking_smoke_token=\$(cat /proc/sys/kernel/random/uuid)
   fi
   cat > '${REMOTE_BASE}/shared/config/release.env.next' <<ENV
-PERSIST_DIR=${REMOTE_BASE}/indexes/sweetness/current
-DUAL_PROTEIN_PERSIST_DIR=${REMOTE_BASE}/indexes/dual_protein/current
-ENCAPSULATION_PERSIST_DIR=${REMOTE_BASE}/indexes/encapsulation/current
-PROTEOGLYCAN_PERSIST_DIR=${REMOTE_BASE}/indexes/proteoglycan/current
+PERSIST_DIR=${REMOTE_BASE}/indexes/sweetness
+DUAL_PROTEIN_PERSIST_DIR=${REMOTE_BASE}/indexes/dual_protein
+ENCAPSULATION_PERSIST_DIR=${REMOTE_BASE}/indexes/encapsulation
+PROTEOGLYCAN_PERSIST_DIR=${REMOTE_BASE}/indexes/proteoglycan
 DATA_DIR=${LEGACY_ROOT}/sweet_related_paper/papers
 METADATA_PATH=${LEGACY_ROOT}/sweet_related_paper/metadata.json
 DUAL_PROTEIN_DATA_DIR=${LEGACY_ROOT}/Dual_Protein_related_paper/papers

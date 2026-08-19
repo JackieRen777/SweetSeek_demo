@@ -13,6 +13,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import Slider from './components/layout/Slider';
 import { useThresholdScroll } from './utils/thresholdScroll';
 import { featureFromPath, REVERSE_PATH_MAP, type FeatureType } from './routing';
+import { STRUCTURE_TOOLS_ENABLED } from './featureFlags';
 
 // Lazy load feature components
 const ChatInterface = lazy(() => import('./features/qa/components/ChatInterface'));
@@ -23,7 +24,9 @@ const DualProteinChatInterface = lazy(() => import('./features/dual-protein/comp
 const EncapsulationChatInterface = lazy(() => import('./features/encapsulation/components/EncapsulationChatInterface'));
 const ProteoglycanChatInterface = lazy(() => import('./features/proteoglycan/components/ProteoglycanChatInterface'));
 const MLPredictSection = lazy(() => import('./features/ml-predict/MLPredictSection'));
-const AmberMDBuilder = lazy(() => import('./features/md-builder/AmberMDBuilder'));
+const AmberMDBuilder = STRUCTURE_TOOLS_ENABLED
+  ? lazy(() => import('./features/md-builder/AmberMDBuilder'))
+  : null;
 
 const SCREEN_COUNT = 5;
 
@@ -97,9 +100,9 @@ function App() {
       else if (index === 5) { setActiveFeature('dual-protein'); return; }
       else if (index === 6) { setActiveFeature('ml-predict'); return; }
       else if (index === 7) { setActiveFeature('encapsulation'); return; }
-      else if (index === 8) { setActiveFeature('md-builder'); return; }
+      else if (index === 8 && STRUCTURE_TOOLS_ENABLED) { setActiveFeature('md-builder'); return; }
       else if (index === 9) { setActiveFeature('proteoglycan'); return; }
-      else if (index === 10) { setActiveFeature('md-builder'); return; }
+      else if (index === 10 && STRUCTURE_TOOLS_ENABLED) { setActiveFeature('md-builder'); return; }
 
       // Also scroll to that section in the background
       navigateTo(index);
@@ -115,6 +118,7 @@ function App() {
             activeScreen={activeScreen} 
             onNavigate={handleNavigate} 
             activeFeature={activeFeature}
+            structureToolsEnabled={STRUCTURE_TOOLS_ENABLED}
         />
 
         {/* Vertical Slider Indicator */}
@@ -228,7 +232,7 @@ function App() {
                         {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
                         {activeFeature === 'encapsulation' && <EncapsulationChatInterface />}
                         {activeFeature === 'proteoglycan' && <ProteoglycanChatInterface />}
-                        {activeFeature === 'md-builder' && <AmberMDBuilder />}
+                        {activeFeature === 'md-builder' && AmberMDBuilder && <AmberMDBuilder />}
                       </Suspense>
                     </div>
                   </div>

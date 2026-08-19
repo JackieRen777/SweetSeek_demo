@@ -100,8 +100,14 @@ def validate_config():
 
 app = Flask(__name__)
 
-from services.md_builder_api import InMemoryUploadRequest
-app.request_class = InMemoryUploadRequest
+STRUCTURE_TOOLS_ENABLED = os.getenv("STRUCTURE_TOOLS_ENABLED", "false").strip().lower() in {
+    "1", "true", "yes"
+}
+
+if STRUCTURE_TOOLS_ENABLED:
+    from services.md_builder_api import InMemoryUploadRequest
+
+    app.request_class = InMemoryUploadRequest
 
 @app.errorhandler(413)
 def request_too_large(_error):
@@ -180,10 +186,12 @@ llm_client = services.llm_client
 compound_service = services.compound_service
 chat_service = services.chat_service
 
-from services.md_builder_api import create_md_builder_blueprint
-app.register_blueprint(create_md_builder_blueprint(lambda: llm_client))
-from services.docking_api import create_docking_blueprint
-app.register_blueprint(create_docking_blueprint())
+if STRUCTURE_TOOLS_ENABLED:
+    from services.md_builder_api import create_md_builder_blueprint
+    from services.docking_api import create_docking_blueprint
+
+    app.register_blueprint(create_md_builder_blueprint(lambda: llm_client))
+    app.register_blueprint(create_docking_blueprint())
 
 # 双蛋白 RAG 系统（独立实例）
 from persistent_storage import PersistentRAGSystem

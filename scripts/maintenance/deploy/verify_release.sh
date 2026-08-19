@@ -23,7 +23,7 @@ if [[ "${gate}" == gate1 ]]; then
   fi
   note "starting mandatory two-hour gate observation"
   for check in {0..8}; do
-    if ! remote "cd '${REMOTE_BASE}/current' && venv/bin/python scripts/maintenance/deploy/record_gate_observation.py \\
+    if ! remote "cd '${REMOTE_BASE}/current' && venv/bin/python scripts/maintenance/deploy/record_release_observation.py \\
         --report-dir '${report_dir}' --release-id '${release_id}'"; then
       "${DEPLOY_DIR}/rollback_release.sh" --automatic || true
       die "Gate 1 observation failed; rollback requested"

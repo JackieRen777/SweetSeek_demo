@@ -6,6 +6,7 @@ __pycache__/
 .Python
 env/
 venv/
+venv.fileprovider-broken-*/
 ENV/
 build/
 develop-eggs/
@@ -114,6 +115,7 @@ nohup.out
 # 自动启动日志
 autostart.log
 .venv/
+/venv
 .archive/
 .trae/
 
@@ -138,6 +140,8 @@ data/models/
 
 # Excel workbooks containing molecule-level CTD-derived data (CC BY-NC-ND 4.0)
 reports/*.xlsx
+reports/local-*.json
+reports/local-observation-*/
 
 # Runtime PID files
 *.pid

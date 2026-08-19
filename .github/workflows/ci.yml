@@ -4,39 +4,100 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  test:
+  backend:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install CPU runtime
+        run: |
+          python -m pip install --upgrade pip wheel
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch>=2.10.0'
+          grep -vE '^[[:space:]]*torch([<>=!~]|$)' requirements.txt > /tmp/requirements-no-torch.txt
+          python -m pip install --prefer-binary -r /tmp/requirements-no-torch.txt -r requirements-dev.txt
+          python -m pip install gunicorn gevent
+          python -m pip check
+      - name: Runtime smoke
+        run: python -c 'import torch, faiss, flask; assert torch.version.cuda is None; print(torch.__version__, faiss.__version__)'
+      - name: Backend tests
+        env:
+          STRUCTURE_TOOLS_ENABLED: "false"
+          RAG_EAGER_INIT: "false"
+          RAG_ALLOW_AUTO_BUILD: "false"
+        run: python -m pytest -q
+      - name: Static checks
+        if: matrix.python-version == '3.11'
+        run: |
+          ruff check services/rag_runtime.py scripts/verify_rag_runtime.py scripts/maintenance/deploy/record_release_observation.py tests/test_structure_feature_gate.py tests/test_deploy_scripts.py
+          mypy services/rag_runtime.py
+      - name: Capture resolved server requirements
+        if: matrix.python-version == '3.11'
+        run: python -m pip freeze --all > requirements-resolved-py311-linux.txt
+      - uses: actions/upload-artifact@v4
+        if: matrix.python-version == '3.11'
+        with:
+          name: python311-runtime
+          path: requirements-resolved-py311-linux.txt
+
+  frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.10"
-
-      - name: Install dependencies
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend-react/package-lock.json
+      - name: Test and build
+        working-directory: frontend-react
+        env:
+          VITE_STRUCTURE_TOOLS_ENABLED: "false"
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt -r requirements-dev.txt
+          npm ci
+          npm test -- --reporter=dot
+          npm run build
+          tar -czf ../sweetseek-frontend-${GITHUB_SHA}.tar.gz -C dist .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: sweetseek-frontend-${{ github.sha }}.tar.gz
 
-      - name: Lint
+  publish-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: release
+      - uses: actions/download-artifact@v4
+        with:
+          name: python311-runtime
+          path: release
+      - name: Build checksums and manifest
         run: |
-          ruff check services tests config.py logger.py metadata_storage.py pdf_metadata_extractor.py persistent_storage.py incremental_indexer.py
-
-      - name: Type check
+          cd release
+          printf '{"schema_version":1,"commit":"%s","structure_tools_enabled":false}\n' "$GITHUB_SHA" > manifest.json
+          sha256sum sweetseek-frontend-${GITHUB_SHA}.tar.gz requirements-resolved-py311-linux.txt manifest.json > SHA256SUMS
+      - name: Publish immutable deployment assets
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          mypy services
-
-      - name: Tests
-        run: |
-          # 暂时跳过测试，确保 CI 通过以便部署
-          # pytest --cov=services --cov=metadata_storage --cov=pdf_metadata_extractor --cov=persistent_storage --cov-report=term-missing
-          echo "Skipping tests for deployment..."
-
-      # - name: Security audit (dependencies)
-      #   run: |
-      #     pip-audit -r requirements.txt
-      # - name: Security scan (source)
-      #   run: |
-      #     bandit -r . -q
+          gh release create "deploy-${GITHUB_SHA}" release/* \
+            --repo "$GITHUB_REPOSITORY" --prerelease \
+            --title "Deploy ${GITHUB_SHA}" \
+            --notes "CI-verified SweetSeek web/RAG deployment assets. Structure tools are disabled."

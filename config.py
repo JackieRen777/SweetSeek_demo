@@ -117,7 +117,7 @@ class Config:
     BASE_DIR = Path(__file__).resolve().parent
     _SWEETNESS_PATHS = get_domain_paths("sweetness")
     METADATA_PATH = _SWEETNESS_PATHS.metadata
-    LOG_DIR = BASE_DIR / "logs"
+    LOG_DIR = Path(os.getenv("LOG_DIR", str(BASE_DIR / "logs"))).expanduser()
     STATIC_DIR = BASE_DIR / "static"
     TEMPLATE_DIR = BASE_DIR / "frontend"
     
@@ -126,6 +126,9 @@ class Config:
     # 固定默认端口 5001：与 gunicorn/nginx/部署脚本一致，减少多环境端口分叉导致的代理与健康检查失败。
     PORT = int(os.getenv('PORT', 5001))
     DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+    STRUCTURE_TOOLS_ENABLED = os.getenv("STRUCTURE_TOOLS_ENABLED", "false").lower() in (
+        "true", "1", "yes"
+    )
     
     # DeepSeek API
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
