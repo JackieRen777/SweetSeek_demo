@@ -292,7 +292,7 @@ EnvironmentFile=$STATE/release.env.next
 Environment=OMP_NUM_THREADS=1
 Environment=OPENBLAS_NUM_THREADS=1
 Environment=MKL_NUM_THREADS=1
-ExecStart=$VENV/bin/python -m gunicorn --bind 127.0.0.1:5002 --workers 1 --worker-class gevent --timeout 900 app:app
+ExecStart=$VENV/bin/python -m gunicorn -c $RELEASE/gunicorn_config.py --bind 127.0.0.1:5002 --access-logfile - --error-logfile - app:app
 CPUQuota=100%
 MemoryHigh=1600M
 MemoryMax=2000M

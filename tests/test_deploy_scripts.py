@@ -28,6 +28,7 @@ def test_git_release_has_canary_rollback_and_observation():
     observe = (DEPLOY / "observe_git_release.sh").read_text(encoding="utf-8")
     recorder = (DEPLOY / "record_release_observation.py").read_text(encoding="utf-8")
     assert "127.0.0.1:5002" in deploy
+    assert "-c $RELEASE/gunicorn_config.py --bind 127.0.0.1:5002" in deploy
     assert "rollback_git_release.sh" in deploy
     assert "STRUCTURE_TOOLS_ENABLED=false" in deploy
     assert "--preflight-only" in deploy
