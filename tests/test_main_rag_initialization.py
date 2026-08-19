@@ -1,3 +1,5 @@
+import threading
+
 import app as app_module
 
 
@@ -17,11 +19,17 @@ def test_api_init_reports_ready(monkeypatch):
 
 
 def test_api_init_starts_background_initialization(monkeypatch):
+    gate = threading.Event()
+    runtime = app_module.rag_runtime._domains["sweetness"]
     monkeypatch.setattr(app_module, "system_ready", False)
-    monkeypatch.setattr(app_module.rag_runtime._domains["sweetness"], "loader", lambda: True)
+    monkeypatch.setattr(runtime, "index_exists", lambda: True)
+    monkeypatch.setattr(runtime, "loader", lambda: gate.wait(1))
 
-    response = app_module.app.test_client().post("/api/init")
+    try:
+        response = app_module.app.test_client().post("/api/init")
 
-    assert response.status_code == 202
-    assert response.get_json()["status"] in {"initializing", "ready"}
-    assert response.get_json()["ready"] is False
+        assert response.status_code == 202
+        assert response.get_json()["status"] == "initializing"
+        assert response.get_json()["ready"] is False
+    finally:
+        gate.set()
