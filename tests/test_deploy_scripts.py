@@ -47,6 +47,10 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "MemoryMax=2600M" in deploy
     assert "MemoryHigh=1600M" in deploy
     assert "MemoryMax=2000M" in deploy
+    assert 'PYPI_INDEX="${SWEETSEEK_PYPI_INDEX:-https://pypi.org/simple}"' in deploy
+    assert 'pip install --index-url "$PYPI_INDEX" --upgrade pip wheel' in deploy
+    assert 'pip install --index-url https://download.pytorch.org/whl/cpu "$torch_spec"' in deploy
+    assert 'pip install --index-url "$PYPI_INDEX" --prefer-binary' in deploy
     assert deploy.index('preflight_json="$(preflight)"') < deploy.index('mkdir -p "$BASE/incoming"')
     assert "legacy Gunicorn did not stop within 30 seconds" in deploy
     assert "sleep 1800" in observe

@@ -190,12 +190,14 @@ VENV="$BASE/venvs/web-${requirements_hash}-py311"
 if [[ ! -f "$VENV/.install-complete" ]]; then
   [[ ! -e "$VENV" ]] || rm -rf "$VENV"
   python3.11 -m venv "$VENV"
-  "$VENV/bin/python" -m pip install --upgrade pip wheel
+  PYPI_INDEX="${SWEETSEEK_PYPI_INDEX:-https://pypi.org/simple}"
+  "$VENV/bin/python" -m pip install --index-url "$PYPI_INDEX" --upgrade pip wheel
   torch_spec="$(grep -E '^torch==' "$INCOMING/requirements-resolved-py311-linux.txt" | head -n 1)"
   [[ -n "$torch_spec" ]]
   "$VENV/bin/python" -m pip install --index-url https://download.pytorch.org/whl/cpu "$torch_spec"
   grep -vE '^torch==' "$INCOMING/requirements-resolved-py311-linux.txt" > "$INCOMING/requirements-no-torch.txt"
-  "$VENV/bin/python" -m pip install --prefer-binary -r "$INCOMING/requirements-no-torch.txt"
+  "$VENV/bin/python" -m pip install --index-url "$PYPI_INDEX" --prefer-binary \
+    -r "$INCOMING/requirements-no-torch.txt"
   "$VENV/bin/python" -m pip check
   "$VENV/bin/python" -c 'import faiss, flask, torch; assert torch.version.cuda is None'
   touch "$VENV/.install-complete"
