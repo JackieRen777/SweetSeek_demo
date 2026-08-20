@@ -32,8 +32,15 @@ describe('Navbar', () => {
     expect(screen.queryByRole('button', { name: 'Docking' })).toBeNull();
   });
 
-  it('hides structure tools in the default production build', () => {
-    render(<Navbar activeScreen={0} activeFeature={null} onNavigate={vi.fn()} />);
+  it('hides MD Builder when its feature flag is disabled', () => {
+    render(
+      <Navbar
+        activeScreen={0}
+        activeFeature={null}
+        onNavigate={vi.fn()}
+        mdBuilderEnabled={false}
+      />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Dual-Protein' }));
     expect(screen.queryByRole('button', { name: 'AMBER MD Builder' })).toBeNull();
