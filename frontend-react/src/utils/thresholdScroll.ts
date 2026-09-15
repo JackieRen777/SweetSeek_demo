@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface UseThresholdScrollOptions {
+  enabled?: boolean;
   thresholdDistance?: number; // px
   thresholdVelocity?: number; // px/ms
   animationDuration?: number; // ms
@@ -8,6 +9,7 @@ interface UseThresholdScrollOptions {
 }
 
 export const useThresholdScroll = ({
+  enabled = true,
   thresholdDistance = 60,
   thresholdVelocity = 1.2,
   animationDuration = 600,
@@ -145,6 +147,8 @@ export const useThresholdScroll = ({
 
   // Setup Global Listeners
   useEffect(() => {
+    if (!enabled) return;
+
     // 使用 { passive: false } 以便我们可以调用 e.preventDefault()
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -157,7 +161,7 @@ export const useThresholdScroll = ({
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleWheel, handleTouchStart, handleTouchEnd, handleKeyDown]);
+  }, [enabled, handleWheel, handleTouchStart, handleTouchEnd, handleKeyDown]);
 
   return { activeScreen, navigateTo };
 };

@@ -56,4 +56,33 @@ describe('Navbar', () => {
     expect(onNavigate).toHaveBeenCalledWith(9);
     expect(screen.queryByRole('button', { name: 'Close navigation menu' })).toBeNull();
   });
+
+  it('hides the FCN References entry by default while allowing it to be restored', () => {
+    const { rerender } = render(
+      <Navbar activeScreen={0} activeFeature={null} onNavigate={vi.fn()} />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'References' })).toBeNull();
+
+    rerender(
+      <Navbar
+        activeScreen={0}
+        activeFeature={null}
+        onNavigate={vi.fn()}
+        referencesNavEnabled
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'References' })).toBeTruthy();
+  });
+
+  it('exposes Database as a top-level navigation destination', () => {
+    const onNavigate = vi.fn();
+    render(<Navbar activeScreen={0} activeFeature={null} onNavigate={onNavigate} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Database' }));
+    expect(onNavigate).toHaveBeenCalledWith(3);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sweetness' }));
+    expect(screen.queryByRole('button', { name: 'Sweet Database' })).toBeNull();
+  });
 });

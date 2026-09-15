@@ -42,6 +42,7 @@ function App() {
   
   // Use custom threshold scroll hook
   const { activeScreen, navigateTo } = useThresholdScroll({
+    enabled: !activeFeature,
     sectionCount: SCREEN_COUNT,
     thresholdDistance: 60,
     thresholdVelocity: 1.2,
@@ -120,23 +121,27 @@ function App() {
         
         <Background />
         
-        <Navbar 
-            activeScreen={activeScreen} 
-            onNavigate={handleNavigate} 
-            activeFeature={activeFeature}
-            mdBuilderEnabled={MD_BUILDER_ENABLED}
-        />
+        {activeFeature !== 'database' && (
+          <Navbar
+              activeScreen={activeScreen}
+              onNavigate={handleNavigate}
+              activeFeature={activeFeature}
+              mdBuilderEnabled={MD_BUILDER_ENABLED}
+          />
+        )}
 
         {/* Vertical Slider Indicator */}
-        <Slider 
-            count={SCREEN_COUNT} 
-            activeScreen={activeScreen} 
-            onNavigate={navigateTo} 
-        />
+        {!activeFeature && (
+          <Slider
+              count={SCREEN_COUNT}
+              activeScreen={activeScreen}
+              onNavigate={navigateTo}
+          />
+        )}
 
         {/* Scroll Indicator Arrow (Visible on first 3 screens, hidden on last) */}
         <AnimatePresence>
-            {activeScreen < SCREEN_COUNT - 1 && (
+          {activeScreen < SCREEN_COUNT - 1 && !activeFeature && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -157,6 +162,7 @@ function App() {
         {/* Main Vertical Scroll Container */}
         <motion.div
           className="flex flex-col w-full h-[500vh]"
+          aria-hidden={Boolean(activeFeature)}
           initial={{ y: 0 }}
           animate={controls}
           style={{ touchAction: "none" }} // Disable default browser scrolling
@@ -220,11 +226,11 @@ function App() {
                   : 'bg-white/95 backdrop-blur-xl'
               }`}
             >
-              <div className="w-full h-full overflow-hidden relative flex flex-col pt-[120px]">
-                {activeFeature === 'ml-predict' ? (
+              <div className={`w-full h-full overflow-hidden relative flex flex-col ${activeFeature === 'database' ? 'pt-0' : 'pt-[120px]'}`}>
+                {activeFeature === 'ml-predict' || activeFeature === 'database' ? (
                   <div className="flex-1 w-full overflow-hidden">
                     <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
-                      <MLPredictSection onClose={() => setActiveFeature(null)} />
+                      {activeFeature === 'ml-predict' ? <MLPredictSection onClose={() => setActiveFeature(null)} /> : <DatabaseInterface onClose={() => setActiveFeature(null)} />}
                     </Suspense>
                   </div>
                 ) : (
@@ -233,7 +239,6 @@ function App() {
                       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
                         {activeFeature === 'qa' && <ChatInterface />}
                         {activeFeature === 'equation' && <SweetTasteEquation />}
-                        {activeFeature === 'database' && <DatabaseInterface />}
                         {activeFeature === 'references' && <ReferencesList />}
                         {activeFeature === 'dual-protein' && <DualProteinChatInterface />}
                         {activeFeature === 'encapsulation' && <EncapsulationChatInterface />}

@@ -1,5 +1,8 @@
 const LEGACY_STRUCTURE_TOOLS_ENABLED = import.meta.env.VITE_STRUCTURE_TOOLS_ENABLED === 'true';
 
+export const REFERENCES_NAV_ENABLED =
+  import.meta.env.VITE_REFERENCES_NAV_ENABLED === 'true';
+
 export const MD_BUILDER_ENABLED =
   import.meta.env.VITE_MD_BUILDER_ENABLED === 'true' || LEGACY_STRUCTURE_TOOLS_ENABLED;
 

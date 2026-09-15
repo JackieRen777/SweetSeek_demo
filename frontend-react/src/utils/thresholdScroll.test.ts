@@ -65,6 +65,14 @@ describe('useThresholdScroll', () => {
     expect(result.current.activeScreen).toBe(1);
   });
 
+  it('should leave wheel scrolling untouched when disabled', () => {
+    const addEventListener = vi.spyOn(window, 'addEventListener');
+    const { result } = renderHook(() => useThresholdScroll({ sectionCount: 4, enabled: false }));
+
+    expect(addEventListener.mock.calls.some(([type]) => type === 'wheel')).toBe(false);
+    expect(result.current.activeScreen).toBe(0);
+  });
+
   it('should handle significant scroll up event (wheel)', () => {
     const { result } = renderHook(() => useThresholdScroll({ sectionCount: 4 }));
     

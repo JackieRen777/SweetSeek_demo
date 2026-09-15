@@ -1,6 +1,7 @@
 import React from 'react';
 import FeatureSection from '../../components/ui/FeatureSection';
 import { Database as DbIcon, Search, FileText } from 'lucide-react';
+import metadata from './data/metadata.generated.json';
 
 interface DatabaseProps {
     onTryNow: () => void;
@@ -14,7 +15,7 @@ const Database: React.FC<DatabaseProps> = ({ onTryNow }) => {
           Sweet <span className="text-blue-600">Database</span>
         </span>
       }
-      description="Access a comprehensive library of 500+ sweet compounds. Search by chemical structure, sensory profile, or biological activity with advanced filtering capabilities."
+      description={`Explore ${metadata.totalRecords.toLocaleString()} curated sweet-compound records by name, formula, structure identity, evidence readiness, and quality status.`}
       onTryNow={onTryNow}
       visualComponent={
         <div className="relative w-80 h-96">
@@ -48,7 +49,7 @@ const Database: React.FC<DatabaseProps> = ({ onTryNow }) => {
                 ))}
                 
                 <div className="mt-auto pt-4 border-t border-slate-50 flex justify-center">
-                    <span className="text-xs font-medium text-slate-400">500+ Records Found</span>
+                    <span className="text-xs font-medium text-slate-400">{metadata.totalRecords.toLocaleString()} Current Records</span>
                 </div>
             </div>
         </div>

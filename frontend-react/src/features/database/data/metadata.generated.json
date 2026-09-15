@@ -1,0 +1,30 @@
+{
+  "title": "SweetSeek Sweet Compounds Database",
+  "version": "sweet_database_source_20260910",
+  "sourceWorkbook": "sweet_database_source_20260910.xlsx",
+  "sourceSheet": "current_sweet_compounds_1296",
+  "generatedAt": "2026-09-10T12:39:23.302Z",
+  "totalRecords": 1296,
+  "currentEntityCoverage": {
+    "small-molecule": 1296,
+    "protein": 0,
+    "other": 0
+  },
+  "tierCounts": {
+    "R2_traceable": 849,
+    "R1_high_readiness": 189,
+    "R3_dataset_supported": 88,
+    "R4_high_risk_review": 170
+  },
+  "gapCounts": {
+    "partial_evidence": 660,
+    "none_significant": 189,
+    "incomplete_evidence_depth": 189,
+    "single_dataset_no_reference": 88,
+    "connectivity_candidate_or_identity_conflict": 170
+  },
+  "reviewRequired": 170,
+  "acceptedAssertions": 2068,
+  "pubchemMatched": 878,
+  "pubchemVerified": 877
+}

@@ -62,3 +62,80 @@ export interface SimilarCompound {
   sweetnessProximity: number | null;
   sharedProperties: number;
 }
+
+export type DatabaseSection = 'overview' | 'compounds' | 'evidence' | 'literature' | 'statistics' | 'downloads' | 'guide';
+
+export interface PubChemValidation {
+  inchiKeyMatch: boolean;
+  formulaMatch: boolean;
+  molecularWeightDelta: number | null;
+  heavyAtomMatch: boolean | null;
+}
+
+export interface PubChemEnrichment {
+  cid: number | null;
+  iupacName: string | null;
+  molecularFormula: string | null;
+  molecularWeight: number | null;
+  smiles: string | null;
+  connectivitySmiles: string | null;
+  inchi: string | null;
+  inchiKey: string | null;
+  xlogp: number | null;
+  tpsa: number | null;
+  hBondDonorCount: number | null;
+  hBondAcceptorCount: number | null;
+  rotatableBondCount: number | null;
+  heavyAtomCount: number | null;
+  charge: number | null;
+  sourceUrl: string | null;
+  retrievedAt: string;
+  matchStatus: 'verified' | 'matched-with-discrepancy';
+  validation: PubChemValidation;
+}
+
+export interface DatabaseCompound {
+  id: string;
+  entityType: 'small-molecule' | 'protein' | 'other';
+  name: string;
+  nameSource: string | null;
+  inchiKey: string | null;
+  canonicalTautomerInchiKey: string | null;
+  isomericSmiles: string | null;
+  canonicalSmiles: string | null;
+  formula: string | null;
+  molecularWeight: number | null;
+  formalCharge: number | null;
+  heavyAtomCount: number | null;
+  createdAt: string | null;
+  evidence: {
+    baselineTier: string | null;
+    releaseTier: string | null;
+    baselineGap: string | null;
+    releaseGap: string | null;
+    priorityScore: number | null;
+    acceptedAssertions: number;
+  };
+  review: {
+    required: boolean;
+    identityStatus: string | null;
+    note: string | null;
+  };
+  pubchem: PubChemEnrichment | null;
+}
+
+export interface DatabaseMetadata {
+  title: string;
+  version: string;
+  sourceWorkbook: string;
+  sourceSheet: string;
+  generatedAt: string;
+  totalRecords: number;
+  currentEntityCoverage: Record<string, number>;
+  tierCounts: Record<string, number>;
+  gapCounts: Record<string, number>;
+  reviewRequired: number;
+  acceptedAssertions: number;
+  pubchemMatched: number;
+  pubchemVerified: number;
+}

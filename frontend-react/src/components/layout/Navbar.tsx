@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Menu, X } from 'lucide-react';
 import type { FeatureType } from '../../routing';
-import { MD_BUILDER_ENABLED } from '../../featureFlags';
+import { MD_BUILDER_ENABLED, REFERENCES_NAV_ENABLED } from '../../featureFlags';
 
 interface NavbarProps {
   activeScreen: number;
   onNavigate: (index: number) => void;
   activeFeature: FeatureType;
   mdBuilderEnabled?: boolean;
+  referencesNavEnabled?: boolean;
 }
 
 interface NavCategory {
@@ -21,6 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   activeFeature,
   mdBuilderEnabled = MD_BUILDER_ENABLED,
+  referencesNavEnabled = REFERENCES_NAV_ENABLED,
 }) => {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -31,7 +33,6 @@ const Navbar: React.FC<NavbarProps> = ({
       items: [
         { label: 'Sweet Q&A', index: 1, feature: 'qa' },
         { label: 'Sweet Taste Equation', index: 2, feature: 'equation' },
-        { label: 'Sweet Database', index: 3, feature: 'database' },
         { label: 'Sweetness Prediction', index: 6, feature: 'ml-predict' },
       ],
     },
@@ -55,6 +56,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   // References remains a standalone destination.
   const referencesItem = { label: 'References', index: 4, feature: 'references' };
+  const databaseItem = { label: 'Sweet Database', index: 3, feature: 'database' };
 
   const isActive = (item: { feature: string | null }) => {
     if (activeFeature) {
@@ -189,19 +191,33 @@ const Navbar: React.FC<NavbarProps> = ({
             );
           })}
 
-          {/* References - Standalone Button */}
           <button
-            onClick={() => handleItemClick(referencesItem)}
+            onClick={() => handleItemClick(databaseItem)}
             className={`
               px-5 py-2.5 rounded-full text-base font-medium transition-all duration-300
-              ${isActive(referencesItem)
+              ${isActive(databaseItem)
                 ? 'text-[var(--color-primary)] bg-blue-50/50'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-50/50'
               }
             `}
           >
-            References
+            Database
           </button>
+
+          {referencesNavEnabled && (
+            <button
+              onClick={() => handleItemClick(referencesItem)}
+              className={`
+                px-5 py-2.5 rounded-full text-base font-medium transition-all duration-300
+                ${isActive(referencesItem)
+                  ? 'text-[var(--color-primary)] bg-blue-50/50'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-50/50'
+                }
+              `}
+            >
+              References
+            </button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -253,11 +269,22 @@ const Navbar: React.FC<NavbarProps> = ({
             ))}
             <button
               type="button"
-              onClick={() => handleItemClick(referencesItem)}
-              className="mt-2 w-full border-t border-slate-100 px-3 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+              onClick={() => handleItemClick(databaseItem)}
+              className={`mt-2 w-full border-t border-slate-100 px-3 py-3 text-left text-sm font-medium ${
+                isActive(databaseItem) ? 'bg-blue-50 text-[var(--color-primary)]' : 'text-slate-700 hover:bg-slate-50'
+              }`}
             >
-              References
+              Sweet Database
             </button>
+            {referencesNavEnabled && (
+              <button
+                type="button"
+                onClick={() => handleItemClick(referencesItem)}
+                className="mt-2 w-full border-t border-slate-100 px-3 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                References
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
