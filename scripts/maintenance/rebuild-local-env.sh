@@ -20,7 +20,7 @@ if [[ ! -f "$marker" ]]; then
   fi
   "$PYTHON_BIN" -m venv "$target"
   "$target/bin/python" -m pip install --upgrade pip wheel
-  "$target/bin/python" -m pip install 'torch>=2.10.0'
+  "$target/bin/python" -m pip install 'torch==2.13.0'
   filtered="$(mktemp)"
   trap 'rm -f "$filtered"' EXIT
   grep -vE '^[[:space:]]*torch([<>=!~]|$)' requirements.txt > "$filtered"
