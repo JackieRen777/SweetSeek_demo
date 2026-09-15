@@ -194,7 +194,26 @@ if [[ ! -f "$VENV/.install-complete" ]]; then
   "$VENV/bin/python" -m pip install --index-url "$PYPI_INDEX" --upgrade pip wheel
   torch_spec="$(grep -E '^torch==' "$INCOMING/requirements-resolved-py311-linux.txt" | head -n 1)"
   [[ -n "$torch_spec" ]]
-  "$VENV/bin/python" -m pip install --index-url https://download.pytorch.org/whl/cpu "$torch_spec"
+  TORCH_INDEX="${SWEETSEEK_TORCH_INDEX:-https://download.pytorch.org/whl/cpu}"
+  if ! "$VENV/bin/python" -m pip install --no-deps --timeout 20 --retries 1 --resume-retries 1 \
+    --index-url "$TORCH_INDEX" "$torch_spec"; then
+    case "$torch_spec" in
+      torch==2.13.0+cpu)
+        torch_wheel="torch-2.13.0+cpu-cp311-cp311-manylinux_2_28_x86_64.whl"
+        torch_mirror_path="torch-2.13.0%2Bcpu-cp311-cp311-manylinux_2_28_x86_64.whl"
+        torch_sha256="6746dbcbeb526eb61330b76b41ff1b4eb848951103a892eeb080dfa2b264667b"
+        ;;
+      *)
+        echo "no verified PyTorch mirror artifact for $torch_spec" >&2
+        exit 1
+        ;;
+    esac
+    TORCH_MIRROR="${SWEETSEEK_TORCH_MIRROR:-https://mirrors.aliyun.com/pytorch-wheels/cpu}"
+    curl -fL --retry 3 --retry-delay 3 "$TORCH_MIRROR/$torch_mirror_path" \
+      -o "$INCOMING/$torch_wheel"
+    printf '%s  %s\n' "$torch_sha256" "$INCOMING/$torch_wheel" | sha256sum -c -
+    "$VENV/bin/python" -m pip install --no-deps "$INCOMING/$torch_wheel"
+  fi
   grep -vE '^torch==' "$INCOMING/requirements-resolved-py311-linux.txt" > "$INCOMING/requirements-no-torch.txt"
   "$VENV/bin/python" -m pip install --index-url "$PYPI_INDEX" --prefer-binary \
     -r "$INCOMING/requirements-no-torch.txt"
