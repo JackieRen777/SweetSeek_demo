@@ -18,6 +18,15 @@ describe('Database portal workflows', () => {
     expect(window.location.search).toContain('section=compounds');
   });
 
+  it('keeps molecule assets outside the database route directory', () => {
+    render(<DatabaseInterface />);
+    const moleculeNames = ['Sucralose', 'Aspartame', 'Stevioside', 'Thiophenesaccharin'];
+    const sources = moleculeNames.map((name) =>
+      screen.getByRole('img', { name: `${name} structure` }).getAttribute('src'),
+    );
+    expect(sources.every((source) => source?.startsWith('/database-assets/'))).toBe(true);
+  });
+
   it('passes the homepage query and evidence tier into Browse', () => {
     render(<DatabaseInterface />);
     fireEvent.change(screen.getByRole('textbox', { name: 'Search SweetDatabase' }), { target: { value: 'Thiophenesaccharin' } });

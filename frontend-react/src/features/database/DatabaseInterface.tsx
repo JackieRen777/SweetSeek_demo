@@ -108,10 +108,10 @@ const CompoundLandscape = ({ onSelect }: { onSelect: (id: string) => void }) => 
 };
 
 const HERO_MOLECULES = [
-  { name: 'Sucralose', file: '/database/sucralose.png' },
-  { name: 'Aspartame', file: '/database/aspartame.png' },
-  { name: 'Stevioside', file: '/database/stevioside.png' },
-  { name: 'Thiophenesaccharin', file: '/database/thiophenesaccharin.png' },
+  { name: 'Sucralose', file: '/database-assets/sucralose.png' },
+  { name: 'Aspartame', file: '/database-assets/aspartame.png' },
+  { name: 'Stevioside', file: '/database-assets/stevioside.png' },
+  { name: 'Thiophenesaccharin', file: '/database-assets/thiophenesaccharin.png' },
 ];
 
 const Overview = ({ onSection, onSelect, onSearch }: {
