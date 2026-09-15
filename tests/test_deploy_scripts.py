@@ -72,6 +72,14 @@ def test_production_service_matches_low_memory_server_budget():
     assert "--workers 1" not in service  # worker count is fixed in gunicorn_config.py
 
 
+def test_ci_publishes_the_verified_python311_lock():
+    workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    lock_name = "requirements-production-py311-linux.txt"
+    assert f"diff -u {lock_name} -" in workflow
+    assert f"cp {lock_name} requirements-resolved-py311-linux.txt" in workflow
+    assert "pip freeze --all > requirements-resolved-py311-linux.txt" not in workflow
+
+
 def test_git_rollback_survives_deployment_unit_exit_and_supports_legacy_health():
     rollback = (DEPLOY / "rollback_git_release.sh").read_text(encoding="utf-8")
     assert "systemd-run" in rollback
