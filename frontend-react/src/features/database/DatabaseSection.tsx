@@ -12,7 +12,7 @@ const Database: React.FC<DatabaseProps> = ({ onTryNow }) => {
     <FeatureSection
       title={
         <span>
-          Sweet <span className="text-blue-600">Database</span>
+          Sweet<span className="text-blue-600">Meta</span>
         </span>
       }
       description={`Explore ${metadata.totalRecords.toLocaleString()} curated sweet-compound records by name, formula, structure identity, evidence readiness, and quality status.`}
@@ -30,7 +30,7 @@ const Database: React.FC<DatabaseProps> = ({ onTryNow }) => {
                         <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                             <DbIcon size={20} />
                         </div>
-                        <span className="font-bold text-slate-700">Sweet Database</span>
+                        <span className="font-bold text-slate-700">SweetMeta</span>
                     </div>
                     <Search size={18} className="text-slate-400" />
                 </div>

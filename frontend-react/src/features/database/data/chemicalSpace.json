@@ -1,294 +1,7855 @@
 {
   "metadata": {
-    "method": "Deterministic metric MDS",
+    "method": "UMAP",
+    "fingerprint": "Morgan / ECFP4 (radius 2, 2048 bits)",
     "distance": "Tanimoto distance",
-    "fingerprint": "PubChem CACTVS Substructure Fingerprint (881 bits)",
-    "source": "PubChem PUG REST",
-    "sourceRecordCount": 49,
-    "generatedAt": "2026-08-04T04:30:57.362Z"
+    "implementation": "RDKit.js 2026.03.6 + umap-js 1.4.0",
+    "sourceRecordCount": 1296,
+    "mappedRecordCount": 1296,
+    "parameters": {
+      "nNeighbors": 20,
+      "minDist": 0.12,
+      "spread": 1,
+      "randomSeed": 42
+    },
+    "clusterMethod": "Deterministic k-medoids on ECFP4 Tanimoto distance",
+    "clusters": [
+      {
+        "id": "C1",
+        "label": "Cluster 1",
+        "size": 572,
+        "medoidId": "CMP_IAOZJIPTCAWIRG-QWRGUYRKSA-N",
+        "medoidName": "aspartame"
+      },
+      {
+        "id": "C2",
+        "label": "Cluster 2",
+        "size": 352,
+        "medoidId": "CMP_UEDUENGHJMELGK-UHFFFAOYSA-N",
+        "medoidName": "SGal"
+      },
+      {
+        "id": "C3",
+        "label": "Cluster 3",
+        "size": 157,
+        "medoidId": "CMP_QBIFEYLZKPFJHE-UHFFFAOYSA-N",
+        "medoidName": "2‐[N''‐(4‐cyanophenyl)‐N'‐(1‐phenylethyl)carbamimidamido]acetic acid"
+      },
+      {
+        "id": "C4",
+        "label": "Cluster 4",
+        "size": 94,
+        "medoidId": "CMP_GBEWVFVMUXHESI-UHFFFAOYSA-N",
+        "medoidName": "Cyclopentyl sulfamic acid sodium salt"
+      },
+      {
+        "id": "C5",
+        "label": "Cluster 5",
+        "size": 45,
+        "medoidId": "CMP_WFJDVZINKFIAPO-UHFFFAOYSA-N",
+        "medoidName": "6-Methylsaccharin"
+      },
+      {
+        "id": "C6",
+        "label": "Cluster 6",
+        "size": 38,
+        "medoidId": "CMP_FBPFZTCFMRRESA-UHFFFAOYSA-N",
+        "medoidName": "D-Mannitol"
+      },
+      {
+        "id": "C7",
+        "label": "Cluster 7",
+        "size": 37,
+        "medoidId": "CMP_XCOJIVIDDFTHGB-UHFFFAOYSA-N",
+        "medoidName": "Perillartine"
+      },
+      {
+        "id": "C8",
+        "label": "Cluster 8",
+        "size": 1,
+        "medoidId": "CMP_VEXZGXHMUGYJMC-UHFFFAOYSA-N",
+        "medoidName": "Beryllium chloride"
+      }
+    ],
+    "generatedAt": "2026-09-16T03:37:58.768Z"
   },
   "points": [
     {
-      "cid": 5988,
-      "x": 0.846237,
-      "y": 0.343634
+      "id": "CMP_ABUUSHLXFTWWDH-UHFFFAOYSA-N",
+      "x": 0.018018,
+      "y": 0.312619,
+      "cluster": "C7"
     },
     {
-      "cid": 5793,
-      "x": 0.886899,
-      "y": 0.395334
+      "id": "CMP_BZLUYDYXYGZUHE-UHFFFAOYSA-N",
+      "x": 0.562689,
+      "y": 0.224744,
+      "cluster": "C1"
     },
     {
-      "cid": 5984,
-      "x": 0.868073,
-      "y": 0.60623
+      "id": "CMP_NPWRSXJQDKRXOR-UHFFFAOYSA-N",
+      "x": 0.563006,
+      "y": 0.224415,
+      "cluster": "C5"
     },
     {
-      "cid": 6036,
-      "x": 0.886899,
-      "y": 0.395334
+      "id": "CMP_VCSSIMKISKEQEO-UHFFFAOYSA-N",
+      "x": 0.571469,
+      "y": 0.212631,
+      "cluster": "C2"
     },
     {
-      "cid": 6255,
-      "x": 0.822832,
-      "y": 0.358439
+      "id": "CMP_IMPKVMRTXBRHRB-UHFFFAOYSA-N",
+      "x": 0.591305,
+      "y": 0.798463,
+      "cluster": "C4"
     },
     {
-      "cid": 6134,
-      "x": 0.822832,
-      "y": 0.358439
+      "id": "CMP_WZUVPPKBWHMQCE-UHFFFAOYSA-N",
+      "x": 0.559048,
+      "y": 0.193567,
+      "cluster": "C2"
     },
     {
-      "cid": 7427,
-      "x": 0.822832,
-      "y": 0.358439
+      "id": "CMP_AIONOLUJZLIMTK-UHFFFAOYSA-N",
+      "x": 0.570809,
+      "y": 0.212631,
+      "cluster": "C5"
     },
     {
-      "cid": 439324,
-      "x": 0.490399,
-      "y": 0.251719
+      "id": "CMP_ZHFKNCMSPIGQBN-UHFFFAOYSA-N",
+      "x": 0.001099,
+      "y": 0.309662,
+      "cluster": "C7"
     },
     {
-      "cid": 6912,
-      "x": 0.964938,
-      "y": 0.520112
+      "id": "CMP_RMLYXMMBIZLGAQ-UHFFFAOYSA-N",
+      "x": 0.176511,
+      "y": 0.571769,
+      "cluster": "C1"
     },
     {
-      "cid": 5780,
-      "x": 0.924515,
-      "y": 0.504743
+      "id": "CMP_IFPUUQMSZGAYIM-UHFFFAOYSA-N",
+      "x": 0.578943,
+      "y": 0.197505,
+      "cluster": "C2"
     },
     {
-      "cid": 6251,
-      "x": 0.924515,
-      "y": 0.504743
+      "id": "CMP_PQDIURLINLBOMS-UHFFFAOYSA-N",
+      "x": 0.564881,
+      "y": 0.195745,
+      "cluster": "C1"
     },
     {
-      "cid": 222285,
+      "id": "CMP_WORYXBDHTBWLLL-UHFFFAOYSA-N",
+      "x": 0.198798,
+      "y": 0.369769,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VZFNJGQZUUAXKC-UHFFFAOYSA-N",
+      "x": 0.005974,
+      "y": 0.308344,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_LHQPVZOJULFHKB-UHFFFAOYSA-N",
+      "x": 0.007903,
+      "y": 0.30522,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_ODUYQBRJJXCYQT-UHFFFAOYSA-N",
+      "x": 0.007501,
+      "y": 0.306795,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_VGIZTMCGWZDDBB-UHFFFAOYSA-N",
+      "x": 0.578434,
+      "y": 0.193608,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YZHKBSWBCADQFN-UHFFFAOYSA-N",
+      "x": 0.575721,
+      "y": 0.193769,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NJVBKZILWGOPHS-UHFFFAOYSA-N",
+      "x": 0.574687,
+      "y": 0.188744,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UBLAFJGPMUZLCM-UHFFFAOYSA-N",
+      "x": 0.351356,
+      "y": 0.32817,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_FUOHSUPGQVKBMC-UHFFFAOYSA-N",
+      "x": 0.434292,
+      "y": 0.889067,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GFFHYQBDPZKUPC-UHFFFAOYSA-N",
+      "x": 0.435116,
+      "y": 0.89005,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JODNFYVZGZMBMF-UHFFFAOYSA-N",
+      "x": 0.45606,
+      "y": 0.906111,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UQXZSKHOYOHVIH-UHFFFAOYSA-N",
+      "x": 0.437873,
+      "y": 0.888902,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FESWLBKGLROKRB-UHFFFAOYSA-N",
+      "x": 0.446366,
+      "y": 0.893064,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LKDJEMHDPNJBCG-UHFFFAOYSA-N",
+      "x": 0.455356,
+      "y": 0.900779,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_CHVUPQUIPWLCRD-UHFFFAOYSA-N",
+      "x": 0.45348,
+      "y": 0.905565,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JOMHJSHXRKOBLD-UHFFFAOYSA-N",
+      "x": 0.510945,
+      "y": 0.002461,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_BMRWNKZVCUKKSR-UHFFFAOYSA-N",
+      "x": 0.104606,
+      "y": 0.602518,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_DNIAPMSPPWPWGF-UHFFFAOYSA-N",
+      "x": 0.104082,
+      "y": 0.603097,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_ZBPSHUGVIISKJJ-UHFFFAOYSA-N",
+      "x": 0.573651,
+      "y": 0.198137,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WTCPAFWUNFLPEW-UHFFFAOYSA-N",
+      "x": 0.012786,
+      "y": 0.302154,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_JNYAEWCLZODPBN-UHFFFAOYSA-N",
+      "x": 0.588163,
+      "y": 0.7979,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_GPEMWPBJVUYRFA-UHFFFAOYSA-N",
+      "x": 0.588679,
+      "y": 0.798578,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KZVAAIRBJJYZOW-UHFFFAOYSA-N",
+      "x": 0.588952,
+      "y": 0.797384,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OBZRQUBQVYFPPH-UHFFFAOYSA-N",
+      "x": 0.571901,
+      "y": 0.200009,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MPCAJMNYNOGXPB-UHFFFAOYSA-N",
+      "x": 0.589187,
+      "y": 0.799,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_AJYOGALEWMBMHN-UHFFFAOYSA-N",
+      "x": 0.456561,
+      "y": 0.879336,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DPQRLGLZWCGBGE-UHFFFAOYSA-N",
+      "x": 0.448714,
+      "y": 0.879488,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NUQJOTXKLQCGTF-UHFFFAOYSA-N",
+      "x": 0.162971,
+      "y": 0.514005,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZOJIAIICBWUZMP-UHFFFAOYSA-N",
+      "x": 0.010514,
+      "y": 0.303494,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BMYDSJBBUKGUHF-UHFFFAOYSA-N",
+      "x": 0.011533,
+      "y": 0.304395,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QNXQEJMBRJWTJJ-UHFFFAOYSA-N",
+      "x": 0.012829,
+      "y": 0.301086,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FVTVMQPGKVHSEY-UHFFFAOYSA-N",
+      "x": 0.162259,
+      "y": 0.518684,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_JSGGOFOHJCNNRH-UHFFFAOYSA-N",
+      "x": 0.006746,
+      "y": 0.308132,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_OMUBABQLRURSKH-UHFFFAOYSA-N",
+      "x": 0.00439,
+      "y": 0.308995,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_QMFJIJFIHIDENY-UHFFFAOYSA-N",
+      "x": 0.01308,
+      "y": 0.302123,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_WBRWISGILFCCJB-UHFFFAOYSA-N",
+      "x": 0.005221,
+      "y": 0.303421,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_CTMHWPIWNRWQEG-UHFFFAOYSA-N",
+      "x": 0.013252,
+      "y": 0.30043,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_QAUQOADRYSWXIV-UHFFFAOYSA-N",
+      "x": 0.15825,
+      "y": 0.518519,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JDGSCPQGNRGIOI-UHFFFAOYSA-N",
+      "x": 0.156707,
+      "y": 0.518274,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZXVNSVKNTLPWHS-UHFFFAOYSA-N",
+      "x": 0.157087,
+      "y": 0.518269,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JKJTXVDQBBLFNG-UHFFFAOYSA-N",
+      "x": 0.155275,
+      "y": 0.514819,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FXKFXOGPMUJIIV-UHFFFAOYSA-N",
+      "x": 0.001562,
+      "y": 0.309415,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_CGGWHBLPUUKEJC-UHFFFAOYSA-N",
+      "x": 0.24093,
+      "y": 1,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RVDLGYWOACCHHM-UHFFFAOYSA-N",
+      "x": 0.940396,
+      "y": 0.468173,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QQJMGGIVFQDMFS-UHFFFAOYSA-N",
+      "x": 0.938817,
+      "y": 0.452713,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IWWCBUICKFHKGJ-UHFFFAOYSA-N",
+      "x": 0.940115,
+      "y": 0.449402,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_CNYSATRRKQVHOC-UHFFFAOYSA-N",
+      "x": 0.943127,
+      "y": 0.450506,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WBYWAXJHAXSJNI-VOTSOKGWSA-N",
+      "x": 0.200046,
+      "y": 0.371292,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XFWXLFPONRYEKE-UHFFFAOYSA-N",
+      "x": 0.130973,
+      "y": 0.359671,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SWPGLCYRJLIDLL-UHFFFAOYSA-N",
+      "x": 0.130059,
+      "y": 0.356105,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NABPVRFXAHNTNL-UHFFFAOYSA-N",
+      "x": 0.16685,
+      "y": 0.344909,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DFBSDSBZZGXYBD-UHFFFAOYSA-N",
+      "x": 0.15829,
+      "y": 0.52009,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QFAQSYOYUIVKDU-UHFFFAOYSA-N",
+      "x": 0.418033,
+      "y": 0.427242,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MMRWPNLLBSGMFH-UHFFFAOYSA-N",
+      "x": 0.19391,
+      "y": 0.363245,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OZEWZNZJRIRASB-UHFFFAOYSA-N",
+      "x": 0.185729,
+      "y": 0.358056,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_TYSGDNUDPSGIQS-UHFFFAOYSA-N",
+      "x": 0.180891,
+      "y": 0.351746,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IMYAWDVGMAMZPE-UHFFFAOYSA-N",
+      "x": 0.573981,
+      "y": 0.202493,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RTDQZMCBSZMJJH-UHFFFAOYSA-N",
+      "x": 0.573358,
+      "y": 0.201199,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OHXYBJBUYIITOC-UHFFFAOYSA-N",
+      "x": 0.575698,
+      "y": 0.193946,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KFPQPMPKHPKBDG-UHFFFAOYSA-N",
+      "x": 0.57531,
+      "y": 0.19511,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VAZAHFMBPZWRBK-UHFFFAOYSA-N",
+      "x": 0.578951,
+      "y": 0.193812,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JUHSFDMWJWDIMK-UHFFFAOYSA-N",
+      "x": 0.573072,
+      "y": 0.204469,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YTNBOYUMFVIHND-UHFFFAOYSA-N",
+      "x": 0.575151,
+      "y": 0.20142,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JZNWDTFNKBTGFS-UHFFFAOYSA-N",
+      "x": 0.572516,
+      "y": 0.203738,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_PZQDDXKVXZUCHR-UHFFFAOYSA-N",
+      "x": 0.577756,
+      "y": 0.196344,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KDOANSJUGNGPNJ-UHFFFAOYSA-N",
+      "x": 0.576424,
+      "y": 0.192076,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BFUKPSYPLJKKDF-UHFFFAOYSA-N",
+      "x": 0.578066,
+      "y": 0.191908,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XHMSNDWTVQSYPW-UHFFFAOYSA-N",
+      "x": 0.579532,
+      "y": 0.193735,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JBICJUNBKNSZJZ-UHFFFAOYSA-N",
+      "x": 0.577305,
+      "y": 0.196455,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YMBOSWLASOVPGH-UHFFFAOYSA-N",
+      "x": 0.564346,
+      "y": 0.197611,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WOACAMIODJIOBG-UHFFFAOYSA-N",
+      "x": 0.573903,
+      "y": 0.185007,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YWECCEXWKFHHQJ-UHFFFAOYSA-N",
+      "x": 0.194249,
+      "y": 0.363841,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NDGITRSGTIVNLC-UHFFFAOYSA-N",
+      "x": 0.194776,
+      "y": 0.36495,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YGTUPRIZNBMOFV-UHFFFAOYSA-N",
+      "x": 0.193879,
+      "y": 0.363684,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UIUCGMLLTRXRBF-UHFFFAOYSA-N",
+      "x": 0.193773,
+      "y": 0.36519,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JUPRMFFMLYDHOW-UHFFFAOYSA-N",
+      "x": 0.194053,
+      "y": 0.365236,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ICQOWIXIHDDXDI-UHFFFAOYSA-N",
+      "x": 0.19298,
+      "y": 0.363027,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_YLSRTFSNLOISFN-UHFFFAOYSA-N",
+      "x": 0.162371,
+      "y": 0.524345,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HMWOUKMAFLHOMI-UHFFFAOYSA-N",
+      "x": 0.16115,
+      "y": 0.522999,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_CBBAHBOTQLDRMV-UHFFFAOYSA-N",
+      "x": 0.162258,
+      "y": 0.525937,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SNKLFWSZMZLMET-UHFFFAOYSA-N",
+      "x": 0.16205,
+      "y": 0.525421,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MVQMTVSMQMKHLR-UHFFFAOYSA-N",
+      "x": 0.327509,
+      "y": 0.308179,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PATWFHOXPCGEAR-UHFFFAOYSA-N",
+      "x": 0.423495,
+      "y": 0.433445,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FYUPOMLBMAPMEY-UHFFFAOYSA-N",
+      "x": 0.164258,
+      "y": 0.529589,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MOUKRCUNIKBGAZ-UHFFFAOYSA-N",
+      "x": 0.249093,
+      "y": 0.483723,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JOIVSNUAGLFOFT-UHFFFAOYSA-N",
+      "x": 0.326979,
+      "y": 0.306295,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_CUXKDSIUGZTAOK-UHFFFAOYSA-N",
+      "x": 0.573646,
+      "y": 0.182862,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SXJFPJILTZIMFA-UHFFFAOYSA-N",
+      "x": 0.571969,
+      "y": 0.187323,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YBBNPMGIZQIAJU-UHFFFAOYSA-N",
+      "x": 0.5721,
+      "y": 0.182963,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_TYPBFKLZGDSPOL-UHFFFAOYSA-N",
+      "x": 0.572342,
+      "y": 0.182856,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MHLKKDVKYIJWAR-UHFFFAOYSA-N",
+      "x": 0.334543,
+      "y": 0.324462,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_CAIPHLYTXYQKNQ-UHFFFAOYSA-N",
+      "x": 0.331875,
+      "y": 0.302842,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_JZWXBQDAINJAMJ-UHFFFAOYSA-N",
+      "x": 0.349885,
+      "y": 0.329066,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PBMAZOMBGBGEDV-UHFFFAOYSA-N",
+      "x": 0.318954,
+      "y": 0.314891,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_BCBKLKKXKFSCEA-UHFFFAOYSA-N",
+      "x": 0.321078,
+      "y": 0.316952,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_HQRWPJZPHWHCJB-UHFFFAOYSA-N",
+      "x": 0.314503,
+      "y": 0.319039,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ZGLZJDAXSWYCMX-UHFFFAOYSA-N",
+      "x": 0.31785,
+      "y": 0.31951,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_TZIUOVBDXIEHMO-UHFFFAOYSA-N",
+      "x": 0.350941,
+      "y": 0.327605,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_BHYNCSOLIORGAT-UHFFFAOYSA-N",
+      "x": 0.351013,
+      "y": 0.329244,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_BANYGKCBVTZKGX-UHFFFAOYSA-N",
+      "x": 0.346578,
+      "y": 0.323461,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_JHAMEVZCEQHKGN-UHFFFAOYSA-N",
+      "x": 0.323125,
+      "y": 0.317058,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XWZVYPOBUCEEIY-UHFFFAOYSA-N",
+      "x": 0.322206,
+      "y": 0.317096,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ZIBNPJVIVGAAMD-UHFFFAOYSA-N",
+      "x": 0.320066,
+      "y": 0.313638,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_WVEBAEJNWNZOGR-UHFFFAOYSA-N",
+      "x": 0.320718,
+      "y": 0.316256,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_LYCFWBTXPJMHFB-UHFFFAOYSA-N",
+      "x": 0.345455,
+      "y": 0.311564,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XMKQGEBDTRSGDQ-UHFFFAOYSA-N",
+      "x": 0.343237,
+      "y": 0.309822,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PCCKBUAIKMEYLJ-UHFFFAOYSA-N",
+      "x": 0.341645,
+      "y": 0.315965,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_FDKHUOVOWXANEP-UHFFFAOYSA-N",
+      "x": 0.355165,
+      "y": 0.318215,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GJMKNZFETAYLJI-UHFFFAOYSA-N",
+      "x": 0.345813,
+      "y": 0.311473,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ARAGUECVEKJOFB-UHFFFAOYSA-N",
+      "x": 0.323775,
+      "y": 0.312782,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_IBLUKGPNSSXSBJ-UHFFFAOYSA-N",
+      "x": 0.332593,
+      "y": 0.300844,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XQPFCHKGJOIXSH-UHFFFAOYSA-N",
+      "x": 0.323878,
+      "y": 0.31243,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_WEXOKUWSEVMGJT-UHFFFAOYSA-N",
+      "x": 0.324617,
+      "y": 0.316689,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GDMYHICJWICUHB-UHFFFAOYSA-N",
+      "x": 0.32606,
+      "y": 0.308687,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_BASNFFGZPFFOHR-UHFFFAOYSA-N",
+      "x": 0.319257,
+      "y": 0.316342,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_DFNWOMRZPOSGOG-UHFFFAOYSA-N",
+      "x": 0.349475,
+      "y": 0.321432,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_FZZZIQJIPBOHNU-UHFFFAOYSA-N",
+      "x": 0.344137,
+      "y": 0.317505,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_JWEPYCHNNHNIJZ-UHFFFAOYSA-N",
+      "x": 0.328269,
+      "y": 0.300077,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_JAWZPSGNTRAKDB-UHFFFAOYSA-N",
+      "x": 0.331799,
+      "y": 0.300814,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_QSVUQBSLORKCRJ-UHFFFAOYSA-N",
+      "x": 0.320694,
+      "y": 0.315138,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PHIRLYSMDBIXTF-UHFFFAOYSA-N",
+      "x": 0.226003,
+      "y": 0.658771,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RWZYAGGXGHYGMB-UHFFFAOYSA-N",
+      "x": 0.196739,
+      "y": 0.361928,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BDTXHAFVIUCIPP-UHFFFAOYSA-N",
+      "x": 0.419148,
+      "y": 0.428432,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JYNJLRHUPKHETA-UHFFFAOYSA-N",
+      "x": 0.419425,
+      "y": 0.428746,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UXVJXDSHHXYJGP-UHFFFAOYSA-N",
+      "x": 0.17213,
+      "y": 0.340368,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZYDCXGXNIJCMDN-UHFFFAOYSA-N",
+      "x": 0.17279,
+      "y": 0.34552,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UCOCIXSCUYIOGR-UHFFFAOYSA-N",
+      "x": 0.420077,
+      "y": 0.429465,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QMLJKHLJWNHRQX-UHFFFAOYSA-N",
+      "x": 0.419172,
+      "y": 0.428896,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RBQBXOORSUEXBG-UHFFFAOYSA-N",
+      "x": 0.173275,
+      "y": 0.339472,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FKJNVNGJYCAUHQ-UHFFFAOYSA-N",
+      "x": 0.17483,
+      "y": 0.343529,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OIULCWSYMJCIJN-UHFFFAOYSA-N",
+      "x": 0.171309,
+      "y": 0.340784,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AVCJNOQDZCCELZ-UHFFFAOYSA-N",
+      "x": 0.169861,
+      "y": 0.341781,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JSSBUTWUGVPHQT-UHFFFAOYSA-N",
+      "x": 0.171723,
+      "y": 0.342374,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CTOSNRCWLLGFMB-UHFFFAOYSA-N",
+      "x": 0.171223,
+      "y": 0.340548,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BKOOMYPCSUNDGP-UHFFFAOYSA-N",
+      "x": 0.007271,
+      "y": 0.317045,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_PWJBIZRQDCISFM-UHFFFAOYSA-N",
+      "x": 0.418864,
+      "y": 0.42812,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YLAXLKMAILLMPU-UHFFFAOYSA-N",
+      "x": 0.162141,
+      "y": 0.524669,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WJMRMTQQBTZCNV-UHFFFAOYSA-N",
+      "x": 0.563621,
+      "y": 0.223883,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_ZUSWOTCOXWMAMM-UHFFFAOYSA-N",
+      "x": 0.576048,
+      "y": 0.202428,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MHGPABLREGQAPC-UHFFFAOYSA-N",
+      "x": 0.350819,
+      "y": 0.322538,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_AENCKJOKZMMBQV-UHFFFAOYSA-N",
+      "x": 0.322732,
+      "y": 0.284263,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_VUQTXLIFUWFYPF-UHFFFAOYSA-N",
+      "x": 0.322294,
+      "y": 0.283271,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_NRCXPDAZPMOMMT-UHFFFAOYSA-N",
+      "x": 0.355384,
+      "y": 0.31823,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_DBEDVTLQJNLJSH-UHFFFAOYSA-N",
+      "x": 0.332877,
+      "y": 0.303006,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_UPEVJJDAAYWTJA-UHFFFAOYSA-N",
+      "x": 0.324709,
+      "y": 0.285821,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XDAJKZNSCAYJKV-UHFFFAOYSA-N",
+      "x": 0.322631,
+      "y": 0.284193,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_UEKCNOUIMLYRNN-UHFFFAOYSA-N",
+      "x": 0.321218,
+      "y": 0.28231,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_QCMQJIFKEMHXRU-UHFFFAOYSA-N",
+      "x": 0.324411,
+      "y": 0.286222,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_CAIQEOLYPCOJDV-UHFFFAOYSA-N",
+      "x": 0.319987,
+      "y": 0.289213,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_QEVYGOQQUUVYHT-UHFFFAOYSA-N",
+      "x": 0.321926,
+      "y": 0.28365,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_NHIIRRBIELTYKV-UHFFFAOYSA-N",
+      "x": 0.324089,
+      "y": 0.286239,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PQDBBYXYTPVAGX-UHFFFAOYSA-N",
+      "x": 0.348329,
+      "y": 0.325908,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_QBIFEYLZKPFJHE-UHFFFAOYSA-N",
+      "x": 0.320269,
+      "y": 0.299458,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_DPKLDYOTTWCOFD-UHFFFAOYSA-N",
+      "x": 0.319796,
+      "y": 0.305527,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_SDHIHVWLJQRIRO-UHFFFAOYSA-N",
+      "x": 0.34819,
+      "y": 0.325912,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KMYBWPBELNLSKK-UHFFFAOYSA-N",
+      "x": 0.346015,
+      "y": 0.328923,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_FUCOWBXCQGDRJV-UHFFFAOYSA-N",
+      "x": 0.323161,
+      "y": 0.309824,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_CTVFGFYHOPFZHY-UHFFFAOYSA-N",
+      "x": 0.321401,
+      "y": 0.317351,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GGIYUJZMOLDIKA-UHFFFAOYSA-N",
+      "x": 0.318478,
+      "y": 0.304309,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_MFJGDKCKFAAXJL-UHFFFAOYSA-N",
+      "x": 0.320747,
+      "y": 0.31629,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_NQFDGCVBKGAUCI-UHFFFAOYSA-N",
+      "x": 0.350556,
+      "y": 0.32831,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_YMTOLLOGAHYQLA-UHFFFAOYSA-N",
+      "x": 0.350421,
+      "y": 0.328031,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_RXLRSUCLGPTDDG-UHFFFAOYSA-N",
+      "x": 0.322287,
+      "y": 0.28713,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XBWNZIIPMXQNNW-UHFFFAOYSA-N",
+      "x": 0.321627,
+      "y": 0.286573,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KBDMAKLYYLZIQE-UHFFFAOYSA-N",
+      "x": 0.322547,
+      "y": 0.290132,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XUJBJTMLSJELKP-UHFFFAOYSA-N",
+      "x": 0.35315,
+      "y": 0.318192,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_FMOCZBCKZHXWRW-UHFFFAOYSA-N",
+      "x": 0.320355,
+      "y": 0.297489,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_FPHONLBWKFAXPH-UHFFFAOYSA-N",
+      "x": 0.35413,
+      "y": 0.320631,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_DBXQHIXAZRJPOE-UHFFFAOYSA-N",
+      "x": 0.354735,
+      "y": 0.319455,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XPMMKNSFIDLNHD-UHFFFAOYSA-N",
+      "x": 0.322809,
+      "y": 0.283562,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_HOUNOLFVKKXHNN-UHFFFAOYSA-N",
+      "x": 0.323306,
+      "y": 0.285825,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KUBBUABCFRMFTD-UHFFFAOYSA-N",
+      "x": 0.335057,
+      "y": 0.302568,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_LPOZPXSACAZGKY-UHFFFAOYSA-N",
+      "x": 0.343819,
+      "y": 0.309082,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GILXHVKKZWTKJA-UHFFFAOYSA-N",
+      "x": 0.324471,
+      "y": 0.285465,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_HHRNGWMYOAQBNK-UHFFFAOYSA-N",
+      "x": 0.32647,
+      "y": 0.283221,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_BUTDLQNOLRXHTK-UHFFFAOYSA-N",
+      "x": 0.322804,
+      "y": 0.283084,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XQCFANPJXOFFOO-UHFFFAOYSA-N",
+      "x": 0.32187,
+      "y": 0.284153,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XUKMJAALGLUHBH-UHFFFAOYSA-N",
+      "x": 0.321409,
+      "y": 0.282374,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ZNTQEYFSBGPGPF-UHFFFAOYSA-N",
+      "x": 0.318223,
+      "y": 0.316864,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ZCBMLLPKVATYLD-UHFFFAOYSA-N",
+      "x": 0.33845,
+      "y": 0.324611,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_LYEPUEOFDCZNSV-UHFFFAOYSA-N",
+      "x": 0.323051,
+      "y": 0.315185,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PSFOWCFOZJMPQA-UHFFFAOYSA-N",
+      "x": 0.352006,
+      "y": 0.319564,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_FUTKLAMDHJYJFM-UHFFFAOYSA-N",
+      "x": 0.457696,
+      "y": 0.636259,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_ZYRKQRBQJXXICH-UHFFFAOYSA-N",
+      "x": 0.43631,
+      "y": 0.896749,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZJEZIQZUXOZWTP-UHFFFAOYSA-N",
+      "x": 0.439998,
+      "y": 0.89801,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_VSGWAAYLIGLWJA-UHFFFAOYSA-N",
+      "x": 0.434196,
+      "y": 0.887595,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QFRLEOWAKGCCNW-UHFFFAOYSA-N",
+      "x": 0.320868,
+      "y": 0.282223,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_NFZQSBJSYUFIFI-UHFFFAOYSA-N",
+      "x": 0.31736,
+      "y": 0.318615,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_SMTLVNOHUDWEJF-UHFFFAOYSA-N",
+      "x": 0.16539,
+      "y": 0.346977,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LBRQLMPFJWTCAV-UHFFFAOYSA-N",
+      "x": 0.573883,
+      "y": 0.185223,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QCYRLOYOUTXLKS-UHFFFAOYSA-N",
+      "x": 0.575208,
+      "y": 0.208864,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RLUWMAPPHYMOQC-UHFFFAOYSA-N",
+      "x": 0.574495,
+      "y": 0.209388,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NDSPJHIZXAAREY-UHFFFAOYSA-N",
+      "x": 0.57406,
+      "y": 0.20796,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NQJNRRQBZPUBLR-UHFFFAOYSA-N",
+      "x": 0.453766,
+      "y": 0.613503,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_FRQPHDMADHUOPV-UHFFFAOYSA-N",
+      "x": 0.572647,
+      "y": 0.183638,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CFQOIIOMTNNUHH-UHFFFAOYSA-N",
+      "x": 0.293045,
+      "y": 0.413271,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GDMDWUWYQDYVEH-UHFFFAOYSA-N",
+      "x": 0.237483,
+      "y": 0.530036,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VYMFFVBJFGDURG-UHFFFAOYSA-N",
+      "x": 0.420282,
+      "y": 0.429657,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FIGRLIIVAJOYBD-UHFFFAOYSA-N",
+      "x": 0.421778,
+      "y": 0.431395,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OHOAYMVQJAAGAB-UHFFFAOYSA-N",
+      "x": 0.422937,
+      "y": 0.432567,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PDEZCWAZIMTOTA-UHFFFAOYSA-N",
+      "x": 0.576326,
+      "y": 0.2023,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XEDHSMBJTTVRAU-UHFFFAOYSA-N",
+      "x": 0.169926,
+      "y": 0.344514,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DJFOIQIFYZXUMA-UHFFFAOYSA-N",
+      "x": 0.168883,
+      "y": 0.347518,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CUHNQWPTFOWISC-UHFFFAOYSA-N",
+      "x": 0.574385,
+      "y": 0.199681,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HQLHZNDJQSRKDT-UHFFFAOYSA-N",
+      "x": 0.180365,
+      "y": 0.575191,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QPAQTHBZEHTUTG-UHFFFAOYSA-N",
+      "x": 0.572077,
+      "y": 0.18267,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WAZPQPKSMKYMLP-UHFFFAOYSA-N",
+      "x": 0.298497,
+      "y": 0.451202,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DMGJDHYVLIZINN-UHFFFAOYSA-N",
+      "x": 0.242085,
+      "y": 0.53059,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BGKATDQXYLNTJU-UHFFFAOYSA-N",
+      "x": 0.254702,
+      "y": 0.638331,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XABMYCSXSQFWQL-UHFFFAOYSA-N",
+      "x": 0.263025,
+      "y": 0.464442,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BJXBHRLGWBZCMV-UHFFFAOYSA-N",
+      "x": 0.255807,
+      "y": 0.466341,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SWYTZCZEMQJKOI-UHFFFAOYSA-N",
+      "x": 0.256943,
+      "y": 0.46513,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KYEVNVDQTGEIPT-UHFFFAOYSA-N",
+      "x": 0.260914,
+      "y": 0.43987,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UXGGVRWWPJDVBZ-UHFFFAOYSA-N",
+      "x": 0.259552,
+      "y": 0.44047,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AUSHEHPPDUUKDQ-UHFFFAOYSA-N",
+      "x": 0.259165,
+      "y": 0.442529,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YTERBQMKTXJTFV-UHFFFAOYSA-N",
+      "x": 0.259722,
+      "y": 0.439114,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MPHJVBHWWQGVPF-UHFFFAOYSA-N",
+      "x": 0.25794,
+      "y": 0.464347,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IIJPIQHFAXGLRL-UHFFFAOYSA-N",
+      "x": 0.256961,
+      "y": 0.463391,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PORLDPRPXJUUPF-UHFFFAOYSA-N",
+      "x": 0.235986,
+      "y": 0.51826,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OWXMHIGQEDMECH-UHFFFAOYSA-N",
+      "x": 0.230335,
+      "y": 0.506794,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MAMIBHWHIQLRNL-UHFFFAOYSA-N",
+      "x": 0.258087,
+      "y": 0.459333,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NLEZJNJBSXXZMU-UHFFFAOYSA-N",
+      "x": 0.257387,
+      "y": 0.45551,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VVHKNQOJUNSDIV-UHFFFAOYSA-N",
+      "x": 0.233525,
+      "y": 0.503487,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VYTSWEYAPBYBSM-UHFFFAOYSA-N",
+      "x": 0.233987,
+      "y": 0.506243,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CFGHSNUFXAFGEI-UHFFFAOYSA-N",
+      "x": 0.259786,
+      "y": 0.441744,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UMMCCJWMNVQHQF-UHFFFAOYSA-N",
+      "x": 0.259483,
+      "y": 0.443133,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZPSJCCZPTFGOER-UHFFFAOYSA-N",
+      "x": 0.260097,
+      "y": 0.440559,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MPTQRNPLHNHDBH-UHFFFAOYSA-N",
+      "x": 0.221891,
+      "y": 0.511879,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UVFFRNPLUABOJW-UHFFFAOYSA-N",
+      "x": 0.232544,
+      "y": 0.536767,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CLXAQHQFHPJGIR-UHFFFAOYSA-N",
+      "x": 0.227961,
+      "y": 0.533051,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KCFONGNGRRVNNW-UHFFFAOYSA-N",
+      "x": 0.291732,
+      "y": 0.450973,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PQAZTEXPSJBYNM-UHFFFAOYSA-N",
+      "x": 0.228458,
+      "y": 0.509314,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CLDOXHZGNKQHHS-UHFFFAOYSA-N",
+      "x": 0.237285,
+      "y": 0.533052,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BYSGLVFXVBSPOW-UHFFFAOYSA-N",
+      "x": 0.238818,
+      "y": 0.535602,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SJALXGUXHNRWAP-UHFFFAOYSA-N",
+      "x": 0.237098,
+      "y": 0.538674,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KBUFIONZEUZINE-UHFFFAOYSA-N",
+      "x": 0.237558,
+      "y": 0.536337,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CBIOARJCUJJPQK-UHFFFAOYSA-N",
+      "x": 0.234317,
+      "y": 0.534859,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZEMNDTYROOYABL-UHFFFAOYSA-N",
+      "x": 0.237167,
+      "y": 0.536658,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GQGXRBWXACNHKP-UHFFFAOYSA-N",
+      "x": 0.237907,
+      "y": 0.534974,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XFRHYQYECJDMJH-UHFFFAOYSA-N",
+      "x": 0.235357,
+      "y": 0.523752,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZSJUDRXSTLTZOC-UHFFFAOYSA-N",
+      "x": 0.236182,
+      "y": 0.528703,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PIYYXFDKSOPHQT-UHFFFAOYSA-N",
+      "x": 0.234957,
+      "y": 0.526701,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YBGITOZORWUGNS-UHFFFAOYSA-N",
+      "x": 0.236631,
+      "y": 0.521157,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RUUJUEYNPVUQGO-UHFFFAOYSA-N",
+      "x": 0.28785,
+      "y": 0.448141,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_MQDDUHSKWDALDF-UHFFFAOYSA-N",
+      "x": 0.293708,
+      "y": 0.452388,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PYSIWDKFLRLSCD-UHFFFAOYSA-N",
+      "x": 0.288799,
+      "y": 0.447588,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GIGYCMVBESHYIR-UHFFFAOYSA-N",
+      "x": 0.240798,
+      "y": 0.524528,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VLMSAIGTAFBLSG-UHFFFAOYSA-N",
+      "x": 0.257826,
+      "y": 0.442564,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_COLPSOXDIWNLQV-UHFFFAOYSA-N",
+      "x": 0.292977,
+      "y": 0.452077,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JCHKSRSJVWBSKD-UHFFFAOYSA-N",
+      "x": 0.298149,
+      "y": 0.450325,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HJCGWQMAXLUSDR-UHFFFAOYSA-N",
+      "x": 0.263433,
+      "y": 0.439322,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QXJPVOOCWPSUNF-UHFFFAOYSA-N",
+      "x": 0.27862,
+      "y": 0.439127,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_RIUYSXQHXWKBSH-UHFFFAOYSA-N",
+      "x": 0.292435,
+      "y": 0.415291,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_QXXVPSZZKBZBQL-UHFFFAOYSA-N",
+      "x": 0.294653,
+      "y": 0.412791,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_OLGGLVUDZAJWCA-UHFFFAOYSA-N",
+      "x": 0.292767,
+      "y": 0.414815,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_RGKVJPARXIQQBK-UHFFFAOYSA-N",
+      "x": 0.297439,
+      "y": 0.449499,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IEEPYTFKLYDKNY-UHFFFAOYSA-N",
+      "x": 0.298444,
+      "y": 0.450532,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FQUMMNMTJYZQQV-UHFFFAOYSA-N",
+      "x": 0.264819,
+      "y": 0.429263,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JPIFCJLFWHXFPZ-UHFFFAOYSA-N",
+      "x": 0.220582,
+      "y": 0.511574,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QLQMSSNWMZZYHR-UHFFFAOYSA-N",
+      "x": 0.247409,
+      "y": 0.482268,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UTGQJQXCOAUUFR-UHFFFAOYSA-N",
+      "x": 0.247238,
+      "y": 0.485521,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RFRLUVKCGDNSJG-UHFFFAOYSA-N",
+      "x": 0.234344,
+      "y": 0.514326,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VQDXVVNNQSAHCL-UHFFFAOYSA-N",
+      "x": 0.237421,
+      "y": 0.51709,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SIISROGFWJEHNE-UHFFFAOYSA-N",
+      "x": 0.236049,
+      "y": 0.518274,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XSDXQNVJNSCZNC-UHFFFAOYSA-N",
+      "x": 0.563154,
+      "y": 0.223806,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BBXGLWHUFVFVHE-UHFFFAOYSA-N",
+      "x": 0.25603,
+      "y": 0.628772,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FKQPZKKQHKWXFV-UHFFFAOYSA-N",
+      "x": 0.232909,
+      "y": 0.572778,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ASXICCYIZTZPOV-UHFFFAOYSA-N",
+      "x": 0.226356,
+      "y": 0.578609,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WTCBTMGYQNYWJN-UHFFFAOYSA-N",
+      "x": 0.228801,
+      "y": 0.577074,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VBGWBWLAACQXGU-UHFFFAOYSA-N",
+      "x": 0.250421,
+      "y": 0.627524,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MDHGLABKUMOUBJ-UHFFFAOYSA-N",
+      "x": 0.269129,
+      "y": 0.627535,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AKHGGIQZIPEUPX-UHFFFAOYSA-N",
+      "x": 0.269892,
+      "y": 0.627123,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NJGNUELDZGCXHI-UHFFFAOYSA-N",
+      "x": 0.267181,
+      "y": 0.630002,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RSMRCCFYFDOGPB-UHFFFAOYSA-N",
+      "x": 0.265758,
+      "y": 0.630419,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XMWIWVOZWGSHFI-UHFFFAOYSA-N",
+      "x": 0.190498,
+      "y": 0.659439,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ANJOVBLIGXKPPV-UHFFFAOYSA-N",
+      "x": 0.248436,
+      "y": 0.6287,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MKQCMKCVUWQTKQ-UHFFFAOYSA-N",
+      "x": 0.250292,
+      "y": 0.640915,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SHVLMLOMLMBILG-UHFFFAOYSA-N",
+      "x": 0.248537,
+      "y": 0.661616,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XZUJOBGRYVCLBW-UHFFFAOYSA-N",
+      "x": 0.249052,
+      "y": 0.677366,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WHPLVDPQYUHENF-UHFFFAOYSA-N",
+      "x": 0.22158,
+      "y": 0.587907,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RFEXNXHLDYQQPX-UHFFFAOYSA-N",
+      "x": 0.258198,
+      "y": 0.627263,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CCPLZCHJZDTWAP-UHFFFAOYSA-N",
+      "x": 0.257024,
+      "y": 0.627523,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PXMDEDAWAXVBIF-UHFFFAOYSA-N",
+      "x": 0.234805,
+      "y": 0.573848,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LZXJLOUSWIEDDC-UHFFFAOYSA-N",
+      "x": 0.189238,
+      "y": 0.660813,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ASZMNLMVXZOUJB-UHFFFAOYSA-N",
+      "x": 0.235168,
+      "y": 0.573186,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AQLZFTFUMFQECB-UHFFFAOYSA-N",
+      "x": 0.231464,
+      "y": 0.578691,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_URAWJRWOZOLHNS-UHFFFAOYSA-N",
+      "x": 0.232225,
+      "y": 0.571901,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SAVBBIKULUFASS-UHFFFAOYSA-N",
+      "x": 0.189667,
+      "y": 0.662011,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KEEGPTCJUFFPPO-UHFFFAOYSA-N",
+      "x": 0.186915,
+      "y": 0.659432,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RPFSUTLSLJSTIY-UHFFFAOYSA-N",
+      "x": 0.180732,
+      "y": 0.672078,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VSVZPBKVUQLPTD-UHFFFAOYSA-N",
+      "x": 0.190986,
+      "y": 0.663276,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QTINJESZABWTJE-UHFFFAOYSA-N",
+      "x": 0.269583,
+      "y": 0.627436,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XJGUSRPOFLOEQM-UHFFFAOYSA-N",
+      "x": 0.189702,
+      "y": 0.659931,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OGEDCAJZYTUFAU-UHFFFAOYSA-N",
+      "x": 0.249145,
+      "y": 0.62946,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FPDROEORDOWVOT-UHFFFAOYSA-N",
+      "x": 0.234994,
+      "y": 0.648046,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XTJALLKDRJMPEK-UHFFFAOYSA-N",
+      "x": 0.235152,
+      "y": 0.650317,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WBYVDNMAJORLMS-UHFFFAOYSA-N",
+      "x": 0.22335,
+      "y": 0.582336,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SFKKRJIOBFCZIM-UHFFFAOYSA-N",
+      "x": 0.248907,
+      "y": 0.677508,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HRMMRBFXPFTUQB-UHFFFAOYSA-N",
+      "x": 0.176778,
+      "y": 0.672348,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CGXREFXNAGMYHL-UHFFFAOYSA-N",
+      "x": 0.177539,
+      "y": 0.671428,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BVWPIHCEVPDUPH-UHFFFAOYSA-N",
+      "x": 0.176551,
+      "y": 0.670426,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AUXRAHMZLFZBSE-UHFFFAOYSA-N",
+      "x": 0.252323,
+      "y": 0.680487,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RUGUFJXPRLPZQY-UHFFFAOYSA-N",
+      "x": 0.249361,
+      "y": 0.678242,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CWKHHYLHENIUDG-UHFFFAOYSA-N",
+      "x": 0.2125,
+      "y": 0.700567,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AJTZXNGGSRWXEJ-UHFFFAOYSA-N",
+      "x": 0.252459,
+      "y": 0.677203,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IZFSYXZPBFHOEQ-UHFFFAOYSA-N",
+      "x": 0.251472,
+      "y": 0.676231,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CJERJIIFRTYESC-UHFFFAOYSA-N",
+      "x": 0.233915,
+      "y": 0.57128,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DSAALGTYXWVNME-UHFFFAOYSA-N",
+      "x": 0.234159,
+      "y": 0.570167,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GAWUENGHSNJHOY-UHFFFAOYSA-N",
+      "x": 0.207056,
+      "y": 0.554598,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ATHOXUKZOYIHEN-UHFFFAOYSA-N",
+      "x": 0.201099,
+      "y": 0.633679,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HJRHYEDXNIFZSI-UHFFFAOYSA-N",
+      "x": 0.200999,
+      "y": 0.634238,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KSHXUDXPTIGMIS-UHFFFAOYSA-N",
+      "x": 0.225909,
+      "y": 0.579714,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_REPKXOTVLOLNBT-UHFFFAOYSA-N",
+      "x": 0.23434,
+      "y": 0.574328,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WGFNJZLTWCVWEF-UHFFFAOYSA-N",
+      "x": 0.232157,
+      "y": 0.575723,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ARYOQLBJNQRHMO-UHFFFAOYSA-N",
+      "x": 0.212133,
+      "y": 0.700613,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YAUBEGWKFGUMGY-UHFFFAOYSA-N",
+      "x": 0.235244,
+      "y": 0.572281,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YFDBOARWAZXXQE-UHFFFAOYSA-N",
+      "x": 0.189007,
+      "y": 0.670252,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IVVBUYRHSUCNOY-UHFFFAOYSA-N",
+      "x": 0.232742,
+      "y": 0.576127,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BSZDLVDHBONSCW-UHFFFAOYSA-N",
+      "x": 0.237535,
+      "y": 0.572292,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DJFUEHXWEUPMDH-UHFFFAOYSA-N",
+      "x": 0.236752,
+      "y": 0.575725,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZPWCKNNFHRSQFL-UHFFFAOYSA-N",
+      "x": 0.234715,
+      "y": 0.57488,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GFYDNNYCFCMBBB-UHFFFAOYSA-N",
+      "x": 0.225803,
+      "y": 0.580086,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YJFLSZMEOCOFJU-UHFFFAOYSA-N",
+      "x": 0.217149,
+      "y": 0.694087,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UYALNSFOJUOCGU-UHFFFAOYSA-N",
+      "x": 0.220667,
+      "y": 0.69183,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JNWIMJINJFXCOG-UHFFFAOYSA-N",
+      "x": 0.226746,
+      "y": 0.665219,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ACGPGAYMTHIXQJ-UHFFFAOYSA-N",
+      "x": 0.220461,
+      "y": 0.677283,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ILQGNBNREBZBJC-UHFFFAOYSA-N",
+      "x": 0.248156,
+      "y": 0.650345,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UOYRNHYKJKISNA-UHFFFAOYSA-N",
+      "x": 0.216233,
+      "y": 0.679739,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DJHNPYOORSIIJS-UHFFFAOYSA-N",
+      "x": 0.221306,
+      "y": 0.665211,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RLLMLNYDKLWJFL-UHFFFAOYSA-N",
+      "x": 0.224123,
+      "y": 0.678791,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LEZUZJDJMLEQTI-UHFFFAOYSA-N",
+      "x": 0.222443,
+      "y": 0.580215,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FDEKJFVUCQUPGJ-UHFFFAOYSA-N",
+      "x": 0.226554,
+      "y": 0.577732,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DKCCHQRFAFEVKX-UHFFFAOYSA-N",
+      "x": 0.215038,
+      "y": 0.56644,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FPLZUDXEDFSXOE-UHFFFAOYSA-N",
+      "x": 0.227511,
+      "y": 0.577467,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QMNBTKWTWBUHGD-UHFFFAOYSA-N",
+      "x": 0.210888,
+      "y": 0.559167,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OGVQXHYEEUIYEL-UHFFFAOYSA-N",
+      "x": 0.216997,
+      "y": 0.690042,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CHVGGEFWMWUEKT-UHFFFAOYSA-N",
+      "x": 0.2147,
+      "y": 0.688207,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VSYRTMNKOKEIDH-UHFFFAOYSA-N",
+      "x": 0.213792,
+      "y": 0.687252,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LURKLKSDEVGHSC-UHFFFAOYSA-N",
+      "x": 0.214383,
+      "y": 0.561163,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VAUNSWGRPIDUML-UHFFFAOYSA-N",
+      "x": 0.220261,
+      "y": 0.671757,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IKKNXYAIKYMBEZ-UHFFFAOYSA-N",
+      "x": 0.221888,
+      "y": 0.694541,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PBJKWVAWLJDXNY-UHFFFAOYSA-N",
+      "x": 0.19595,
+      "y": 0.621824,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YCVJSHVXNYOZKO-UHFFFAOYSA-N",
+      "x": 0.240672,
+      "y": 0.679795,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CVRHOSZSAZRIJY-UHFFFAOYSA-N",
+      "x": 0.232996,
+      "y": 0.571135,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OKBKEZZJENLGGU-UHFFFAOYSA-N",
+      "x": 0.209279,
+      "y": 0.639358,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DNLIJZKVEZKQOE-UHFFFAOYSA-N",
+      "x": 0.21149,
+      "y": 0.564852,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AQPAHBCOAMAPBN-UHFFFAOYSA-N",
+      "x": 0.222293,
+      "y": 0.665608,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XDKIZTIFFHMFMZ-UHFFFAOYSA-N",
+      "x": 0.222068,
+      "y": 0.693307,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OAXLSXDYFAZOMA-UHFFFAOYSA-N",
+      "x": 0.222322,
+      "y": 0.664566,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SRZHYDDTUNHLDZ-UHFFFAOYSA-N",
+      "x": 0.221836,
+      "y": 0.675561,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MOHJTLASAFDHMH-UHFFFAOYSA-N",
+      "x": 0.227673,
+      "y": 0.571481,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PWHVFUCMCZQFOD-UHFFFAOYSA-N",
+      "x": 0.222391,
+      "y": 0.664138,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YKHDJKZXBBJNHD-UHFFFAOYSA-N",
+      "x": 0.205731,
+      "y": 0.666685,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HGLYXWQKCNZAMH-UHFFFAOYSA-N",
+      "x": 0.217624,
+      "y": 0.694042,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GUBGLFZLGYBQIG-UHFFFAOYSA-N",
+      "x": 0.208224,
+      "y": 0.659477,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OEOVIYRFPZWYTG-UHFFFAOYSA-N",
+      "x": 0.204842,
+      "y": 0.661111,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VGKLZRWPJRDZSZ-UHFFFAOYSA-N",
+      "x": 0.209501,
+      "y": 0.656249,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YHLLPKQETZPFRT-UHFFFAOYSA-N",
+      "x": 0.218164,
+      "y": 0.690301,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RZVSVRAKPHMSQB-UHFFFAOYSA-N",
+      "x": 0.264689,
+      "y": 0.654627,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CRGHGVHNJHXXFZ-UHFFFAOYSA-N",
+      "x": 0.216115,
+      "y": 0.691071,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JIIYGFLYKFJSCT-UHFFFAOYSA-N",
+      "x": 0.206976,
+      "y": 0.63401,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XIRXTGGWYDQXEQ-UHFFFAOYSA-N",
+      "x": 0.265876,
+      "y": 0.655192,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FWWUOELPFNGMOV-UHFFFAOYSA-N",
+      "x": 0.265698,
+      "y": 0.655582,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AYSXKGHOTGRMKO-UHFFFAOYSA-N",
+      "x": 0.235503,
+      "y": 0.575753,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GWWGUDLHBMRKTA-UHFFFAOYSA-N",
+      "x": 0.233833,
+      "y": 0.576785,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LUFAUTIIMPKZLH-UHFFFAOYSA-N",
+      "x": 0.250921,
+      "y": 0.640038,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FUPJMIRGSBAVEF-UHFFFAOYSA-N",
+      "x": 0.249953,
+      "y": 0.636445,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HCQYMRCYTZIEFJ-UHFFFAOYSA-N",
+      "x": 0.185378,
+      "y": 0.657287,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PLDNJENXPXIAMU-UHFFFAOYSA-N",
+      "x": 0.185162,
+      "y": 0.65555,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UXRBSEMFZPHJKW-UHFFFAOYSA-N",
+      "x": 0.202271,
+      "y": 0.580741,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XASUUYULQBMOEH-UHFFFAOYSA-N",
+      "x": 0.177937,
+      "y": 0.669289,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QYXYXHLMSJWEEE-UHFFFAOYSA-N",
+      "x": 0.187607,
+      "y": 0.670671,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VDXGZOTXKMSFSM-UHFFFAOYSA-N",
+      "x": 0.192166,
+      "y": 0.665093,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MLWVBXQGYMSHGP-UHFFFAOYSA-N",
+      "x": 0.177515,
+      "y": 0.657465,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KKTKATASCDSSNX-UHFFFAOYSA-N",
+      "x": 0.181921,
+      "y": 0.655308,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZBWMPZVORNKXPM-UHFFFAOYSA-N",
+      "x": 0.176667,
+      "y": 0.65813,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ABHMIEDKNPPLNC-UHFFFAOYSA-N",
+      "x": 0.181875,
+      "y": 0.655448,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XMCVPIUWKFDNDF-UHFFFAOYSA-N",
+      "x": 0.261785,
+      "y": 0.63381,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZJSPAJQXKUHGKQ-UHFFFAOYSA-N",
+      "x": 0.252208,
+      "y": 0.637861,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NDSKUMNPWUXAOJ-UHFFFAOYSA-N",
+      "x": 0.248583,
+      "y": 0.674567,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DKSJZZCQXHSHCN-UHFFFAOYSA-N",
+      "x": 0.244905,
+      "y": 0.664864,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OXEWDXHJRAVGDO-UHFFFAOYSA-N",
+      "x": 0.251061,
+      "y": 0.673372,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JFMOHFAVVZOEDD-UHFFFAOYSA-N",
+      "x": 0.176867,
+      "y": 0.659829,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CUSAUPTWLADOAS-UHFFFAOYSA-N",
+      "x": 0.181547,
+      "y": 0.654436,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UGOWQTMWNGHBQP-UHFFFAOYSA-N",
+      "x": 0.251534,
+      "y": 0.639216,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RIJBGVWUNFFKJM-UHFFFAOYSA-N",
+      "x": 0.249467,
+      "y": 0.677876,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RTSGCIPLUNJINX-UHFFFAOYSA-N",
+      "x": 0.249953,
+      "y": 0.675449,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BNYPRNFKWKMTLT-UHFFFAOYSA-N",
+      "x": 0.176762,
+      "y": 0.658343,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FITBHLORZADUBE-UHFFFAOYSA-N",
+      "x": 0.179545,
+      "y": 0.658042,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DWHZTXUQTJAWHV-UHFFFAOYSA-N",
+      "x": 0.177033,
+      "y": 0.660237,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WLXVKGMHNZAQFC-UHFFFAOYSA-N",
+      "x": 0.182547,
+      "y": 0.654569,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MGXVOMCKJHQJHA-UHFFFAOYSA-N",
+      "x": 0.194431,
+      "y": 0.665973,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KMCGEHUTFDGZAB-UHFFFAOYSA-N",
+      "x": 0.217784,
+      "y": 0.585344,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UVPVYHMJHITAMD-UHFFFAOYSA-N",
+      "x": 0.217588,
+      "y": 0.584145,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UTIYGQPPPLURRH-UHFFFAOYSA-N",
+      "x": 0.189836,
+      "y": 0.662223,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XWPZKRKCHZOEGA-UHFFFAOYSA-N",
+      "x": 0.180108,
+      "y": 0.675426,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VHKFMPGYLCMOLC-UHFFFAOYSA-N",
+      "x": 0.191376,
+      "y": 0.664759,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LRQLLKJKOOSYSH-UHFFFAOYSA-N",
+      "x": 0.208504,
+      "y": 0.554295,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RZUAOIZEKIUNEI-UHFFFAOYSA-N",
+      "x": 0.240735,
+      "y": 0.678707,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NKILDKXOJMGREZ-UHFFFAOYSA-N",
+      "x": 0.237672,
+      "y": 0.678673,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UOMBMNMBKVFYEC-UHFFFAOYSA-N",
+      "x": 0.25229,
+      "y": 0.63827,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SBAFIOIWOQNJGK-UHFFFAOYSA-N",
+      "x": 0.254458,
+      "y": 0.68409,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BGSRDSPUJZPKRM-UHFFFAOYSA-N",
+      "x": 0.202449,
+      "y": 0.571928,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GRQRQTZCUPDQLS-UHFFFAOYSA-N",
+      "x": 0.178749,
+      "y": 0.671834,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DUTLCPVDWZIPRE-UHFFFAOYSA-N",
+      "x": 0.251293,
+      "y": 0.687186,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZXMJPZDOOVBAQT-UHFFFAOYSA-N",
+      "x": 0.250088,
+      "y": 0.688082,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AWWQPWSNFJMUHH-UHFFFAOYSA-N",
+      "x": 0.221492,
+      "y": 0.696261,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OYACURKHMQMOPH-UHFFFAOYSA-N",
+      "x": 0.209387,
+      "y": 0.699763,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_STYKNLNMMWWZAA-UHFFFAOYSA-N",
+      "x": 0.219761,
+      "y": 0.695863,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QRYUAMRDCKNCAT-UHFFFAOYSA-N",
+      "x": 0.209986,
+      "y": 0.551022,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FQRARTMFPOJPEU-UHFFFAOYSA-N",
+      "x": 0.217106,
+      "y": 0.696754,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AKFGFYGLIUUINF-UHFFFAOYSA-N",
+      "x": 0.237882,
+      "y": 0.678746,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_USGBELAFIJTUNF-UHFFFAOYSA-N",
+      "x": 0.224663,
+      "y": 0.666075,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PVKCCUZSTQFUSH-UHFFFAOYSA-N",
+      "x": 0.224548,
+      "y": 0.659416,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YBVWZINAGLLRHT-UHFFFAOYSA-N",
+      "x": 0.222712,
+      "y": 0.665592,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DHBGWXOAFRSYRC-UHFFFAOYSA-N",
+      "x": 0.227281,
+      "y": 0.656012,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MNKOBAVJFNJGQP-UHFFFAOYSA-N",
+      "x": 0.224647,
+      "y": 0.643998,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CJJJORNJONBWQV-UHFFFAOYSA-N",
+      "x": 0.203296,
+      "y": 0.634861,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FBIZVNHJFIYGNL-UHFFFAOYSA-N",
+      "x": 0.190006,
+      "y": 0.643473,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZRLFTLKWMBTSKS-UHFFFAOYSA-N",
+      "x": 0.192355,
+      "y": 0.641332,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XFNMHRJEVNSEMC-UHFFFAOYSA-N",
+      "x": 0.202776,
+      "y": 0.63271,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ITTILWCSZFFKLK-UHFFFAOYSA-N",
+      "x": 0.223515,
+      "y": 0.646471,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KNOHNZGQEZOYLQ-UHFFFAOYSA-N",
+      "x": 0.224114,
+      "y": 0.643645,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ASAUKESVWCIYIQ-UHFFFAOYSA-N",
+      "x": 0.224752,
+      "y": 0.649323,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PQWGLWRWBVVKPT-UHFFFAOYSA-N",
+      "x": 0.215594,
+      "y": 0.641486,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OYVQXZNGRVRKJW-UHFFFAOYSA-N",
+      "x": 0.209977,
+      "y": 0.549789,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LGAIOBCZGDJIKZ-UHFFFAOYSA-N",
+      "x": 0.210253,
+      "y": 0.548632,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VLCPBJOAQBJLLV-UHFFFAOYSA-N",
+      "x": 0.210366,
+      "y": 0.634223,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VYMKESVJGODYMA-UHFFFAOYSA-N",
+      "x": 0.210901,
+      "y": 0.697676,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PAKKEKSNZBRWCM-UHFFFAOYSA-N",
+      "x": 0.246683,
+      "y": 0.664766,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WRQXQZATOOSATB-UHFFFAOYSA-N",
+      "x": 0.24123,
+      "y": 0.656234,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OTUALUMGAOCCCJ-UHFFFAOYSA-N",
+      "x": 0.245771,
+      "y": 0.664893,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BZSQFMHEIIWVHG-UHFFFAOYSA-N",
+      "x": 0.242193,
+      "y": 0.656232,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CXYIYZFMHUCMEN-UHFFFAOYSA-N",
+      "x": 0.219185,
+      "y": 0.697748,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QRXGNHGLHILBSW-UHFFFAOYSA-N",
+      "x": 0.205472,
+      "y": 0.609326,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YRLMETLJXZYSKF-UHFFFAOYSA-N",
+      "x": 0.215863,
+      "y": 0.698294,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DCRKHSHUPAAWEO-UHFFFAOYSA-N",
+      "x": 0.219814,
+      "y": 0.649545,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RKUJITVZXNFKNY-UHFFFAOYSA-N",
+      "x": 0.210497,
+      "y": 0.635812,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JAGISDJMLZHVQD-UHFFFAOYSA-N",
+      "x": 0.221264,
+      "y": 0.69519,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MMZWGOHBSMLSIA-UHFFFAOYSA-N",
+      "x": 0.221043,
+      "y": 0.664525,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LQOBYEGQFXFWBN-UHFFFAOYSA-N",
+      "x": 0.220241,
+      "y": 0.680623,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZCBPXJGUXJBWLP-UHFFFAOYSA-N",
+      "x": 0.188691,
+      "y": 0.671137,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BNYNKLLFVOSSCO-UHFFFAOYSA-N",
+      "x": 0.222597,
+      "y": 0.659933,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QHXUBJIEVLQAKR-UHFFFAOYSA-N",
+      "x": 0.225359,
+      "y": 0.66476,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KUVLLLZRFZEDPG-UHFFFAOYSA-N",
+      "x": 0.1878,
+      "y": 0.671237,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ALLNLEHUCLZSFQ-UHFFFAOYSA-N",
+      "x": 0.224175,
+      "y": 0.658255,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VGSMTQKHRVZRTE-UHFFFAOYSA-N",
+      "x": 0.223353,
+      "y": 0.659114,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NDGBVFIYKPSAGD-UHFFFAOYSA-N",
+      "x": 0.211732,
+      "y": 0.635424,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QZIKKPMEQKTBSX-UHFFFAOYSA-N",
+      "x": 0.210364,
+      "y": 0.63385,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YGGMDHRAUUOWDB-UHFFFAOYSA-N",
+      "x": 0.211627,
+      "y": 0.635003,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KFYVDTFRCOTWMA-UHFFFAOYSA-N",
+      "x": 0.204764,
+      "y": 0.655187,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PKEPBVKINPLUTK-UHFFFAOYSA-N",
+      "x": 0.246898,
+      "y": 0.659364,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SFSGRTYUFZCQQP-UHFFFAOYSA-N",
+      "x": 0.221199,
+      "y": 0.695033,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VXJUHPWDEVGFDT-UHFFFAOYSA-N",
+      "x": 0.210961,
+      "y": 0.65634,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NPSGWDDXWWYBMI-UHFFFAOYSA-N",
+      "x": 0.21211,
+      "y": 0.655269,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XNLNODVXPHNZMN-UHFFFAOYSA-N",
+      "x": 0.293067,
+      "y": 0.439511,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MWHQWINWPMNIJX-UHFFFAOYSA-N",
+      "x": 0.201983,
+      "y": 0.66154,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WSOOKVSUFQFWSU-UHFFFAOYSA-N",
+      "x": 0.203632,
+      "y": 0.660249,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HVJALUQHVHHJKH-UHFFFAOYSA-N",
+      "x": 0.20421,
+      "y": 0.664159,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OZZPTJBKPBBASH-UHFFFAOYSA-N",
+      "x": 0.201494,
+      "y": 0.667982,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IPHQRDFRCDXWAN-UHFFFAOYSA-N",
+      "x": 0.205667,
+      "y": 0.635939,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VQBWSXOOVCWRQM-UHFFFAOYSA-N",
+      "x": 0.203705,
+      "y": 0.66294,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BNNVIEWFHNBJRP-UHFFFAOYSA-N",
+      "x": 0.205233,
+      "y": 0.635459,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KCYZZFRWSADIIG-UHFFFAOYSA-N",
+      "x": 0.203867,
+      "y": 0.662435,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QDKUWPHOQFGANP-UHFFFAOYSA-N",
+      "x": 0.229931,
+      "y": 0.662978,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZMFSCIZWASRWRR-UHFFFAOYSA-N",
+      "x": 0.20196,
+      "y": 0.567613,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FOUYAXGWRXSTGX-UHFFFAOYSA-N",
+      "x": 0.215385,
+      "y": 0.691756,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XCDFNPAVOIEJSV-UHFFFAOYSA-N",
+      "x": 0.207987,
+      "y": 0.633194,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QKUMVUGUOBDHIT-UHFFFAOYSA-N",
+      "x": 0.207045,
+      "y": 0.634094,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GPPRWHIUOAXMJM-UHFFFAOYSA-N",
+      "x": 0.202724,
+      "y": 0.581382,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NCWLTYNQQXXUND-UHFFFAOYSA-N",
+      "x": 0.204666,
+      "y": 0.612266,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UHGQITLWCUHTPC-UHFFFAOYSA-N",
+      "x": 0.203966,
+      "y": 0.609522,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YXRVMIQXVKLLSS-UHFFFAOYSA-N",
+      "x": 0.20507,
+      "y": 0.599211,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DLBLFBVFAWXGLQ-UHFFFAOYSA-N",
+      "x": 0.262726,
+      "y": 0.633137,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KUEMUSIPJOWTBX-UHFFFAOYSA-N",
+      "x": 0.209165,
+      "y": 0.55253,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UAGGUNDAQDTCFW-UHFFFAOYSA-N",
+      "x": 0.257891,
+      "y": 0.367587,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KRBRYJLBILJHAS-UHFFFAOYSA-N",
+      "x": 0.255529,
+      "y": 0.366886,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_DVPQVOPYTZSSMA-UHFFFAOYSA-N",
+      "x": 0.251734,
+      "y": 0.365707,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_MAYBZGKWHOVSAQ-UHFFFAOYSA-N",
+      "x": 0.253714,
+      "y": 0.366325,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_DADLXGFKJVGHGU-UHFFFAOYSA-N",
+      "x": 0.204172,
+      "y": 0.580525,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JGAIFPNIVHUZBG-UHFFFAOYSA-N",
+      "x": 0.19954,
+      "y": 0.625011,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UFYKNJHDKHWMLM-UHFFFAOYSA-N",
+      "x": 0.207855,
+      "y": 0.58203,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AQYQDQPHWOEOJN-UHFFFAOYSA-N",
+      "x": 0.208068,
+      "y": 0.554383,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GNKTXQNCPYJMAN-UHFFFAOYSA-N",
+      "x": 0.25255,
+      "y": 0.366271,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XFDUHJPVQKIXHO-UHFFFAOYSA-N",
+      "x": 0.204376,
+      "y": 0.359029,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NJXPYZHXZZCTNI-UHFFFAOYSA-N",
+      "x": 0.253847,
+      "y": 0.36633,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_HSKNZZIAUZCVIS-UHFFFAOYSA-N",
+      "x": 0.43577,
+      "y": 0.558951,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DGLFRXQWDMFSMD-UHFFFAOYSA-N",
+      "x": 0.42038,
+      "y": 0.429727,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CMMFOLDWKCHZKX-UHFFFAOYSA-N",
+      "x": 0.421098,
+      "y": 0.430474,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UWEZGOSFYATCSM-UHFFFAOYSA-N",
+      "x": 0.422331,
+      "y": 0.43191,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OPGYAXDMJNHZIZ-UHFFFAOYSA-N",
+      "x": 0.418963,
+      "y": 0.428219,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YWLWBEBBMOJICI-UHFFFAOYSA-N",
+      "x": 0.177477,
+      "y": 0.344211,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_TYTOTPBQBNEFFS-UHFFFAOYSA-N",
+      "x": 0.174562,
+      "y": 0.345525,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CUKZGOBWGGOLIQ-UHFFFAOYSA-N",
+      "x": 0.456438,
+      "y": 0.901672,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NDSPYSHLDCEQCC-UHFFFAOYSA-N",
+      "x": 0.571618,
+      "y": 0.19607,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DRUUHIKJSVHYLU-UHFFFAOYSA-N",
+      "x": 0.573838,
+      "y": 0.196868,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GSCKWFZZSHUKQZ-UHFFFAOYSA-N",
+      "x": 0.163339,
+      "y": 0.528207,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_SCBBSJMAPKXHAH-UHFFFAOYSA-N",
+      "x": 0.601583,
+      "y": 0.790832,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BUSUAFVMEIVKJW-UHFFFAOYSA-N",
+      "x": 0.18717,
+      "y": 0.915731,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_AEJKKPILUYRMGG-UHFFFAOYSA-N",
+      "x": 0.256614,
+      "y": 0.46522,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_TUWBWDYSWWBNKB-UHFFFAOYSA-N",
+      "x": 0.295638,
+      "y": 0.411578,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ABEWZIAAGNAOFA-UHFFFAOYSA-N",
+      "x": 0.295833,
+      "y": 0.409622,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JHDGZPDUCBFWPW-UHFFFAOYSA-N",
+      "x": 0.276673,
+      "y": 0.448975,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_JYTSDAGRJYCVBO-UHFFFAOYSA-N",
+      "x": 0.276164,
+      "y": 0.445666,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GPMNDDMSGGOHTI-UHFFFAOYSA-N",
+      "x": 0.291633,
+      "y": 0.417082,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ZYLDMANBSKTMSS-UHFFFAOYSA-N",
+      "x": 0.292157,
+      "y": 0.414084,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_QIVCPPVEFZJIGT-UHFFFAOYSA-N",
+      "x": 0.292487,
+      "y": 0.417478,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_HVUDUTOIDONARJ-UHFFFAOYSA-N",
+      "x": 0.294447,
+      "y": 0.41314,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KMZWCBJRFASLLP-UHFFFAOYSA-N",
+      "x": 0.292563,
+      "y": 0.414982,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_FJUCQOCCYKZPJK-UHFFFAOYSA-N",
+      "x": 0.293477,
+      "y": 0.41622,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_OVOCFOCATFQFQO-UHFFFAOYSA-N",
+      "x": 0.29195,
+      "y": 0.41504,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_MTCAIURPELEANQ-UHFFFAOYSA-N",
+      "x": 0.291884,
+      "y": 0.415505,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_REJBNHBLPNRHNN-UHFFFAOYSA-N",
+      "x": 0.293133,
+      "y": 0.412667,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_OSEAMSUIVMRMER-UHFFFAOYSA-N",
+      "x": 0.290643,
+      "y": 0.417621,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_WGQSJADAPWAKOI-UHFFFAOYSA-N",
+      "x": 0.294615,
+      "y": 0.413831,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ONTLVBURSDPBDT-UHFFFAOYSA-N",
+      "x": 0.295509,
+      "y": 0.414981,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_MGVNRDKGQOJHAE-UHFFFAOYSA-N",
+      "x": 0.279769,
+      "y": 0.449827,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ZRSBTYRFJQNYTK-UHFFFAOYSA-N",
+      "x": 0.27792,
+      "y": 0.452947,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PDEQGFLJTSKHES-UHFFFAOYSA-N",
+      "x": 0.276162,
+      "y": 0.452948,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ACDJCQRZBUUIAW-UHFFFAOYSA-N",
+      "x": 0.279126,
+      "y": 0.446987,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_HBTSFKZUTTZQPX-UHFFFAOYSA-N",
+      "x": 0.276078,
+      "y": 0.452836,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_SMHPDAGZRZKUNU-UHFFFAOYSA-N",
+      "x": 0.288609,
+      "y": 0.445826,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_AJLJIBUEJOIBCY-UHFFFAOYSA-N",
+      "x": 0.288877,
+      "y": 0.448295,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XOJBUFHRPJWNQB-UHFFFAOYSA-N",
+      "x": 0.287189,
+      "y": 0.447917,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_TVRMCOJVTUMDLO-UHFFFAOYSA-N",
+      "x": 0.273423,
+      "y": 0.453286,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DNWVAQNIWHQSBN-UHFFFAOYSA-N",
+      "x": 0.278008,
+      "y": 0.451138,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KWSLUSWNRSORCK-UHFFFAOYSA-N",
+      "x": 0.289897,
+      "y": 0.44706,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_NQLLUEBITQXYMG-UHFFFAOYSA-N",
+      "x": 0.286603,
+      "y": 0.447635,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_OJMZGOOXSXAWEF-UHFFFAOYSA-N",
+      "x": 0.287388,
+      "y": 0.447799,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_QPANXPYKHOKNFR-UHFFFAOYSA-N",
+      "x": 0.284004,
+      "y": 0.442985,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_HTMNOSRIDPHOLQ-UHFFFAOYSA-N",
+      "x": 0.274267,
+      "y": 0.455337,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BCRNERHQBQBGNV-UHFFFAOYSA-N",
+      "x": 0.289322,
+      "y": 0.44766,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_VNUOKNKFVJSKOZ-UHFFFAOYSA-N",
+      "x": 0.287321,
+      "y": 0.448498,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_NZZYMLZGZLLIKB-UHFFFAOYSA-N",
+      "x": 0.287534,
+      "y": 0.42823,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_WYOMHXCASHOYJM-UHFFFAOYSA-N",
+      "x": 0.289339,
+      "y": 0.425513,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_IGEXMEBMOVRUAQ-UHFFFAOYSA-N",
+      "x": 0.257065,
+      "y": 0.46534,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AHZVGMRMLJKMDF-UHFFFAOYSA-N",
+      "x": 0.261816,
+      "y": 0.439504,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VGTOMZCLJFIYMC-UHFFFAOYSA-N",
+      "x": 0.296365,
+      "y": 0.410383,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PKHIKGUOMRHNCO-UHFFFAOYSA-N",
+      "x": 0.295286,
+      "y": 0.412559,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LWSNUDIWBMSCCX-UHFFFAOYSA-N",
+      "x": 0.294883,
+      "y": 0.412057,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_CAJVFRMHLCZHAN-UHFFFAOYSA-N",
+      "x": 0.187505,
+      "y": 0.672491,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PHMKDXMOTNWMDM-UHFFFAOYSA-N",
+      "x": 0.177891,
+      "y": 0.670309,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DQRJPYOIJCVCRB-UHFFFAOYSA-N",
+      "x": 0.18839,
+      "y": 0.67024,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ROYWFMACUXPQPW-UHFFFAOYSA-N",
+      "x": 0.183396,
+      "y": 0.673367,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VDDPEZRYLDOHNN-UHFFFAOYSA-N",
+      "x": 0.190852,
+      "y": 0.661546,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GTXWSAOIEJSDLT-UHFFFAOYSA-N",
+      "x": 0.202403,
+      "y": 0.631337,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YIIRKFQTWCHVRJ-UHFFFAOYSA-N",
+      "x": 0.232828,
+      "y": 0.506088,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XKEUZJSSLWTWKP-UHFFFAOYSA-N",
+      "x": 0.237456,
+      "y": 0.517959,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZVDAGZSGKDBDCV-UHFFFAOYSA-N",
+      "x": 0.234093,
+      "y": 0.505762,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HDXKSUHRXJQRPY-UHFFFAOYSA-N",
+      "x": 0.232698,
+      "y": 0.507217,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XFYKMNYVJNSARK-UHFFFAOYSA-N",
+      "x": 0.212049,
+      "y": 0.700078,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GTSBTKMSTTVPNF-UHFFFAOYSA-N",
+      "x": 0.240969,
+      "y": 0.526284,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LYFRYBQNXYEBHM-UHFFFAOYSA-N",
+      "x": 0.242063,
+      "y": 0.525168,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OVLQMZWLNZSCQA-UHFFFAOYSA-N",
+      "x": 0.297174,
+      "y": 0.44918,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SLRAUJMRBDGCSU-UHFFFAOYSA-N",
+      "x": 0.298325,
+      "y": 0.450276,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VALSPMBBMAUWAA-UHFFFAOYSA-N",
+      "x": 0.227213,
+      "y": 0.508111,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BNRMHXHTEJBPQQ-UHFFFAOYSA-N",
+      "x": 0.241544,
+      "y": 0.532069,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XHNQIVALLDYYND-UHFFFAOYSA-N",
+      "x": 0.218486,
+      "y": 0.510647,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HYZRJZFYTYDGSO-UHFFFAOYSA-N",
+      "x": 0.217636,
+      "y": 0.509335,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CIJGJACOAAMTOH-UHFFFAOYSA-N",
+      "x": 0.217488,
+      "y": 0.510529,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SPFZAWKTGITLIN-UHFFFAOYSA-N",
+      "x": 0.229579,
+      "y": 0.510098,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ICFZQFLZXFURDX-UHFFFAOYSA-N",
+      "x": 0.257503,
+      "y": 0.464829,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DUZBIFXLDJRCEM-UHFFFAOYSA-N",
+      "x": 0.222851,
+      "y": 0.510926,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JMTZEGKYNNAEIQ-UHFFFAOYSA-N",
+      "x": 0.225821,
+      "y": 0.511461,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YGCXVLRVCYYDPR-UHFFFAOYSA-N",
+      "x": 0.222121,
+      "y": 0.513008,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZRYDGNGNYRDZBL-UHFFFAOYSA-N",
+      "x": 0.223366,
+      "y": 0.510492,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KAMGLNLDBUOOSG-UHFFFAOYSA-N",
+      "x": 0.241878,
+      "y": 0.531905,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XBMZHNYSHZHHGX-UHFFFAOYSA-N",
+      "x": 0.239908,
+      "y": 0.530808,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NWMOEXHTQGVOTM-UHFFFAOYSA-N",
+      "x": 0.240852,
+      "y": 0.530844,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LNNSXPCIIODGQJ-UHFFFAOYSA-N",
+      "x": 0.220381,
+      "y": 0.511594,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DKNYGPRXPLXEBJ-UHFFFAOYSA-N",
+      "x": 0.220897,
+      "y": 0.510929,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GJQFSUVWJZEAPL-UHFFFAOYSA-N",
+      "x": 0.26573,
+      "y": 0.459956,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QKLVXRUYLWNZBN-UHFFFAOYSA-N",
+      "x": 0.274438,
+      "y": 0.448045,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_SFJTYMWBRVGRPA-UHFFFAOYSA-N",
+      "x": 0.266036,
+      "y": 0.460166,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UWONBZPCSCHLKU-UHFFFAOYSA-N",
+      "x": 0.267788,
+      "y": 0.628818,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XDEMXVCWMQJWEW-UHFFFAOYSA-N",
+      "x": 0.193814,
+      "y": 0.667911,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AUYZYZBJTHDDHM-UHFFFAOYSA-N",
+      "x": 0.222825,
+      "y": 0.581888,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GKGTYBJJYOQURB-UHFFFAOYSA-N",
+      "x": 0.232978,
+      "y": 0.576565,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RMPCMVZKBVYKBY-UHFFFAOYSA-N",
+      "x": 0.239879,
+      "y": 0.678393,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XTKXRRAMZLFUIP-UHFFFAOYSA-N",
+      "x": 0.223715,
+      "y": 0.697557,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AOFWPRCTTZVUOE-UHFFFAOYSA-N",
+      "x": 0.214992,
+      "y": 0.692653,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LKALYQSHEGGNED-UHFFFAOYSA-N",
+      "x": 0.22393,
+      "y": 0.664026,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PHGVSTVAGMVMQF-UHFFFAOYSA-N",
+      "x": 0.235082,
+      "y": 0.697197,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PZVOQKHTHSPIJF-UHFFFAOYSA-N",
+      "x": 0.237654,
+      "y": 0.695657,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IJQREKRMXKJOKF-UHFFFAOYSA-N",
+      "x": 0.235024,
+      "y": 0.698016,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OQKYXVCMNMHMDQ-UHFFFAOYSA-N",
+      "x": 0.231912,
+      "y": 0.633423,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WVFHKKPEMSBQKT-UHFFFAOYSA-N",
+      "x": 0.220942,
+      "y": 0.673615,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BMNQFQPVIJEFKY-UHFFFAOYSA-N",
+      "x": 0.236302,
+      "y": 0.695678,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WETXBIFKLCITQS-UHFFFAOYSA-N",
+      "x": 0.233932,
+      "y": 0.69754,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VTWUFDNHGHATEX-UHFFFAOYSA-N",
+      "x": 0.26448,
+      "y": 0.653945,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OFWYYVSRGSCPNO-UHFFFAOYSA-N",
+      "x": 0.264888,
+      "y": 0.656093,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RVENKOYTVFMNOC-UHFFFAOYSA-N",
+      "x": 0.265272,
+      "y": 0.655505,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HTDSXFDKWFPJOG-UHFFFAOYSA-N",
+      "x": 0.24685,
+      "y": 0.662144,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BFDJHUSQAAZUHU-UHFFFAOYSA-N",
+      "x": 0.244274,
+      "y": 0.662239,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NRKLVRIDBXCJKL-UHFFFAOYSA-N",
+      "x": 0.233675,
+      "y": 0.674531,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BGSAEHMDAHTZCP-UHFFFAOYSA-N",
+      "x": 0.250711,
+      "y": 0.684633,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BNXUFCPQCLYXLA-UHFFFAOYSA-N",
+      "x": 0.22017,
+      "y": 0.696873,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MBSKDBJEHKBNSO-UHFFFAOYSA-N",
+      "x": 0.448013,
+      "y": 0.895646,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OLQAJWKTEIBHBK-UHFFFAOYSA-N",
+      "x": 0.429667,
+      "y": 0.886404,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ULDGLTCTHCJDJJ-UHFFFAOYSA-N",
+      "x": 0.437511,
+      "y": 0.900071,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MCHSAUCWHGLCDO-UHFFFAOYSA-N",
+      "x": 0.427882,
+      "y": 0.886058,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MAZKVNMXJQPXKL-UHFFFAOYSA-N",
+      "x": 0.429682,
+      "y": 0.889253,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FENREIXHZISABF-UHFFFAOYSA-N",
+      "x": 0.437903,
+      "y": 0.896577,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BAQAVOSOZGMPRM-UHFFFAOYSA-N",
+      "x": 0.428199,
+      "y": 0.88248,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JYPJBAAJYHXKOP-UHFFFAOYSA-N",
+      "x": 0.427587,
+      "y": 0.888747,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BPICFHYOPYWBFS-UHFFFAOYSA-N",
+      "x": 0.428781,
+      "y": 0.885811,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_VXCVAXIJPNTNKI-UHFFFAOYSA-N",
+      "x": 0.448642,
+      "y": 0.900068,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PRSCBRCIQGOQEF-UHFFFAOYSA-N",
+      "x": 0.451107,
+      "y": 0.899854,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZHNOFXKPCMIXDU-UHFFFAOYSA-N",
+      "x": 0.43035,
+      "y": 0.887025,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DIMUPAQIMNBCAF-UHFFFAOYSA-N",
+      "x": 0.43194,
+      "y": 0.889805,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DWBVRTUMIABHRN-UHFFFAOYSA-N",
+      "x": 0.456853,
+      "y": 0.905251,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_CBVOUKZSNIOEJW-UHFFFAOYSA-N",
+      "x": 0.432155,
+      "y": 0.887694,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XKSVHODTAIJZNZ-UHFFFAOYSA-N",
+      "x": 0.431076,
+      "y": 0.882408,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NGHJKZSWKROOFE-UHFFFAOYSA-N",
+      "x": 0.455543,
+      "y": 0.905285,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FIDFALXLJNXFHB-UHFFFAOYSA-N",
+      "x": 0.009369,
+      "y": 0.30444,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_IFKXKNCAQKDUNZ-UHFFFAOYSA-N",
+      "x": 0.421493,
+      "y": 0.431146,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LXLMZIUTFMDEJV-UHFFFAOYSA-N",
+      "x": 0.420201,
+      "y": 0.429535,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RGAGNJJQXKSISU-UHFFFAOYSA-N",
+      "x": 0.4206,
+      "y": 0.429933,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CGWMCFZUXSKBMR-UHFFFAOYSA-N",
+      "x": 0.420275,
+      "y": 0.42965,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LCJLUQDDSSYPJM-UHFFFAOYSA-N",
+      "x": 0.296459,
+      "y": 0.448412,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KIGAPXNVLOREBY-UHFFFAOYSA-N",
+      "x": 0.295963,
+      "y": 0.446121,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ICWOFAWHMTYQKI-UHFFFAOYSA-N",
+      "x": 0.004545,
+      "y": 0.312002,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_GKNHTUSGSFGGIK-UHFFFAOYSA-N",
+      "x": 0.008139,
+      "y": 0.304621,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_BAQAVOSOZGMPRM-RDBDAFJKSA-N",
+      "x": 0.429267,
+      "y": 0.884348,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DIMUPAQIMNBCAF-RDBDAFJKSA-N",
+      "x": 0.43195,
+      "y": 0.888443,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XKSVHODTAIJZNZ-RDBDAFJKSA-N",
+      "x": 0.430052,
+      "y": 0.881403,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XZEBDAGFIQDMTD-UHFFFAOYSA-N",
+      "x": 0.29863,
+      "y": 0.451204,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RJVBYVVFNRCQJX-UHFFFAOYSA-N",
+      "x": 0.444894,
+      "y": 0.894486,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ANTWOVVNFSAVIJ-UHFFFAOYSA-N",
+      "x": 0.435161,
+      "y": 0.895848,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NNNBYOYSLQUCNI-UHFFFAOYSA-N",
+      "x": 0.5068,
+      "y": 0.007038,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_MKJRRXRZPSMCRR-UHFFFAOYSA-N",
+      "x": 0.457796,
+      "y": 0.902988,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NUQUHUSEOPZFRN-UHFFFAOYSA-N",
+      "x": 0.431915,
+      "y": 0.889535,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YAGYTNHVHSFTCT-UHFFFAOYSA-N",
+      "x": 0.437003,
+      "y": 0.89798,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GRDHQWBQPQWUOG-KXORAMEASA-N",
+      "x": 0.615935,
+      "y": 0.813088,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GRDHQWBQPQWUOG-UHFFFAOYSA-N",
+      "x": 0.61581,
+      "y": 0.813992,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PGUKYDVWVXRPKK-UHFFFAOYSA-N",
+      "x": 0.215047,
+      "y": 0.383718,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PWBOWMMYKHVZOD-UHFFFAOYSA-N",
+      "x": 0.328406,
+      "y": 0.318231,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_OQILCCLFTNMMDD-UHFFFAOYSA-N",
+      "x": 0.455541,
+      "y": 0.903201,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JQIVMCQIBVHHTJ-UHFFFAOYSA-N",
+      "x": 0.129175,
+      "y": 0.358643,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JQIVMCQIBVHHTJ-PLPSAWTPSA-N",
+      "x": 0.127519,
+      "y": 0.360484,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NFYOKCWAXOECPS-UHFFFAOYSA-N",
+      "x": 0.223086,
+      "y": 0.389285,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OKMPKYIRMZXMHX-STECZYCISA-N",
+      "x": 0.160252,
+      "y": 0.51799,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_BKRJBJCEENAMCC-UHFFFAOYSA-N",
+      "x": 0.160131,
+      "y": 0.517156,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OKMPKYIRMZXMHX-UHFFFAOYSA-N",
+      "x": 0.161304,
+      "y": 0.517879,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PPMQSIYTPIQSAX-UHFFFAOYSA-N",
+      "x": 0.512254,
+      "y": 0.001014,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_SWWUGWZLYNIPQQ-UHFFFAOYSA-N",
+      "x": 0.573767,
+      "y": 0.186632,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DBRJEXVDVZSRAS-UHFFFAOYSA-N",
+      "x": 0.174082,
+      "y": 0.341914,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XYVLWDARIRYHNG-UHFFFAOYSA-N",
+      "x": 0.571724,
+      "y": 0.200091,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BVKPTAWUJKLCEO-UHFFFAOYSA-N",
+      "x": 0.294243,
+      "y": 0.445755,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XWKQAJGITRINEF-UHFFFAOYSA-N",
+      "x": 0.175236,
+      "y": 0.34292,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UJPKXJUVYZMHKT-UHFFFAOYSA-N",
+      "x": 0.170758,
+      "y": 0.339752,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VGDIVZIWKGOUMA-UHFFFAOYSA-N",
+      "x": 0.169229,
+      "y": 0.3386,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GJVSRGHGGPWYPI-UHFFFAOYSA-N",
+      "x": 0.170919,
+      "y": 0.340919,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GUNRICIIRFLJKK-UHFFFAOYSA-N",
+      "x": 0.171972,
+      "y": 0.34193,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BMSWPMSVFNXLMB-UHFFFAOYSA-N",
+      "x": 0.574531,
+      "y": 0.209862,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GWLWSXLMKRIEFC-UHFFFAOYSA-N",
+      "x": 0.177471,
+      "y": 0.347453,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VPQICCOHFSGBMA-UHFFFAOYSA-N",
+      "x": 0.267513,
+      "y": 0.368115,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GHOOLRNQAXXFMT-UHFFFAOYSA-N",
+      "x": 0.090537,
+      "y": 0.30417,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MWKXDHYORSTANZ-UHFFFAOYSA-N",
+      "x": 0.512588,
+      "y": 0.000636,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_OJCWJVMKZIXECE-UHFFFAOYSA-N",
+      "x": 0.511621,
+      "y": 0.00171,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_LODBQQPVSRUAKI-UHFFFAOYSA-N",
+      "x": 0.511291,
+      "y": 0.002078,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_SCOFUEZVDBYRLH-UHFFFAOYSA-N",
+      "x": 0.243038,
+      "y": 0.360847,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_KNWYARBAEIMVMZ-UHFFFAOYSA-N",
+      "x": 0.599747,
+      "y": 0.787051,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_QHZXSDXVDAMGJS-UHFFFAOYSA-N",
+      "x": 0.170074,
+      "y": 0.339069,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HBHBIVTWYLBZAQ-UHFFFAOYSA-N",
+      "x": 0.43159,
+      "y": 0.888977,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DRYIKORCPWXLRX-UHFFFAOYSA-N",
+      "x": 0.450739,
+      "y": 0.899673,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NDAQZBMVJWZZNG-UHFFFAOYSA-N",
+      "x": 0.448772,
+      "y": 0.897321,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KWIDMMUHSFLNTP-UHFFFAOYSA-N",
+      "x": 0.456113,
+      "y": 0.906934,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BPQOIESVQZIMHQ-UHFFFAOYSA-N",
+      "x": 0.439248,
+      "y": 0.885148,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XRPUPCVSHRQWKI-UHFFFAOYSA-N",
+      "x": 0.456863,
+      "y": 0.905033,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BPQOIESVQZIMHQ-RDBDAFJKSA-N",
+      "x": 0.437449,
+      "y": 0.884801,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SSRKZHLPNHLAKM-UHFFFAOYSA-N",
+      "x": 0.506066,
+      "y": 0.007841,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_HERFDENCNURSOX-UHFFFAOYSA-N",
+      "x": 0.455319,
+      "y": 0.879714,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FICLVQOYKYBXFN-UHFFFAOYSA-N",
+      "x": 0.175232,
+      "y": 0.57184,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NRTHKYABOMUPSC-UHFFFAOYSA-N",
+      "x": 0.174794,
+      "y": 0.572656,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QQRRMRLXOFZGIB-UHFFFAOYSA-N",
+      "x": 0.505842,
+      "y": 0.008089,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_XTZDYCVKIDQZIN-UHFFFAOYSA-N",
+      "x": 0.457719,
+      "y": 0.899617,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_CQOUMHHIZQPSBE-UHFFFAOYSA-N",
+      "x": 0.513012,
+      "y": 0.000175,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_YKBIDDXCRFTFKT-UHFFFAOYSA-N",
+      "x": 0.509652,
+      "y": 0.003889,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_KEOZGOWEMVYVGD-UHFFFAOYSA-N",
+      "x": 0.508324,
+      "y": 0.005339,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_DUVJEMBTGGPDNX-UHFFFAOYSA-N",
+      "x": 0.507118,
+      "y": 0.006676,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_SZKFMAOEZUMSRT-UHFFFAOYSA-N",
+      "x": 0.564506,
+      "y": 0.222308,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FDRYLJGFQYHFHZ-UHFFFAOYSA-N",
+      "x": 0.565398,
+      "y": 0.220548,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MXCHHIIHNONWER-UHFFFAOYSA-N",
+      "x": 0.513169,
+      "y": 0,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_WFJDVZINKFIAPO-UHFFFAOYSA-N",
+      "x": 0.507456,
+      "y": 0.006302,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_MXOVPZSGLMVPCE-UHFFFAOYSA-N",
+      "x": 0.459297,
+      "y": 0.900695,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZUSASVCGDRESNL-UHFFFAOYSA-N",
+      "x": 0.456745,
+      "y": 0.904328,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_VFFBXSDNDMWYPS-UHFFFAOYSA-N",
+      "x": 0.089829,
+      "y": 0.303306,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JXLKNMYKLNHNNN-UHFFFAOYSA-N",
+      "x": 0.175246,
+      "y": 0.573029,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_TVTYWZAUGVDZKU-UHFFFAOYSA-N",
+      "x": 0.50717,
+      "y": 0.00663,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_UISIRMDNFHLMEK-UHFFFAOYSA-N",
+      "x": 0.238034,
+      "y": 0.990431,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YSAZFSHVWLGSEX-UHFFFAOYSA-N",
+      "x": 0.239295,
+      "y": 0.991393,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KKPUJPQFRHRSKB-UHFFFAOYSA-N",
+      "x": 0.236705,
+      "y": 0.989883,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_AAGCSWZDEQLCDF-UHFFFAOYSA-N",
+      "x": 0.5721,
+      "y": 0.208038,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IERGEBHOFKMGQE-UHFFFAOYSA-N",
+      "x": 0.573796,
+      "y": 0.203631,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GVUJVJVVBYGHQF-UHFFFAOYSA-N",
+      "x": 0.572982,
+      "y": 0.205894,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_WMBRTCSXNWSDQX-UHFFFAOYSA-N",
+      "x": 0.559609,
+      "y": 0.195474,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YINNYHLJBWDWDV-UHFFFAOYSA-N",
+      "x": 0.215008,
+      "y": 0.561731,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CJHYXUPCGHKJOO-UHFFFAOYSA-N",
+      "x": 0.121321,
+      "y": 0.886099,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QEDGWIMJTUXDGU-UHFFFAOYSA-N",
+      "x": 0.120892,
+      "y": 0.886194,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NISBQKZXGCOUOU-UHFFFAOYSA-N",
+      "x": 0.12207,
+      "y": 0.88593,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HMQKXUDOQSFWTG-UHFFFAOYSA-N",
+      "x": 0.120665,
+      "y": 0.886145,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KLBQQJXKVACGIQ-UHFFFAOYSA-N",
+      "x": 0.12157,
+      "y": 0.886363,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_INCULGNJNLRUCH-UHFFFAOYSA-N",
+      "x": 0.119593,
+      "y": 0.885342,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MZYZKUCZEBQBKZ-UHFFFAOYSA-N",
+      "x": 0.119921,
+      "y": 0.885336,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QEDGWIMJTUXDGU-XZJFWIHMSA-N",
+      "x": 0.120179,
+      "y": 0.885602,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NISBQKZXGCOUOU-WINXOHPISA-N",
+      "x": 0.121727,
+      "y": 0.885913,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HMQKXUDOQSFWTG-KKGHHUCOSA-N",
+      "x": 0.12219,
+      "y": 0.886909,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_AVXRNUMVGRLMBL-UHFFFAOYSA-N",
+      "x": 0.211666,
+      "y": 0.538944,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YGCFIWIQZPHFLU-UHFFFAOYSA-N",
+      "x": 0.510544,
+      "y": 0.002909,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_FZENGILVLUJGJX-UHFFFAOYSA-N",
+      "x": 0.006586,
+      "y": 0.313414,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_YTKBWWKAVMSYHE-UHFFFAOYSA-N",
+      "x": 0.233978,
+      "y": 0.507921,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QNAYBMKLOCPYGJ-REOHCLBHSA-N",
+      "x": 0.148994,
+      "y": 0.58562,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PVLIPPHITNPLBJ-UHFFFAOYSA-N",
+      "x": 0.182764,
+      "y": 0.926009,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IGUMKDPFGXLXSS-UHFFFAOYSA-N",
+      "x": 0.184627,
+      "y": 0.925536,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HISFSXQTFKGKPO-UHFFFAOYSA-N",
+      "x": 0.184648,
+      "y": 0.924777,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BJSBNZRJGTUSCR-UHFFFAOYSA-N",
+      "x": 0.185278,
+      "y": 0.926764,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XKQFVUQOPLFZGL-UHFFFAOYSA-N",
+      "x": 0.187578,
+      "y": 0.924015,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IGUMKDPFGXLXSS-OYHZHZMNSA-N",
+      "x": 0.185516,
+      "y": 0.924694,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IVBOUFAWPCPFTQ-SFYZADRCSA-N",
+      "x": 0.268816,
+      "y": 0.628066,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IVBOUFAWPCPFTQ-UHFFFAOYSA-N",
+      "x": 0.269323,
+      "y": 0.627423,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UMAWDEANJVRUDY-UHFFFAOYSA-N",
+      "x": 0.268442,
+      "y": 0.628415,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RYPZNGZAKWLSSX-UHFFFAOYSA-N",
+      "x": 0.242531,
+      "y": 0.360408,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GUBGYTABKSRVRQ-XLOQQCSPSA-N",
+      "x": 0.617509,
+      "y": 0.812176,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WQZGKKKJIJFFOK-PQMKYFCFSA-N",
+      "x": 0.599912,
+      "y": 0.785774,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RFSUNEUAIZKAJO-KAZBKCHUSA-N",
+      "x": 0.457587,
+      "y": 0.879047,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LKDRXBCSQODPBY-VANKVMQKSA-N",
+      "x": 0.090838,
+      "y": 0.302625,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SRBFZHDQGSBBOR-QMKXCQHVSA-N",
+      "x": 0.588564,
+      "y": 0.799448,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_SHZGCJCMOBCMKK-HGVZOGFYSA-N",
+      "x": 0.60462,
+      "y": 0.794787,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LKDRXBCSQODPBY-BGPJRJDNSA-N",
+      "x": 0.08894,
+      "y": 0.302347,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LPLVUJXQOOQHMX-UHFFFAOYSA-N",
+      "x": 0.192832,
+      "y": 0.915934,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BSPQWRTYKWHYSW-UHFFFAOYSA-N",
+      "x": 0.009826,
+      "y": 0.313442,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_UYTMLDBQFLIQJA-UHFFFAOYSA-N",
+      "x": 0.008614,
+      "y": 0.312885,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_RETHOWGCGNZYSL-UHFFFAOYSA-N",
+      "x": 0.192502,
+      "y": 0.91472,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PYMYPHUHKUWMLA-WDCZJNDASA-N",
+      "x": 0.125057,
+      "y": 0.148174,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_HEBKCHPVOIAQTA-QWWZWVQMSA-N",
+      "x": 0.100942,
+      "y": 0.606229,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_DTMJARJUCFBMFR-UHFFFAOYSA-N",
+      "x": 0.188994,
+      "y": 0.917152,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MNGXTXFJMFRDMI-UHFFFAOYSA-N",
+      "x": 0.159564,
+      "y": 0.519387,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YUTZRUVNKGDDMK-UHFFFAOYSA-N",
+      "x": 0.156972,
+      "y": 0.51633,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FSFMVMHRCWRFIV-UHFFFAOYSA-N",
+      "x": 0.158986,
+      "y": 0.518358,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BQBLTENOKFBMKH-UHFFFAOYSA-N",
+      "x": 0.236447,
+      "y": 0.681846,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PIPYBUIGOCXBLZ-UHFFFAOYSA-N",
+      "x": 0.252723,
+      "y": 0.687496,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DUQVGMQHNODJJJ-UHFFFAOYSA-N",
+      "x": 0.252713,
+      "y": 0.686564,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DUQVGMQHNODJJJ-MHTGXQDBSA-N",
+      "x": 0.252975,
+      "y": 0.687863,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DGEBAKDNVHVZAW-UHFFFAOYSA-N",
+      "x": 0.201717,
+      "y": 0.580774,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SBRIUDMLTVTNIE-UHFFFAOYSA-N",
+      "x": 0.215493,
+      "y": 0.691852,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UAASRAGIIGRXDE-UHFFFAOYSA-N",
+      "x": 0.217941,
+      "y": 0.694797,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VOQPIRFCQUFIFQ-UHFFFAOYSA-N",
+      "x": 0.2053,
+      "y": 0.592802,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IAOZJIPTCAWIRG-QWRGUYRKSA-N",
+      "x": 0.211899,
+      "y": 0.549472,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IAOZJIPTCAWIRG-UHFFFAOYSA-N",
+      "x": 0.210425,
+      "y": 0.548491,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KLUGCZPRIGVEKY-UHFFFAOYSA-N",
+      "x": 0.253324,
+      "y": 0.6829,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_MYMZLBHZVRWYRE-UHFFFAOYSA-N",
+      "x": 0.267182,
+      "y": 0.429927,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GESYKZHHPRXTJD-UHFFFAOYSA-N",
+      "x": 0.207519,
+      "y": 0.555255,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SZXAXWBWWRMFNS-UHFFFAOYSA-N",
+      "x": 0.207316,
+      "y": 0.554688,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YALJNCSVAFFHPJ-UHFFFAOYSA-N",
+      "x": 0.206471,
+      "y": 0.555265,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JOKKBOSZTVHKSH-UHFFFAOYSA-N",
+      "x": 0.180742,
+      "y": 0.912147,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JOKKBOSZTVHKSH-VBLBRRQBSA-N",
+      "x": 0.179902,
+      "y": 0.911588,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KAWOFQZCZFQCSH-UHFFFAOYSA-N",
+      "x": 0.192191,
+      "y": 0.361915,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DOYCCFBZDCYVRJ-UHFFFAOYSA-N",
+      "x": 0.318812,
+      "y": 0.316489,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_VEXZGXHMUGYJMC-UHFFFAOYSA-N",
+      "x": 0.23404,
+      "y": 0.613119,
+      "cluster": "C8"
+    },
+    {
+      "id": "CMP_LKDRXBCSQODPBY-ARQDHWQXSA-N",
+      "x": 0.089814,
+      "y": 0.303433,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WQZGKKKJIJFFOK-FPRJBGLDSA-N",
+      "x": 0.601152,
+      "y": 0.78654,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WQZGKKKJIJFFOK-VFUOTHLCSA-N",
+      "x": 0.601098,
+      "y": 0.786562,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SRBFZHDQGSBBOR-SOOFDHNKSA-N",
+      "x": 0.58758,
+      "y": 0.798888,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_HMFHBZSHGGEWLO-KKQCNMDGSA-N",
+      "x": 0.600696,
+      "y": 0.785748,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SHZGCJCMOBCMKK-KGJVWPDLSA-N",
+      "x": 0.605946,
+      "y": 0.794306,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BAAUCXCLMDAZEL-UHFFFAOYSA-N",
+      "x": 0.240074,
+      "y": 0.358672,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_GDJOCHKMJOSUGR-UHFFFAOYSA-N",
+      "x": 0.235711,
+      "y": 0.994983,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JHMDOTWOBVWYTQ-UHFFFAOYSA-N",
+      "x": 0.237289,
+      "y": 0.991994,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BZTLBVUBTRSJCL-UHFFFAOYSA-N",
+      "x": 0.446859,
+      "y": 0.606175,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HCAJEUSONLESMK-UHFFFAOYSA-N",
+      "x": 0.460134,
+      "y": 0.644108,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_CVHZOJJKTDOEJC-UHFFFAOYSA-N",
+      "x": 0.508432,
+      "y": 0.005225,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_DPAJZQDHFKAPSC-UHFFFAOYSA-N",
+      "x": 0.239548,
+      "y": 0.993816,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WWDDJYHDZQBKBW-UHFFFAOYSA-N",
+      "x": 0.238586,
+      "y": 0.992907,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QMIBAVZANYVPEF-UHFFFAOYSA-N",
+      "x": 0.327585,
+      "y": 0.297783,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GUBGYTABKSRVRQ-UHFFFAOYSA-N",
+      "x": 0.616143,
+      "y": 0.814037,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KWIXNFOTNVKIGM-UHFFFAOYSA-N",
+      "x": 0.240549,
+      "y": 0.358645,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_HEDRZPFGACZZDS-UHFFFAOYSA-N",
+      "x": 0.106365,
+      "y": 0.602054,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_BYSRPHRKESMCPO-UHFFFAOYSA-N",
+      "x": 0.559674,
+      "y": 0.224913,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PCFVIHJYMQZKLI-UHFFFAOYSA-N",
+      "x": 0.558811,
+      "y": 0.226159,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_NHIZNZFPJBEXMQ-UHFFFAOYSA-N",
+      "x": 0.559211,
+      "y": 0.224263,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KVLMFEXSBNHVFA-UHFFFAOYSA-N",
+      "x": 0.56552,
+      "y": 0.220587,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_PULGNYAZZAVYNC-UHFFFAOYSA-N",
+      "x": 0.943778,
+      "y": 0.453754,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SDEHYTCIWACMKY-UHFFFAOYSA-N",
+      "x": 0.272154,
+      "y": 0.451675,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AWCDLPKQSGESKV-UHFFFAOYSA-N",
+      "x": 0.28231,
+      "y": 0.425918,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_DTIMJEQQKUQIDR-UHFFFAOYSA-N",
+      "x": 0.181304,
+      "y": 0.925422,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MBONYXVHBCFMDH-UHFFFAOYSA-N",
+      "x": 0.178026,
+      "y": 0.922753,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DTIMJEQQKUQIDR-JNIVDJBLSA-N",
+      "x": 0.17935,
+      "y": 0.922874,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FBKWVEBXMUVBNH-UHFFFAOYSA-N",
+      "x": 0.460718,
+      "y": 0.645521,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_UETRTYSFDLSYCR-UHFFFAOYSA-N",
+      "x": 0.461794,
+      "y": 0.647863,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_GBEWVFVMUXHESI-UHFFFAOYSA-N",
+      "x": 0.462282,
+      "y": 0.645562,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_HSVATNZVIVJPHM-UHFFFAOYSA-N",
+      "x": 0.220651,
+      "y": 0.518477,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QNAYBMKLOCPYGJ-UHFFFAOYSA-N",
+      "x": 0.150338,
+      "y": 0.584658,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RNBCVLFIWRMLSA-UHFFFAOYSA-N",
+      "x": 0.212165,
+      "y": 0.538541,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HEBKCHPVOIAQTA-UHFFFAOYSA-N",
+      "x": 0.101253,
+      "y": 0.605824,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_DCXYFEDJOCDNAF-UHFFFAOYSA-N",
+      "x": 0.157933,
+      "y": 0.578493,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WQZGKKKJIJFFOK-UHFFFAOYSA-N",
+      "x": 0.600015,
+      "y": 0.785949,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZDXPYRJPNDTMRX-UHFFFAOYSA-N",
+      "x": 0.155937,
+      "y": 0.579298,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HNDVDQJCIGZPNO-UHFFFAOYSA-N",
+      "x": 0.174527,
+      "y": 0.571866,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AGPKZVBTJJNPAG-UHFFFAOYSA-N",
+      "x": 0.153357,
+      "y": 0.580463,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JCQLYHFGKNRPGE-UHFFFAOYSA-N",
+      "x": 0.46808,
+      "y": 0.88069,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ROHFNLRQFUQHCH-UHFFFAOYSA-N",
+      "x": 0.155256,
+      "y": 0.579567,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JPFGFRMPGVDDGE-UHFFFAOYSA-N",
+      "x": 0.473789,
+      "y": 0.875765,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KDXKERNSBIXSRK-UHFFFAOYSA-N",
+      "x": 0.155707,
+      "y": 0.579689,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FYGDTMLNYKFZSV-UHFFFAOYSA-N",
+      "x": 0.615492,
+      "y": 0.813739,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FBPFZTCFMRRESA-UHFFFAOYSA-N",
+      "x": 0.100481,
+      "y": 0.606434,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_FFEARJCKVFRZRR-UHFFFAOYSA-N",
+      "x": 0.155755,
+      "y": 0.579292,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SNDPXSYFESPGGJ-UHFFFAOYSA-N",
+      "x": 0.155239,
+      "y": 0.579529,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_COLNVLDHVKWLRT-UHFFFAOYSA-N",
+      "x": 0.179107,
+      "y": 0.56527,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LKDRXBCSQODPBY-UHFFFAOYSA-N",
+      "x": 0.088975,
+      "y": 0.303312,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SHZGCJCMOBCMKK-UHFFFAOYSA-N",
+      "x": 0.605527,
+      "y": 0.794333,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MTCFGRXMJLQNBG-UHFFFAOYSA-N",
+      "x": 0.155701,
+      "y": 0.579175,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_BJHIKXHVCXFQLS-PQLUHFTBSA-N",
+      "x": 0.102205,
+      "y": 0.604618,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_AYFVYJQAPQTCCC-UHFFFAOYSA-N",
+      "x": 0.153355,
+      "y": 0.582406,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QIVBCDIJIAJPQS-UHFFFAOYSA-N",
+      "x": 0.176084,
+      "y": 0.571872,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OUYCCCASQSFEME-UHFFFAOYSA-N",
+      "x": 0.178274,
+      "y": 0.569291,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KZSNJWFQEVHDMF-UHFFFAOYSA-N",
+      "x": 0.152173,
+      "y": 0.582062,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QWCKQJZIFLGMSD-UHFFFAOYSA-N",
+      "x": 0.154619,
+      "y": 0.579455,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_FQTHKEOMKYXAFS-UHFFFAOYSA-N",
+      "x": 0.25932,
+      "y": 0.464261,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RDCGCASRUKHMQH-UHFFFAOYSA-N",
+      "x": 0.56242,
+      "y": 0.224418,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KQNGHARGJDXHKF-UHFFFAOYSA-N",
+      "x": 0.56749,
+      "y": 0.217693,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RXKJFZQQPQGTFL-UHFFFAOYSA-N",
+      "x": 0.117273,
+      "y": 0.599208,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_YBBLOADPFWKNGS-UHFFFAOYSA-N",
+      "x": 0.149984,
+      "y": 0.583513,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GGLIEWRLXDLBBF-UHFFFAOYSA-N",
+      "x": 0.221854,
+      "y": 0.389106,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_CANAPGLEBDTCAF-UHFFFAOYSA-N",
+      "x": 0.983687,
+      "y": 0.455869,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_CANAPGLEBDTCAF-YHKAPUBJSA-N",
+      "x": 0.98567,
+      "y": 0.455652,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UNXHWFMMPAWVPI-UHFFFAOYSA-N",
+      "x": 0.103821,
+      "y": 0.60308,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_AMMPGYPPRLWMLW-UHFFFAOYSA-N",
+      "x": 0.245319,
+      "y": 0.362398,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LYCAIKOWRPUZTN-UHFFFAOYSA-N",
+      "x": 0.106865,
+      "y": 0.602245,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_YYCNLHMQWCQALS-UHFFFAOYSA-N",
+      "x": 0.531396,
+      "y": 0.389076,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BAVURYORXSHVQG-UHFFFAOYSA-N",
+      "x": 0.530851,
+      "y": 0.389585,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HGPNNKSSPKPKNG-UHFFFAOYSA-N",
+      "x": 0.529484,
+      "y": 0.391112,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_AIQUYORIPKCSAN-UHFFFAOYSA-N",
+      "x": 0.530383,
+      "y": 0.390108,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JKNJJAAMUBAUHS-UHFFFAOYSA-N",
+      "x": 0.530402,
+      "y": 0.390088,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FLDGMSWQPUJZSM-UHFFFAOYSA-N",
+      "x": 0.530503,
+      "y": 0.389976,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NBZSXEVUAOIOEE-UHFFFAOYSA-N",
+      "x": 0.530533,
+      "y": 0.389935,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UYZQEJUFKPJIRG-UHFFFAOYSA-N",
+      "x": 0.530755,
+      "y": 0.389679,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KJVBJICWGQIMOZ-UHFFFAOYSA-N",
+      "x": 0.240096,
+      "y": 0.358436,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_BJHIKXHVCXFQLS-UYFOZJQFSA-N",
+      "x": 0.100297,
+      "y": 0.607193,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_PNNNRSAQSRJVSB-UHFFFAOYSA-N",
+      "x": 0.126346,
+      "y": 0.149551,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_HYBBIBNJHNGZAN-UHFFFAOYSA-N",
+      "x": 0.206454,
+      "y": 0.372687,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SKBGYAGGFRHBDJ-UHFFFAOYSA-N",
+      "x": 0.187697,
+      "y": 0.916499,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FBPFZTCFMRRESA-GUCUJZIJSA-N",
+      "x": 0.102364,
+      "y": 0.604629,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_GZCGUPFRVQAUEE-KCDKBNATSA-N",
+      "x": 0.125496,
+      "y": 0.148651,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_CZMRCDWAGMRECN-UHFFFAOYSA-N",
+      "x": 0.454586,
+      "y": 0.901315,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IQHRODLFQNPIDT-UHFFFAOYSA-N",
+      "x": 0.999451,
+      "y": 0.437789,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RIVDBUKSLDURCK-UHFFFAOYSA-N",
+      "x": 0.999136,
+      "y": 0.43796,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UFXMFRIIPSDFDL-UHFFFAOYSA-N",
       "x": 1,
-      "y": 0.548822
+      "y": 0.437309,
+      "cluster": "C2"
     },
     {
-      "cid": 493591,
-      "x": 0.84346,
-      "y": 0.361258
+      "id": "CMP_IQHRODLFQNPIDT-FWYFGEFVSA-N",
+      "x": 0.998676,
+      "y": 0.437977,
+      "cluster": "C2"
     },
     {
-      "cid": 88735,
-      "x": 0.84346,
-      "y": 0.361258
+      "id": "CMP_GZCGUPFRVQAUEE-SLPGGIOYSA-N",
+      "x": 0.125485,
+      "y": 0.148649,
+      "cluster": "C6"
     },
     {
-      "cid": 15722,
-      "x": 0.167764,
-      "y": 0.490218
+      "id": "CMP_XLFZVYJZWVCVRS-UHFFFAOYSA-N",
+      "x": 0.454761,
+      "y": 0.898623,
+      "cluster": "C2"
     },
     {
-      "cid": 134601,
-      "x": 0.203094,
-      "y": 0.351029
+      "id": "CMP_AEFLONBTGZFSGQ-UHFFFAOYSA-N",
+      "x": 0.157037,
+      "y": 0.582112,
+      "cluster": "C1"
     },
     {
-      "cid": 5143,
+      "id": "CMP_PEDCQBHIVMGVHV-UHFFFAOYSA-N",
+      "x": 0.103278,
+      "y": 0.604127,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_DHMQDGOQFOQNFH-UHFFFAOYSA-N",
+      "x": 0.151001,
+      "y": 0.582575,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ORBWZQKPFRXMHZ-UHFFFAOYSA-N",
+      "x": 0.281836,
+      "y": 0.422846,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GLLUYNRFPAMGQR-UHFFFAOYSA-N",
+      "x": 0.131582,
+      "y": 0.358976,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XSAFZACUCHNJBV-UHFFFAOYSA-N",
+      "x": 0.189111,
+      "y": 0.917792,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UREFTEYUCRFTIM-UHFFFAOYSA-N",
+      "x": 0.188458,
+      "y": 0.917732,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LPLVUJXQOOQHMX-HOZUYCNMSA-N",
+      "x": 0.193546,
+      "y": 0.915471,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BLKGRRRHOTWIRC-UHFFFAOYSA-N",
+      "x": 0.192465,
+      "y": 0.914513,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BLKGRRRHOTWIRC-XODRHEQBSA-N",
+      "x": 0.192007,
+      "y": 0.914885,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LPLVUJXQOOQHMX-QWBHMCJMSA-N",
+      "x": 0.192688,
+      "y": 0.917233,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XJIPREFALCDWRQ-UHFFFAOYSA-N",
+      "x": 0.243161,
+      "y": 0.997333,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZRALSGWEFCBTJO-UHFFFAOYSA-N",
+      "x": 0.152962,
+      "y": 0.581923,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_YTIVLQIOZQWRJM-UHFFFAOYSA-N",
+      "x": 0.350818,
+      "y": 0.328259,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ASRGRPYTNVBNSD-UHFFFAOYSA-N",
+      "x": 0.285722,
+      "y": 0.428673,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PFWQCAQPDUBXKO-UHFFFAOYSA-N",
+      "x": 0.179359,
+      "y": 0.923392,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WZUVPPKBWHMQCE-BBRMVZONSA-N",
+      "x": 0.557341,
+      "y": 0.195478,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PWWVUFCCNOKWRU-UHFFFAOYSA-N",
+      "x": 0.290988,
+      "y": 0.446465,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_HYQNKKAJVPMBDR-HIFRSBDPSA-N",
+      "x": 0.012208,
+      "y": 0.310613,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_HYQNKKAJVPMBDR-UHFFFAOYSA-N",
+      "x": 0.013775,
+      "y": 0.308548,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_RWKSTZADJBEXSQ-UHFFFAOYSA-N",
+      "x": 0.163934,
+      "y": 0.34733,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HNNQOHVLOUWZGV-UHFFFAOYSA-N",
+      "x": 0.139595,
+      "y": 0.352274,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YALCGCHVWZLREG-UHFFFAOYSA-N",
+      "x": 0.137215,
+      "y": 0.352532,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZGMZUXKKXIAJDQ-UHFFFAOYSA-N",
+      "x": 0.130535,
+      "y": 0.357262,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XJHMLSKQZFKMLL-UHFFFAOYSA-N",
+      "x": 0.131408,
+      "y": 0.356747,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_TXMHXWCNTKDTMX-UHFFFAOYSA-N",
+      "x": 0.130182,
+      "y": 0.357161,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_TXMHXWCNTKDTMX-JGTHOSHESA-N",
+      "x": 0.129589,
+      "y": 0.358095,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QRVGJSHXWIIHPI-UHFFFAOYSA-N",
+      "x": 0.56006,
+      "y": 0.227198,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XJCCHWKNFMUJFE-UHFFFAOYSA-N",
+      "x": 0.617451,
+      "y": 0.827302,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_VLZVIIYRNMWPSN-UHFFFAOYSA-N",
+      "x": 0.238615,
+      "y": 0.357162,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_CDAISMWEOUEBRE-UHFFFAOYSA-N",
+      "x": 0.600577,
+      "y": 0.791747,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_BJHIKXHVCXFQLS-UHFFFAOYSA-N",
+      "x": 0.101024,
+      "y": 0.606279,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_VKQOHFHGWCXKOA-UHFFFAOYSA-N",
+      "x": 0.23898,
+      "y": 0.357574,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_SQKPHECGTGXVQW-UHFFFAOYSA-N",
+      "x": 0.241725,
+      "y": 0.995762,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SERLAGPUMNYUCK-UHFFFAOYSA-N",
+      "x": 0.618189,
+      "y": 0.829605,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_PVXPPJIGRGXGCY-TZLCEDOOSA-N",
+      "x": 0.462713,
+      "y": 0.883531,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GHBNZZJYBXQAHG-WQQTUWBJSA-N",
+      "x": 0.242736,
+      "y": 0.99642,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NIHHCJZYYQHCHJ-UHFFFAOYSA-N",
+      "x": 0.243691,
+      "y": 0.361077,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HXNMODWBVYDYRW-UHFFFAOYSA-N",
+      "x": 0.556659,
+      "y": 0.196113,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KKDZNTJQBCZWOH-UHFFFAOYSA-N",
+      "x": 0.556589,
+      "y": 0.196882,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HXNMODWBVYDYRW-WPZCJLIBSA-N",
+      "x": 0.557072,
+      "y": 0.195383,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_KKDZNTJQBCZWOH-OEMAIJDKSA-N",
+      "x": 0.558394,
+      "y": 0.195853,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HIWPGCMGAMJNRG-LIZSDCNHSA-N",
+      "x": 0.613604,
+      "y": 0.816447,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HIWPGCMGAMJNRG-UHFFFAOYSA-N",
+      "x": 0.615064,
+      "y": 0.816685,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GBTNFNWWZMHORY-UHFFFAOYSA-N",
+      "x": 0.252851,
+      "y": 0.638234,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_TZHVYFBSLOMRCU-UHFFFAOYSA-N",
+      "x": 0.156505,
+      "y": 0.592869,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OEHNLOQCFKDMNG-UHFFFAOYSA-N",
+      "x": 0.222944,
+      "y": 0.692627,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IWAJCWUNRMGJMR-UHFFFAOYSA-N",
+      "x": 0.222507,
+      "y": 0.67208,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YKWYMOXJHLFDTE-UHFFFAOYSA-N",
+      "x": 0.225491,
+      "y": 0.663855,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LLFTWBBVRSIOCK-UHFFFAOYSA-N",
+      "x": 0.234059,
+      "y": 0.691491,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BUYCCMXPDBHABH-UHFFFAOYSA-N",
+      "x": 0.221147,
+      "y": 0.674545,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_DUJNVKBCCRBEOS-UHFFFAOYSA-N",
+      "x": 0.24328,
+      "y": 0.65771,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_GVQZAKNGMUPKFL-UHFFFAOYSA-N",
+      "x": 0.210027,
+      "y": 0.6376,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HIBMVTUDUUKKHQ-UHFFFAOYSA-N",
+      "x": 0.208246,
+      "y": 0.640429,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BCISGTOXCLDNRV-UHFFFAOYSA-N",
+      "x": 0.253888,
+      "y": 0.683094,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WRCSYXBOOIMRPL-UHFFFAOYSA-N",
+      "x": 0.222597,
+      "y": 0.69251,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JNEIADDXOQJNKE-UHFFFAOYSA-N",
+      "x": 0.219413,
+      "y": 0.69067,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WJDDCIKGJRRGCL-UHFFFAOYSA-N",
+      "x": 0.241681,
+      "y": 0.65198,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WBGUKJZKVZJECE-UHFFFAOYSA-N",
+      "x": 0.23722,
+      "y": 0.694453,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YWFYACAKCGZHAA-UHFFFAOYSA-N",
+      "x": 0.22915,
+      "y": 0.663122,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SQLJHWMWPDFSIG-UHFFFAOYSA-N",
+      "x": 0.267464,
+      "y": 0.628523,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PMMYEEVYMWASQN-UHFFFAOYSA-N",
+      "x": 0.246213,
+      "y": 0.619628,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_ONIBWKKTOPOVIA-UHFFFAOYSA-N",
+      "x": 0.248559,
+      "y": 0.621563,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_VQHSOMBJVWLPSR-JVCRWLNRSA-N",
+      "x": 0.617158,
+      "y": 0.831545,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_VQHSOMBJVWLPSR-UHFFFAOYSA-N",
+      "x": 0.617881,
+      "y": 0.82932,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_GUBGYTABKSRVRQ-DCSYEGIMSA-N",
+      "x": 0.615824,
+      "y": 0.812837,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FVVCFHXLWDDRHG-UHFFFAOYSA-N",
+      "x": 0.458295,
+      "y": 0.898269,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JCQLYHFGKNRPGE-FCVZTGTOSA-N",
+      "x": 0.466585,
+      "y": 0.882887,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XSTKYFWHPDTKJT-APBKVMOESA-N",
+      "x": 0.460003,
+      "y": 0.893928,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XSTKYFWHPDTKJT-UHFFFAOYSA-N",
+      "x": 0.461865,
+      "y": 0.892845,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DXALOGXSFLZLLN-UHFFFAOYSA-N",
+      "x": 0.617759,
+      "y": 0.829164,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JPFGFRMPGVDDGE-GWRCVIBKSA-N",
+      "x": 0.472358,
+      "y": 0.877338,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XMGQYMWWDOXHJM-UHFFFAOYSA-N",
+      "x": 0.005926,
+      "y": 0.305865,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_DEMKZLAVQYISIA-UHFFFAOYSA-N",
+      "x": 0.133514,
+      "y": 0.360091,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IHKGGKRBWGTNNG-UHFFFAOYSA-N",
+      "x": 0.316282,
+      "y": 0.321587,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_VQHSOMBJVWLPSR-WUJBLJFYSA-N",
+      "x": 0.617131,
+      "y": 0.828339,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_GUBGYTABKSRVRQ-QUYVBRFLSA-N",
+      "x": 0.615911,
+      "y": 0.814126,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NBGXQZRRLOGAJF-HFZVAGMNSA-N",
+      "x": 0.47219,
+      "y": 0.877357,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NBGXQZRRLOGAJF-UHFFFAOYSA-N",
+      "x": 0.472598,
+      "y": 0.877288,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FBPFZTCFMRRESA-KVTDHHQDSA-N",
+      "x": 0.101865,
+      "y": 0.605115,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_UNXHWFMMPAWVPI-ZXZARUISSA-N",
+      "x": 0.102321,
+      "y": 0.604498,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_PRTWZRAABOYCEZ-UHFFFAOYSA-N",
+      "x": 0.427787,
+      "y": 0.565225,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_NIPDVSLAMPAWTP-UHFFFAOYSA-N",
+      "x": 0.244621,
+      "y": 0.361904,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UGCAWWFSBIEYGD-UHFFFAOYSA-N",
+      "x": 0.601212,
+      "y": 0.801128,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_TTXGMVXSNBMYNY-UHFFFAOYSA-N",
+      "x": 0.603666,
+      "y": 0.804917,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ARNZRNVPEASSLV-UHFFFAOYSA-N",
+      "x": 0.602565,
+      "y": 0.804351,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OHWCAVRRXKJCRB-UHFFFAOYSA-N",
+      "x": 0.605284,
+      "y": 0.799017,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FERFVIBPKVMYMC-UHFFFAOYSA-N",
+      "x": 0.139911,
+      "y": 0.589514,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_IHYXTIZGRRSCNF-UHFFFAOYSA-N",
+      "x": 0.122997,
+      "y": 0.597961,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HOVAGTYPODGVJG-UHFFFAOYSA-N",
+      "x": 0.606691,
+      "y": 0.805379,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_APKXYJAUJLWHFF-UHFFFAOYSA-N",
+      "x": 0.089565,
+      "y": 0.303271,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DSBIJCMXAIKKKI-UHFFFAOYSA-N",
+      "x": 0.240133,
+      "y": 0.358393,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_ZBDGHWFPLXXWRD-UHFFFAOYSA-N",
+      "x": 0.591015,
+      "y": 0.800588,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WQVLQSBOJJVHOB-UHFFFAOYSA-N",
+      "x": 0.189138,
+      "y": 0.918421,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_CLEVZYNTRGGYKV-UHFFFAOYSA-N",
+      "x": 0.189137,
+      "y": 0.9177,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JLYBBRAAICDTIS-UHFFFAOYSA-N",
+      "x": 0.234746,
+      "y": 0.989573,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_WVXIMWMLKSCVTD-UHFFFAOYSA-N",
+      "x": 0.234243,
+      "y": 0.989284,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KYVIPFHNYCKOMQ-UHFFFAOYSA-N",
+      "x": 0.234341,
+      "y": 0.989421,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DDDXYRAMQRKPDO-UHFFFAOYSA-N",
+      "x": 0.243262,
+      "y": 0.997264,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PASFPXYDHLIVRF-UHFFFAOYSA-N",
+      "x": 0.235816,
+      "y": 0.990753,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QATISCJMIITVAB-UHFFFAOYSA-N",
+      "x": 0.243439,
+      "y": 0.995899,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KCIDKFJPPPPBLC-UHFFFAOYSA-N",
+      "x": 0.243933,
+      "y": 0.997867,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WRPAFPPCKSYACJ-UHFFFAOYSA-N",
+      "x": 0.244075,
+      "y": 0.998459,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OKGRRPCHOJYNKX-UHFFFAOYSA-N",
+      "x": 0.234815,
+      "y": 0.990816,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GHBNZZJYBXQAHG-UHFFFAOYSA-N",
+      "x": 0.244621,
+      "y": 0.998308,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LTDANPHZAHSOBN-UHFFFAOYSA-N",
+      "x": 0.242483,
+      "y": 0.997175,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LEXMIJUWSYGUOM-UHFFFAOYSA-N",
+      "x": 0.243018,
+      "y": 0.996452,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KMOOTJMQBJIGFL-UHFFFAOYSA-N",
+      "x": 0.240013,
+      "y": 0.99464,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WVXIMWMLKSCVTD-GYADMBLNSA-N",
+      "x": 0.234278,
+      "y": 0.989379,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WRPAFPPCKSYACJ-ZBYJYCAASA-N",
+      "x": 0.242392,
+      "y": 0.996809,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GHBNZZJYBXQAHG-KUVSNLSMSA-N",
+      "x": 0.243389,
+      "y": 0.996063,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FIUHNOWVTJFWCX-IINYFYTJSA-N",
+      "x": 0.178527,
+      "y": 0.571158,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HLDYLAJAWSKPFZ-UHFFFAOYSA-N",
+      "x": 0.191911,
+      "y": 0.91532,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XLSMFKSTNGKWQX-UHFFFAOYSA-N",
+      "x": 0.126271,
+      "y": 0.595062,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_OHLBTNZSOHMDGY-UHFFFAOYSA-N",
+      "x": 0.61476,
+      "y": 0.814653,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DKCXTAHVHSIYLQ-UHFFFAOYSA-N",
+      "x": 0.351232,
+      "y": 0.328841,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_UGVBAGYLHYJHJH-UHFFFAOYSA-N",
+      "x": 0.351645,
+      "y": 0.329113,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_VNXQWHDJOMLASP-UHFFFAOYSA-N",
+      "x": 0.183432,
+      "y": 0.57333,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_BYHJHXPTQMMKCA-UHFFFAOYSA-N",
+      "x": 0.184667,
+      "y": 0.573746,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_SIXSBZCTRDJENX-UHFFFAOYSA-N",
+      "x": 0.203684,
+      "y": 0.566846,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_XUJRIQCLSRINJB-UHFFFAOYSA-N",
+      "x": 0.005298,
+      "y": 0.312437,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_IKRSXNFAPNSCTB-UHFFFAOYSA-N",
+      "x": 0.171848,
+      "y": 0.341064,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WSICPULIPDYLBT-UHFFFAOYSA-N",
+      "x": 0.316686,
+      "y": 0.319064,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_PXBPRWGREKFNQP-UHFFFAOYSA-N",
+      "x": 0.457173,
+      "y": 0.627079,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_KGHMYJFHUHFOGL-UHFFFAOYSA-N",
+      "x": 0.320289,
+      "y": 0.308276,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ZSAZSZBFLSUQJY-UHFFFAOYSA-N",
+      "x": 0.000062,
+      "y": 0.307898,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_WCSWAXGMXOQQAJ-UHFFFAOYSA-N",
+      "x": 0.001727,
+      "y": 0.31074,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_UOKKXTZSNWGYGN-UHFFFAOYSA-N",
       "x": 0,
-      "y": 0.494426
+      "y": 0.3116,
+      "cluster": "C7"
     },
     {
-      "cid": 71485,
-      "x": 0.854597,
-      "y": 0.278167
+      "id": "CMP_YIAJVAWYXKPNBI-UHFFFAOYSA-N",
+      "x": 0.00836,
+      "y": 0.308098,
+      "cluster": "C7"
     },
     {
-      "cid": 23689119,
-      "x": 0.564974,
-      "y": 0.102359
+      "id": "CMP_BFBJCNLASHHJGG-UHFFFAOYSA-N",
+      "x": 0.004629,
+      "y": 0.308997,
+      "cluster": "C7"
     },
     {
-      "cid": 9837248,
-      "x": 0.028128,
-      "y": 0.418878
+      "id": "CMP_CALYDVCLCBCNCL-UHFFFAOYSA-N",
+      "x": 0.004673,
+      "y": 0.31057,
+      "cluster": "C7"
     },
     {
-      "cid": 53394744,
-      "x": 0.409694,
-      "y": 0.078339
+      "id": "CMP_LRDLKFQWJHWBSO-UHFFFAOYSA-N",
+      "x": 0.181774,
+      "y": 0.670995,
+      "cluster": "C1"
     },
     {
-      "cid": 9257,
-      "x": 0.54701,
-      "y": 1
+      "id": "CMP_QVMINPHTMAXIET-UHFFFAOYSA-N",
+      "x": 0.235093,
+      "y": 0.532994,
+      "cluster": "C1"
     },
     {
-      "cid": 63018,
-      "x": 0.454418,
-      "y": 0.717457
+      "id": "CMP_ZULACESGMQPLEU-UHFFFAOYSA-N",
+      "x": 0.238973,
+      "y": 0.515931,
+      "cluster": "C1"
     },
     {
-      "cid": 3196,
-      "x": 0.184661,
-      "y": 0.599836
+      "id": "CMP_BJURSQSSPDLTAU-UHFFFAOYSA-N",
+      "x": 0.239091,
+      "y": 0.516314,
+      "cluster": "C1"
     },
     {
-      "cid": 65094,
-      "x": 0.41918,
-      "y": 0.685994
+      "id": "CMP_NGTYGLIQNSERCN-UHFFFAOYSA-N",
+      "x": 0.238297,
+      "y": 0.517709,
+      "cluster": "C1"
     },
     {
-      "cid": 12345678,
-      "x": 0.022422,
-      "y": 0.25146
+      "id": "CMP_CCHYZUZNMXGESK-UHFFFAOYSA-N",
+      "x": 0.002634,
+      "y": 0.31046,
+      "cluster": "C7"
     },
     {
-      "cid": 442089,
-      "x": 0.502229,
-      "y": 0.578491
+      "id": "CMP_VMNLFQASWUYYQE-UHFFFAOYSA-N",
+      "x": 0.32089,
+      "y": 0.318268,
+      "cluster": "C3"
     },
     {
-      "cid": 6918840,
-      "x": 0.500633,
-      "y": 0.580283
+      "id": "CMP_VFXOOZPDZCZLSO-UHFFFAOYSA-N",
+      "x": 0.325713,
+      "y": 0.288318,
+      "cluster": "C3"
     },
     {
-      "cid": 9841865,
-      "x": 0.12169,
-      "y": 0.200237
+      "id": "CMP_YDZCLWPEBZNSFS-UHFFFAOYSA-N",
+      "x": 0.321956,
+      "y": 0.315587,
+      "cluster": "C3"
     },
     {
-      "cid": 14982,
-      "x": 0.509538,
-      "y": 0.624743
+      "id": "CMP_MBLBDJOUHNCFQT-UHFFFAOYSA-N",
+      "x": 0.124477,
+      "y": 0.147659,
+      "cluster": "C6"
     },
     {
-      "cid": 12345685,
-      "x": 0.158439,
-      "y": 0.240013
+      "id": "CMP_OVRNDRQMDRJTHS-UHFFFAOYSA-N",
+      "x": 0.597688,
+      "y": 0.784703,
+      "cluster": "C2"
     },
     {
-      "cid": 119286,
-      "x": 0.138141,
-      "y": 0.437362
+      "id": "CMP_ZQTPOMUMEJTURV-UHFFFAOYSA-N",
+      "x": 0.244269,
+      "y": 0.362041,
+      "cluster": "C1"
     },
     {
-      "cid": 126965,
-      "x": 0.051948,
-      "y": 0.313061
+      "id": "CMP_FECFIIXKXJBOSU-UHFFFAOYSA-N",
+      "x": 0.454172,
+      "y": 0.613177,
+      "cluster": "C4"
     },
     {
-      "cid": 10886,
-      "x": 0.694738,
-      "y": 0.150404
+      "id": "CMP_MKFJCXDVWMRZMV-UHFFFAOYSA-N",
+      "x": 0.001146,
+      "y": 0.31074,
+      "cluster": "C7"
     },
     {
-      "cid": 93167,
-      "x": 0.532397,
-      "y": 0
+      "id": "CMP_UIVMDKRDCPWLNN-UHFFFAOYSA-N",
+      "x": 0.00529,
+      "y": 0.309841,
+      "cluster": "C7"
     },
     {
-      "cid": 93168,
-      "x": 0.115175,
-      "y": 0.469766
+      "id": "CMP_CWBZAESOUBENAP-UHFFFAOYSA-N",
+      "x": 0.13007,
+      "y": 0.356466,
+      "cluster": "C2"
     },
     {
-      "cid": 18950,
-      "x": 0.886899,
-      "y": 0.395334
+      "id": "CMP_ZROGCCBNZBKLEL-UHFFFAOYSA-N",
+      "x": 0.562075,
+      "y": 0.224956,
+      "cluster": "C2"
     },
     {
-      "cid": 94154,
-      "x": 0.964938,
-      "y": 0.520112
+      "id": "CMP_CPADUELZCFSWDX-UHFFFAOYSA-N",
+      "x": 0.130066,
+      "y": 0.357367,
+      "cluster": "C2"
     },
     {
-      "cid": 135191,
-      "x": 0.927619,
-      "y": 0.392109
+      "id": "CMP_CPADUELZCFSWDX-CFXCKNIUSA-N",
+      "x": 0.130402,
+      "y": 0.35674,
+      "cluster": "C2"
     },
     {
-      "cid": 5779,
-      "x": 0.961237,
-      "y": 0.397225
+      "id": "CMP_ITVGXXMINPYUHD-CUVHLRMHSA-N",
+      "x": 0.131075,
+      "y": 0.356477,
+      "cluster": "C2"
     },
     {
-      "cid": 66308,
-      "x": 0.899748,
-      "y": 0.647852
+      "id": "CMP_ITVGXXMINPYUHD-UHFFFAOYSA-N",
+      "x": 0.13047,
+      "y": 0.356734,
+      "cluster": "C2"
     },
     {
-      "cid": 93170,
-      "x": 0.068611,
-      "y": 0.655244
+      "id": "CMP_ITVGXXMINPYUHD-LJORXUSDSA-N",
+      "x": 0.129429,
+      "y": 0.355804,
+      "cluster": "C2"
     },
     {
-      "cid": 19233,
-      "x": 0.862984,
-      "y": 0.657697
+      "id": "CMP_DBNRLZOLHROQOQ-UHFFFAOYSA-N",
+      "x": 0.241807,
+      "y": 0.997437,
+      "cluster": "C2"
     },
     {
-      "cid": 17106,
-      "x": 0.876172,
-      "y": 0.402041
+      "id": "CMP_HLIAVLHNDJUHFG-UHFFFAOYSA-N",
+      "x": 0.2349,
+      "y": 0.522153,
+      "cluster": "C1"
     },
     {
-      "cid": 440658,
-      "x": 0.822832,
-      "y": 0.358439
+      "id": "CMP_XJCVRTZCHMZPBD-UHFFFAOYSA-N",
+      "x": 0.23949,
+      "y": 0.360002,
+      "cluster": "C5"
     },
     {
-      "cid": 440660,
-      "x": 0.772397,
-      "y": 0.358732
+      "id": "CMP_LQNUZADURLCDLV-UHFFFAOYSA-N",
+      "x": 0.240479,
+      "y": 0.361116,
+      "cluster": "C1"
     },
     {
-      "cid": 440662,
-      "x": 0.230767,
-      "y": 0.766099
+      "id": "CMP_WKXSWPQIPHLBES-UHFFFAOYSA-N",
+      "x": 0.458786,
+      "y": 0.637589,
+      "cluster": "C4"
     },
     {
-      "cid": 440664,
-      "x": 0.553469,
-      "y": 0.781263
+      "id": "CMP_DOQFUFHDFCUKML-UHFFFAOYSA-N",
+      "x": 0.457375,
+      "y": 0.633849,
+      "cluster": "C4"
     },
     {
-      "cid": 440666,
-      "x": 0.240463,
-      "y": 0.77455
+      "id": "CMP_NGQCNZGREBJKJU-UHFFFAOYSA-N",
+      "x": 0.461444,
+      "y": 0.645561,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_BAVIITPZLQIDAF-UHFFFAOYSA-N",
+      "x": 0.457389,
+      "y": 0.635086,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_HGXBYLZJARTFTK-UHFFFAOYSA-N",
+      "x": 0.456826,
+      "y": 0.635097,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_QZOALWMSYRBZSA-UHFFFAOYSA-N",
+      "x": 0.132282,
+      "y": 0.889028,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QZOALWMSYRBZSA-YFEGTUOYSA-N",
+      "x": 0.130383,
+      "y": 0.888148,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RXQCEGOUSFBKPI-UHFFFAOYSA-N",
+      "x": 0.24472,
+      "y": 0.362391,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JQSVXJNTPDVVKM-UHFFFAOYSA-N",
+      "x": 0.507538,
+      "y": 0.006224,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_DMSHKWHLXNDUST-UHFFFAOYSA-N",
+      "x": 0.221392,
+      "y": 0.38944,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_PVXPPJIGRGXGCY-UHFFFAOYSA-N",
+      "x": 0.462883,
+      "y": 0.885041,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XNLFIERPGXTDDP-UHFFFAOYSA-N",
+      "x": 0.199753,
+      "y": 0.92208,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LPJAUAFOONIRJB-UHFFFAOYSA-N",
+      "x": 0.193305,
+      "y": 0.921056,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YVHGFLRTSDMQKR-UHFFFAOYSA-N",
+      "x": 0.200176,
+      "y": 0.923316,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KYZGSVXLJRVXSE-UHFFFAOYSA-N",
+      "x": 0.193408,
+      "y": 0.920303,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OHGFKHHCPIGSKE-UHFFFAOYSA-N",
+      "x": 0.198427,
+      "y": 0.921785,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XNLFIERPGXTDDP-WTGFDMRSSA-N",
+      "x": 0.199214,
+      "y": 0.922328,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LPJAUAFOONIRJB-IPRCCJLNSA-N",
+      "x": 0.194596,
+      "y": 0.920475,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YVHGFLRTSDMQKR-MLARRGEASA-N",
+      "x": 0.198369,
+      "y": 0.922464,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KYZGSVXLJRVXSE-CHFYZHDNSA-N",
+      "x": 0.192481,
+      "y": 0.922842,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RUMOYJJNUMEFDD-UHFFFAOYSA-N",
+      "x": 0.004723,
+      "y": 0.306962,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_XCOJIVIDDFTHGB-UHFFFAOYSA-N",
+      "x": 0.001259,
+      "y": 0.309272,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_XCOJIVIDDFTHGB-YRNVUSSQSA-N",
+      "x": 0.001813,
+      "y": 0.310464,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_RFWVSSPNTKPQLT-UHFFFAOYSA-N",
+      "x": 0.180592,
+      "y": 0.352193,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_IDZNMJYHOMKLCL-UHFFFAOYSA-N",
+      "x": 0.177688,
+      "y": 0.910563,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IOUVKUPGCMBWBT-UHFFFAOYSA-N",
+      "x": 0.131423,
+      "y": 0.358059,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QCDYQQDYXPDABM-UHFFFAOYSA-N",
+      "x": 0.18977,
+      "y": 0.350329,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_SAOQOZCUTHVKOH-UHFFFAOYSA-N",
+      "x": 0.193754,
+      "y": 0.364291,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_PBILBHLAPJTJOT-UHFFFAOYSA-N",
+      "x": 0.573412,
+      "y": 0.208696,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OFFJUHSISSNBNT-UHFFFAOYSA-N",
+      "x": 0.130327,
+      "y": 0.88828,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DMRIOWKDQLGGAP-UHFFFAOYSA-N",
+      "x": 0.130238,
+      "y": 0.88821,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OFFJUHSISSNBNT-BJSWHCNPSA-N",
+      "x": 0.130582,
+      "y": 0.888259,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YNGZUGDVISLJEQ-UHFFFAOYSA-N",
+      "x": 0.130874,
+      "y": 0.357034,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QZCQLDNUGVQVDR-UHFFFAOYSA-N",
+      "x": 0.16285,
+      "y": 0.345446,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YPYDMFZSCPZWMY-UHFFFAOYSA-N",
+      "x": 0.160742,
+      "y": 0.345764,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UESGIOZUTMALSQ-UHFFFAOYSA-N",
+      "x": 0.190002,
+      "y": 0.917556,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YCGMGYPLKKAMNS-UHFFFAOYSA-N",
+      "x": 0.090802,
+      "y": 0.303047,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_TVKYRGWJELUGNG-UHFFFAOYSA-N",
+      "x": 0.595259,
+      "y": 0.793779,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LKDRXBCSQODPBY-XIURSDRTSA-N",
+      "x": 0.089879,
+      "y": 0.303353,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NNXQSUSEFPRCRS-UHFFFAOYSA-N",
+      "x": 0.173187,
+      "y": 0.921206,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SODWWCZKQRRZTG-UHFFFAOYSA-N",
+      "x": 0.17476,
+      "y": 0.920246,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NNXQSUSEFPRCRS-LHIHKXQHSA-N",
+      "x": 0.174275,
+      "y": 0.919394,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SODWWCZKQRRZTG-UKXKIDEASA-N",
+      "x": 0.175185,
+      "y": 0.92144,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MUPFEKGTMRGPLJ-DXCGAROWSA-N",
+      "x": 0.457771,
+      "y": 0.898735,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MUPFEKGTMRGPLJ-UHFFFAOYSA-N",
+      "x": 0.458573,
+      "y": 0.898951,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HELXLJCILKEWJH-UHFFFAOYSA-N",
+      "x": 0.977108,
+      "y": 0.443799,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PVODACNPTLRQDN-UHFFFAOYSA-N",
+      "x": 0.956709,
+      "y": 0.460127,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DRSKVOAJKLUMCL-UHFFFAOYSA-N",
+      "x": 0.965748,
+      "y": 0.435403,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YIESYHVYXYGLLF-UHFFFAOYSA-N",
+      "x": 0.976167,
+      "y": 0.449948,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QSRAJVGDWKFOGU-UHFFFAOYSA-N",
+      "x": 0.982863,
+      "y": 0.451686,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RPYRMTHVSUWHSV-UHFFFAOYSA-N",
+      "x": 0.974528,
+      "y": 0.444913,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RLLCWNUIHGPAJY-UHFFFAOYSA-N",
+      "x": 0.959982,
+      "y": 0.457178,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HYLAUKAHEAUVFE-UHFFFAOYSA-N",
+      "x": 0.988421,
+      "y": 0.442755,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PUEWSZCYJACQQB-UHFFFAOYSA-N",
+      "x": 0.989591,
+      "y": 0.442242,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OKPSCKUJXYCMPR-UHFFFAOYSA-N",
+      "x": 0.960024,
+      "y": 0.452078,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UYOANCNCPRFKOY-UHFFFAOYSA-N",
+      "x": 0.980863,
+      "y": 0.450777,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BSVKOVOOJNJHBR-UHFFFAOYSA-N",
+      "x": 0.975264,
+      "y": 0.446968,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HINSNOJRHFIMKB-UHFFFAOYSA-N",
+      "x": 0.982575,
+      "y": 0.451999,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LASZCLVLJHQWST-UHFFFAOYSA-N",
+      "x": 0.98153,
+      "y": 0.450448,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SNHLJSLCVSDFJQ-UHFFFAOYSA-N",
+      "x": 0.5462,
+      "y": 0.705693,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GSGVXNMGMKBGQU-UHFFFAOYSA-N",
+      "x": 0.977187,
+      "y": 0.443467,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_AKEKAGBWNXIWSS-UHFFFAOYSA-N",
+      "x": 0.983123,
+      "y": 0.452846,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KTOQMKFUTRIEQB-UHFFFAOYSA-N",
+      "x": 0.981534,
+      "y": 0.449849,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UFPKWQCGHPXDSK-UHFFFAOYSA-N",
+      "x": 0.9869,
+      "y": 0.441175,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MTDNRMMSJHLWPG-UHFFFAOYSA-N",
+      "x": 0.981632,
+      "y": 0.457127,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IQTHWKQUEBKSFC-UHFFFAOYSA-N",
+      "x": 0.986595,
+      "y": 0.443416,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IOIDMIXOWIUCSG-UHFFFAOYSA-N",
+      "x": 0.988927,
+      "y": 0.441478,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XDYBERBMHSBDST-UHFFFAOYSA-N",
+      "x": 0.986677,
+      "y": 0.442061,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IVTGKGQKUIPEEM-UHFFFAOYSA-N",
+      "x": 0.987719,
+      "y": 0.444344,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XZCQFIGUYUOUSW-UHFFFAOYSA-N",
+      "x": 0.546105,
+      "y": 0.705766,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SPYZRRVRFHDMJY-UHFFFAOYSA-N",
+      "x": 0.546109,
+      "y": 0.705781,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HELXLJCILKEWJH-NCGAPWICSA-N",
+      "x": 0.980469,
+      "y": 0.446398,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DRSKVOAJKLUMCL-OHOPTAKLSA-N",
+      "x": 0.965663,
+      "y": 0.435786,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QSRAJVGDWKFOGU-WBXIDTKBSA-N",
+      "x": 0.983714,
+      "y": 0.450339,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RPYRMTHVSUWHSV-CUZJHZIBSA-N",
+      "x": 0.975951,
+      "y": 0.446124,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RLLCWNUIHGPAJY-RYGMGDGWSA-N",
+      "x": 0.961491,
+      "y": 0.454737,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BEVFMIYRESKWFT-JKKLNFHLSA-N",
+      "x": 0.988445,
+      "y": 0.442037,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GHMLBKRAJCXXBS-UHFFFAOYSA-N",
+      "x": 0.192803,
+      "y": 0.350278,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_YWPVROCHNBYFTP-UHFFFAOYSA-N",
+      "x": 0.938854,
+      "y": 0.448223,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FIRLKUFWUIOKOG-UHFFFAOYSA-N",
+      "x": 0.942921,
+      "y": 0.471628,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MFKBWOSBBNOLCM-UHFFFAOYSA-N",
+      "x": 0.942284,
+      "y": 0.471378,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UTEGEWYYOCFWTL-UHFFFAOYSA-N",
+      "x": 0.94208,
+      "y": 0.470421,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PYMYPHUHKUWMLA-LMVFSUKVSA-N",
+      "x": 0.125511,
+      "y": 0.148682,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_PYMYPHUHKUWMLA-UHFFFAOYSA-N",
+      "x": 0.125494,
+      "y": 0.148697,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_JBNWAELMMNTBAX-UHFFFAOYSA-N",
+      "x": 0.941452,
+      "y": 0.469905,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KRFUHKZNOMVNTM-UHFFFAOYSA-N",
+      "x": 0.940945,
+      "y": 0.469059,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ABXDYPWRPFNMFF-UHFFFAOYSA-N",
+      "x": 0.941172,
+      "y": 0.469415,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FEDZHFHAGVBEAX-UHFFFAOYSA-N",
+      "x": 0.94238,
+      "y": 0.470265,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_USUKVDGSYLFQTK-UHFFFAOYSA-N",
+      "x": 0.940841,
+      "y": 0.469238,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BYLFJRYUQRPALW-UHFFFAOYSA-N",
+      "x": 0.941635,
+      "y": 0.46725,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OAUJSBZEOKWDGF-UHFFFAOYSA-N",
+      "x": 0.940395,
+      "y": 0.468729,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UCYSMMSMJWJRBS-UHFFFAOYSA-N",
+      "x": 0.941129,
+      "y": 0.472795,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HQMXATMZYJUGRD-UHFFFAOYSA-N",
+      "x": 0.941482,
+      "y": 0.469551,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QTNHOJCQEHIIGH-UHFFFAOYSA-N",
+      "x": 0.944283,
+      "y": 0.470294,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YWPVROCHNBYFTP-HSXMIDIGSA-N",
+      "x": 0.940649,
+      "y": 0.449063,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SUMCIRPHLYWSOC-UHFFFAOYSA-N",
+      "x": 0.941031,
+      "y": 0.445479,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_AMTHOGASCTUUJE-UHFFFAOYSA-N",
+      "x": 0.226808,
+      "y": 0.574715,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_UGNFZCRRRZMUAY-UHFFFAOYSA-N",
+      "x": 0.943727,
+      "y": 0.471998,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DTKUEOHDAACKOZ-UHFFFAOYSA-N",
+      "x": 0.944584,
+      "y": 0.470238,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PXVOYERAHXOUGI-UHFFFAOYSA-N",
+      "x": 0.944651,
+      "y": 0.469616,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WOISKWJOBYNPHO-UHFFFAOYSA-N",
+      "x": 0.943497,
+      "y": 0.469709,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_YNXAIYRIEKUHBD-UHFFFAOYSA-N",
+      "x": 0.944944,
+      "y": 0.469623,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZVKUQBCGRNGTNI-UHFFFAOYSA-N",
+      "x": 0.94118,
+      "y": 0.467766,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZLJLRDSPFPQVSJ-UHFFFAOYSA-N",
+      "x": 0.943357,
+      "y": 0.46961,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_CRNOBMYDTZIJBN-UHFFFAOYSA-N",
+      "x": 0.943143,
+      "y": 0.468065,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_RQEBAUOPXDTSDF-UHFFFAOYSA-N",
+      "x": 0.944602,
+      "y": 0.470558,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XVMPUCJESXFFDW-UHFFFAOYSA-N",
+      "x": 0.240598,
+      "y": 0.994927,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GKUQBELMWYQKKJ-UHFFFAOYSA-N",
+      "x": 0.090052,
+      "y": 0.302753,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PMDYNLFGCCRGRX-UHFFFAOYSA-N",
+      "x": 0.560162,
+      "y": 0.224464,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PMDYNLFGCCRGRX-ZKZWBHJESA-N",
+      "x": 0.560249,
+      "y": 0.224441,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NKMPBYGIRLKNIO-UHFFFAOYSA-N",
+      "x": 0.546235,
+      "y": 0.705915,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UEDUENGHJMELGK-UHFFFAOYSA-N",
+      "x": 0.950507,
+      "y": 0.46427,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WKLJSXDOXYNRES-UHFFFAOYSA-N",
+      "x": 0.944418,
+      "y": 0.471971,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JCAMMOHXVCWLJO-UHFFFAOYSA-N",
+      "x": 0.945682,
+      "y": 0.468847,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XJIPREFALCDWRQ-KGFBLRRZSA-N",
+      "x": 0.242378,
+      "y": 0.997055,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZTGTXQJFHLHMSM-UHFFFAOYSA-N",
+      "x": 0.453907,
+      "y": 0.614869,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_WVGLWFQQNVBIQY-UHFFFAOYSA-N",
+      "x": 0.454585,
+      "y": 0.614037,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_HZSQRWZGCAKNCK-UHFFFAOYSA-N",
+      "x": 0.511065,
+      "y": 0.002332,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_UOUBHXLOFQQIPZ-UHFFFAOYSA-N",
+      "x": 0.462753,
+      "y": 0.646239,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_UJHUEIVPTULBLA-UHFFFAOYSA-N",
+      "x": 0.429165,
+      "y": 0.550888,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_BSLBIQWYMQGLBL-UHFFFAOYSA-N",
+      "x": 0.433862,
+      "y": 0.5554,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_JXGOVHRCZWPESA-UHFFFAOYSA-N",
+      "x": 0.430486,
+      "y": 0.551756,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_GHTAVGJYOXNNOK-UHFFFAOYSA-N",
+      "x": 0.429333,
+      "y": 0.552393,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_UPHCJQPBZLPEHG-UHFFFAOYSA-N",
+      "x": 0.433368,
+      "y": 0.553784,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_XTHZKDLUZWQJAD-UHFFFAOYSA-N",
+      "x": 0.460052,
+      "y": 0.573144,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_YUWZYMMMYVMIIL-UHFFFAOYSA-N",
+      "x": 0.466593,
+      "y": 0.65103,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_KBYLLOKASXNZIL-UHFFFAOYSA-N",
+      "x": 0.458327,
+      "y": 0.571205,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_NBRXIUAJZIRWFO-UHFFFAOYSA-N",
+      "x": 0.441011,
+      "y": 0.564328,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_WXUHQSNOOJHBQA-UHFFFAOYSA-N",
+      "x": 0.461913,
+      "y": 0.646887,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_KLCIQIJSLGGVSW-UHFFFAOYSA-N",
+      "x": 0.454025,
+      "y": 0.61513,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_QLFXPWUPFGNATD-UHFFFAOYSA-N",
+      "x": 0.441437,
+      "y": 0.558835,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_LTBIFETVMAYRRV-UHFFFAOYSA-N",
+      "x": 0.463662,
+      "y": 0.647625,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_BXWSJIVUGLLBDF-UHFFFAOYSA-N",
+      "x": 0.441207,
+      "y": 0.555761,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_BIVSFLWPJUYIMR-UHFFFAOYSA-N",
+      "x": 0.442635,
+      "y": 0.56196,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YWVHOKCVTOZOKU-UHFFFAOYSA-N",
+      "x": 0.444027,
+      "y": 0.556963,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_KKFCLPYERUPCNR-UHFFFAOYSA-N",
+      "x": 0.45477,
+      "y": 0.613058,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_LMVHWZSUGKCFLU-UHFFFAOYSA-N",
+      "x": 0.454526,
+      "y": 0.614662,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_WNUBEGZNWIQJNV-UHFFFAOYSA-N",
+      "x": 0.452859,
+      "y": 0.613557,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_GEMYPJWUMFLPSQ-UHFFFAOYSA-N",
+      "x": 0.442701,
+      "y": 0.560062,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_IQQOKNDVBQTTAP-UHFFFAOYSA-N",
+      "x": 0.454542,
+      "y": 0.614434,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_CEARBSKYBSRLJZ-UHFFFAOYSA-N",
+      "x": 0.463868,
+      "y": 0.647764,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_KBBLWXAKAJOFAG-UHFFFAOYSA-N",
+      "x": 0.440744,
+      "y": 0.561242,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_ZADDKWCPUHMWJX-UHFFFAOYSA-N",
+      "x": 0.445091,
+      "y": 0.562397,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JQYKPARCQAJKED-UHFFFAOYSA-N",
+      "x": 0.460592,
+      "y": 0.644816,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_YBLLHXKRLSTJFW-UHFFFAOYSA-N",
+      "x": 0.434028,
+      "y": 0.552509,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_XDXFTQLIWJRKEK-UHFFFAOYSA-N",
+      "x": 0.430615,
+      "y": 0.552981,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_KUEMJAUVOMJXQK-UHFFFAOYSA-N",
+      "x": 0.432276,
+      "y": 0.55729,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_QTSJQJPGWKWILA-UHFFFAOYSA-N",
+      "x": 0.430079,
+      "y": 0.554712,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_AHHRIBAXGLABET-UHFFFAOYSA-N",
+      "x": 0.433014,
+      "y": 0.550851,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_MJZHHMBPTICPLJ-UHFFFAOYSA-N",
+      "x": 0.454045,
+      "y": 0.614907,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_AWRXEZRADGDSQH-UHFFFAOYSA-N",
+      "x": 0.464363,
+      "y": 0.648082,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_WYFBGNZNBXZXLP-UHFFFAOYSA-N",
+      "x": 0.463939,
+      "y": 0.647211,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_LBLUMRWFLNTZPD-UHFFFAOYSA-N",
+      "x": 0.430968,
+      "y": 0.554399,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_MYWVDZTWKQFSPV-UHFFFAOYSA-N",
+      "x": 0.463368,
+      "y": 0.575207,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_YQCIKTQGZBMVLT-UHFFFAOYSA-N",
+      "x": 0.447297,
+      "y": 0.561063,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_WZIZNOJQUPWDPA-UHFFFAOYSA-N",
+      "x": 0.442998,
+      "y": 0.555256,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_OJVTTWDOYMVNDE-UHFFFAOYSA-N",
+      "x": 0.440182,
+      "y": 0.55383,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_JEUWETBUTJMXCU-UHFFFAOYSA-N",
+      "x": 0.433338,
+      "y": 0.552027,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_BULNJLRCRDTBSQ-UHFFFAOYSA-N",
+      "x": 0.430366,
+      "y": 0.555812,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_CIIAHJAGIRSHDS-UHFFFAOYSA-N",
+      "x": 0.434726,
+      "y": 0.559814,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_ZZYDAPLAIRWKIT-UHFFFAOYSA-N",
+      "x": 0.46017,
+      "y": 0.573049,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_KTBLLHSPTDDMMX-UHFFFAOYSA-N",
+      "x": 0.457278,
+      "y": 0.568839,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KYKLZMVLGFJICM-UHFFFAOYSA-N",
+      "x": 0.455633,
+      "y": 0.56694,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_AXVMWYFMYPQTNQ-UHFFFAOYSA-N",
+      "x": 0.458644,
+      "y": 0.57098,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_OSMSPFWHQWDGGP-UHFFFAOYSA-N",
+      "x": 0.432668,
+      "y": 0.556285,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_UGONWMBUPIAULC-UHFFFAOYSA-N",
+      "x": 0.458247,
+      "y": 0.572301,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_TZFKGPXWVDWZDG-UHFFFAOYSA-N",
+      "x": 0.433457,
+      "y": 0.561263,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_YUWDCYWHKSBLEX-UHFFFAOYSA-N",
+      "x": 0.460232,
+      "y": 0.573052,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_UZJNIKRUOGMNBN-UHFFFAOYSA-N",
+      "x": 0.463666,
+      "y": 0.576226,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_FXOJIEVNGNBJFB-UHFFFAOYSA-N",
+      "x": 0.463236,
+      "y": 0.575728,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_IGPQWYNISLNKSX-UHFFFAOYSA-N",
+      "x": 0.439951,
+      "y": 0.556769,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_AIMYKLCQJDWXIH-UHFFFAOYSA-N",
+      "x": 0.461708,
+      "y": 0.573709,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_LWAGUMMFHBDGKQ-UHFFFAOYSA-N",
+      "x": 0.465484,
+      "y": 0.649704,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_VNMCYLIZVXVWQL-UHFFFAOYSA-N",
+      "x": 0.461393,
+      "y": 0.573982,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_ZFVGQELEGXBHKF-UHFFFAOYSA-N",
+      "x": 0.462394,
+      "y": 0.576117,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_YVMMXTFWZFJJPM-UHFFFAOYSA-N",
+      "x": 0.459554,
+      "y": 0.571104,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_NZKKHYYWBQRFBE-UHFFFAOYSA-N",
+      "x": 0.446975,
+      "y": 0.562976,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_BOYQUQVILBWNCQ-UHFFFAOYSA-N",
+      "x": 0.457212,
+      "y": 0.568553,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_AFADCZLAPHFYDX-UHFFFAOYSA-N",
+      "x": 0.448785,
+      "y": 0.564331,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_GREIWJODZCGLLG-UHFFFAOYSA-N",
+      "x": 0.465758,
+      "y": 0.649923,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_QUOMIDQCEIFHBY-UHFFFAOYSA-N",
+      "x": 0.464221,
+      "y": 0.648522,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_WVPORFOFSXGTLS-UHFFFAOYSA-N",
+      "x": 0.464591,
+      "y": 0.648511,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_FKQPPNANKBHSRP-UHFFFAOYSA-N",
+      "x": 0.46317,
+      "y": 0.646538,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_JEYSHPXCWFSACO-UHFFFAOYSA-N",
+      "x": 0.463615,
+      "y": 0.647487,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_ZYSXHACXWDEZSM-UHFFFAOYSA-N",
+      "x": 0.464908,
+      "y": 0.649132,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_YXDVUIBLXCFASO-UHFFFAOYSA-N",
+      "x": 0.446371,
+      "y": 0.578631,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_SVPKTHMFTSTYBO-UHFFFAOYSA-N",
+      "x": 0.429952,
+      "y": 0.553815,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_SWMOQORLMWSQOD-UHFFFAOYSA-N",
+      "x": 0.445019,
+      "y": 0.561984,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_ZRIUYVJZAXRIKO-UHFFFAOYSA-N",
+      "x": 0.454617,
+      "y": 0.613983,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_VSODOBPILARAHU-UHFFFAOYSA-N",
+      "x": 0.454213,
+      "y": 0.61429,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_CMJMDOLYQULUMC-UHFFFAOYSA-N",
+      "x": 0.431929,
+      "y": 0.555564,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_BDKBRMLQJVLFRZ-UHFFFAOYSA-N",
+      "x": 0.431771,
+      "y": 0.554518,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_HLLNYJRNTNFUIW-UHFFFAOYSA-N",
+      "x": 0.434928,
+      "y": 0.557769,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RWJGCFDARAQOFK-UHFFFAOYSA-N",
+      "x": 0.460692,
+      "y": 0.573477,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_VTYXKZPSXBROIH-UHFFFAOYSA-N",
+      "x": 0.437174,
+      "y": 0.560757,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_QANTZRODOLMIBJ-UHFFFAOYSA-N",
+      "x": 0.430759,
+      "y": 0.556333,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_MLXKZVKMKOFEII-UHFFFAOYSA-N",
+      "x": 0.431199,
+      "y": 0.555153,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_SZSSRVYYBRPJJG-UHFFFAOYSA-N",
+      "x": 0.461564,
+      "y": 0.573955,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_HZZSMFGSUPBPHC-UHFFFAOYSA-N",
+      "x": 0.462191,
+      "y": 0.574601,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_IMARMDICEUEMGJ-UHFFFAOYSA-N",
+      "x": 0.462785,
+      "y": 0.575129,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_HLIBNTOXKQCYMV-UHFFFAOYSA-N",
+      "x": 0.454487,
+      "y": 0.613282,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_ORMPWBRKLLZGOF-UHFFFAOYSA-N",
+      "x": 0.461865,
+      "y": 0.64659,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_FKDUYSLICHAXJO-UHFFFAOYSA-N",
+      "x": 0.463804,
+      "y": 0.647303,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_HEFVEPWESGAVMJ-UHFFFAOYSA-N",
+      "x": 0.456409,
+      "y": 0.623713,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_USTVZVLUAHGTKC-UHFFFAOYSA-N",
+      "x": 0.457692,
+      "y": 0.635408,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_BEHLMOQXOSLGHN-UHFFFAOYSA-N",
+      "x": 0.432773,
+      "y": 0.557607,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_FBPFZTCFMRRESA-JGWLITMVSA-N",
+      "x": 0.101006,
+      "y": 0.606132,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_BJHIKXHVCXFQLS-PYWDMBMJSA-N",
+      "x": 0.101099,
+      "y": 0.60628,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_SYAFZCKINXYMIS-UHFFFAOYSA-N",
+      "x": 0.575265,
+      "y": 0.192633,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_LNTHQBNSXNQPPZ-UHFFFAOYSA-N",
+      "x": 0.006679,
+      "y": 0.307569,
+      "cluster": "C7"
+    },
+    {
+      "id": "CMP_UQZIYBXSHAGNOE-KCZKOWSFSA-N",
+      "x": 0.458002,
+      "y": 0.897753,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UQZIYBXSHAGNOE-UHFFFAOYSA-N",
+      "x": 0.458321,
+      "y": 0.900325,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QFVOYBUQQBFCRH-UHFFFAOYSA-N",
+      "x": 0.962481,
+      "y": 0.437329,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OMHUCGDTACNQEX-UHFFFAOYSA-N",
+      "x": 0.96408,
+      "y": 0.434994,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_OMHUCGDTACNQEX-YDPAOHKCSA-N",
+      "x": 0.964911,
+      "y": 0.436645,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SFXJVNMXTJSYPR-UHFFFAOYSA-N",
+      "x": 0.954226,
+      "y": 0.461348,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QSIDJGUAAUSPMG-UHFFFAOYSA-N",
+      "x": 0.963497,
+      "y": 0.435319,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_UEDUENGHJMELGK-KUXJJJEVSA-N",
+      "x": 0.952333,
+      "y": 0.462708,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BQHYXTYNWYCUPT-UHFFFAOYSA-N",
+      "x": 0.546108,
+      "y": 0.705824,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_MHYWHXMSQJVSQU-UHFFFAOYSA-N",
+      "x": 0.960443,
+      "y": 0.455909,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_GIPHUOWOTCAJSR-UHFFFAOYSA-N",
+      "x": 0.96067,
+      "y": 0.456627,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NIFWGBCCKFDXFB-UHFFFAOYSA-N",
+      "x": 0.961527,
+      "y": 0.455052,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_KCTSUIMXVGYXPH-UHFFFAOYSA-N",
+      "x": 0.943768,
+      "y": 0.440478,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_DJGDBVPYRDFFOC-UHFFFAOYSA-N",
+      "x": 0.940904,
+      "y": 0.4531,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JRITVVGPSXLNMR-UHFFFAOYSA-N",
+      "x": 0.942174,
+      "y": 0.446667,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_IBXRQQBJPCVMCM-UHFFFAOYSA-N",
+      "x": 0.938738,
+      "y": 0.453132,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_TYIKLWYMBUWTIH-UHFFFAOYSA-N",
+      "x": 0.942323,
+      "y": 0.446044,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_CCUSLDHMJQZSLY-UHFFFAOYSA-N",
+      "x": 0.938842,
+      "y": 0.453175,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WVFKLLZOKOUNJS-UHFFFAOYSA-N",
+      "x": 0.942317,
+      "y": 0.448499,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_FRIGZPCGEQQVKW-UHFFFAOYSA-N",
+      "x": 0.940229,
+      "y": 0.449768,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BXLOAAYMPNPFFB-UHFFFAOYSA-N",
+      "x": 0.939876,
+      "y": 0.445651,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LZHJVRLURSDZTB-UHFFFAOYSA-N",
+      "x": 0.941015,
+      "y": 0.445191,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BAQAVOSOZGMPRM-QBMZZYIRSA-N",
+      "x": 0.429851,
+      "y": 0.885163,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WKUNDZOMGGNEMT-UHFFFAOYSA-N",
+      "x": 0.435502,
+      "y": 0.888379,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QMMNUWUJACCCGO-UHFFFAOYSA-N",
+      "x": 0.431399,
+      "y": 0.882089,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_XUECYQGOMBXBDV-UHFFFAOYSA-N",
+      "x": 0.430852,
+      "y": 0.883874,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LBDVSPIQWSQRLB-UHFFFAOYSA-N",
+      "x": 0.348875,
+      "y": 0.326611,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N",
+      "x": 0.45524,
+      "y": 0.900746,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BNQNFUPSTIHLDU-UHFFFAOYSA-N",
+      "x": 0.167976,
+      "y": 0.532722,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RHAXXQNPIDFFKJ-UHFFFAOYSA-N",
+      "x": 0.266744,
+      "y": 0.42915,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_XTMHQRCRPPHNMY-UHFFFAOYSA-N",
+      "x": 0.265986,
+      "y": 0.459348,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_JMSVCTWVEWCHDZ-UHFFFAOYSA-N",
+      "x": 0.179089,
+      "y": 0.351896,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_OBCUBIAFMFWPOD-UHFFFAOYSA-N",
+      "x": 0.651502,
+      "y": 0.927845,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_JBABRITZWMACBP-UHFFFAOYSA-N",
+      "x": 0.652031,
+      "y": 0.928452,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_WBORLJFSFFAKNM-UHFFFAOYSA-N",
+      "x": 0.652051,
+      "y": 0.928468,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ZEKGTPFAPKUVAX-UHFFFAOYSA-N",
+      "x": 0.651852,
+      "y": 0.92822,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_VTUMMCRSKXWOFU-UHFFFAOYSA-N",
+      "x": 0.653084,
+      "y": 0.929726,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LUOVJXXXAOACJP-UHFFFAOYSA-N",
+      "x": 0.651915,
+      "y": 0.928291,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QGZYLJUBJATVFW-UHFFFAOYSA-N",
+      "x": 0.65299,
+      "y": 0.929501,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BFDVDGCMNOIOFX-UHFFFAOYSA-N",
+      "x": 0.653759,
+      "y": 0.930297,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_BDGKNUOFJHLJRW-UHFFFAOYSA-N",
+      "x": 0.652464,
+      "y": 0.928914,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_ALCCZPQMMCGQSQ-UHFFFAOYSA-N",
+      "x": 0.652461,
+      "y": 0.928899,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LUOVJXXXAOACJP-ZVWLMSEASA-N",
+      "x": 0.652823,
+      "y": 0.929295,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_QPFMBZIOSGYJDE-UHFFFAOYSA-N",
+      "x": 0.105585,
+      "y": 0.603126,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_KNIARVALBGQJTH-UHFFFAOYSA-N",
+      "x": 0.281239,
+      "y": 0.42818,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_RCGMVCCNAAVDBT-UHFFFAOYSA-N",
+      "x": 0.509596,
+      "y": 0.003947,
+      "cluster": "C5"
+    },
+    {
+      "id": "CMP_DBFYASVHFRFUPB-UHFFFAOYSA-N",
+      "x": 0.268172,
+      "y": 0.429419,
+      "cluster": "C3"
+    },
+    {
+      "id": "CMP_JYZJRADNUWZBPO-UHFFFAOYSA-N",
+      "x": 0.263383,
+      "y": 0.461457,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RUVINXPYWBROJD-ONEGZZNKSA-N",
+      "x": 0.201042,
+      "y": 0.372241,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_RUVINXPYWBROJD-UHFFFAOYSA-N",
+      "x": 0.202058,
+      "y": 0.372433,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KJPRLNWUNMBNBZ-QPJJXVBHSA-N",
+      "x": 0.202411,
+      "y": 0.373932,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_KJPRLNWUNMBNBZ-UHFFFAOYSA-N",
+      "x": 0.201476,
+      "y": 0.372888,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_HDTRYLNUVZCQOY-FZQFVNPLSA-N",
+      "x": 0.611648,
+      "y": 0.811974,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HDTRYLNUVZCQOY-UHFFFAOYSA-N",
+      "x": 0.611675,
+      "y": 0.812354,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_NMELTECMHKKXLF-DGQJZECASA-N",
+      "x": 0.618247,
+      "y": 0.829374,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_NMELTECMHKKXLF-UHFFFAOYSA-N",
+      "x": 0.618284,
+      "y": 0.8288,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_GSTCPEBQYSOEHV-UHFFFAOYSA-N",
+      "x": 0.132839,
+      "y": 0.358697,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SEWFWJUQVJHATO-GWRCVIBKSA-N",
+      "x": 0.473516,
+      "y": 0.876226,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SEWFWJUQVJHATO-UHFFFAOYSA-N",
+      "x": 0.473699,
+      "y": 0.876265,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LGQKSQQRKHFMLI-UHFFFAOYSA-N",
+      "x": 0.589957,
+      "y": 0.801078,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_PYMYPHUHKUWMLA-VPENINKCSA-N",
+      "x": 0.125514,
+      "y": 0.148686,
+      "cluster": "C6"
+    },
+    {
+      "id": "CMP_RFSUNEUAIZKAJO-UHFFFAOYSA-N",
+      "x": 0.457955,
+      "y": 0.879982,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_SRBFZHDQGSBBOR-UHFFFAOYSA-N",
+      "x": 0.587318,
+      "y": 0.799753,
+      "cluster": "C4"
+    },
+    {
+      "id": "CMP_MFBFJSQTXYOUAV-UHFFFAOYSA-N",
+      "x": 0.172428,
+      "y": 0.341698,
+      "cluster": "C1"
+    },
+    {
+      "id": "CMP_WHGYBXFWUBPSRW-UHFFFAOYSA-N",
+      "x": 0.599772,
+      "y": 0.785878,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_HMFHBZSHGGEWLO-UHFFFAOYSA-N",
+      "x": 0.600624,
+      "y": 0.786947,
+      "cluster": "C2"
+    },
+    {
+      "id": "CMP_LMYULRZWYVEIPM-UHFFFAOYSA-N",
+      "x": 0.156011,
+      "y": 0.580157,
+      "cluster": "C1"
     }
   ],
-  "excluded": [
-    {
-      "cid": 12345679,
-      "name": "Thaumatin",
-      "reason": "No small-molecule structure"
-    },
-    {
-      "cid": 12345680,
-      "name": "Monellin",
-      "reason": "No small-molecule structure"
-    },
-    {
-      "cid": 12345681,
-      "name": "Brazzein",
-      "reason": "No small-molecule structure"
-    },
-    {
-      "cid": 12345682,
-      "name": "Pentadin",
-      "reason": "No small-molecule structure"
-    },
-    {
-      "cid": 12345683,
-      "name": "Curculin",
-      "reason": "No small-molecule structure"
-    },
-    {
-      "cid": 12345684,
-      "name": "Miraculin",
-      "reason": "No small-molecule structure"
-    },
-    {
-      "cid": 12345686,
-      "name": "Baiyunoside",
-      "reason": "No small-molecule structure"
-    }
-  ]
+  "excluded": []
 }

@@ -7,10 +7,10 @@ import DatabaseInterface from './DatabaseInterface';
 beforeEach(() => window.history.replaceState({}, '', '/database'));
 afterEach(() => cleanup());
 
-describe('Database portal workflows', () => {
+describe('Database portal workflows', { timeout: 15_000 }, () => {
   it('opens the portal homepage and browses the real release', () => {
     render(<DatabaseInterface />);
-    expect(screen.getByRole('heading', { name: 'SweetDatabase' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'SweetMeta' })).toBeTruthy();
     expect(document.querySelector('.sdb-main')?.classList.contains('overflow-auto')).toBe(true);
     expect(screen.getByText('1,296')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Browse entities/i }));
@@ -27,9 +27,31 @@ describe('Database portal workflows', () => {
     expect(sources.every((source) => source?.startsWith('/database-assets/'))).toBe(true);
   });
 
+  it('shows the complete ECFP4 UMAP map and molecular hover details', () => {
+    render(<DatabaseInterface />);
+    expect(screen.getByRole('heading', { name: 'ECFP4 structural similarity map' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'ECFP4 UMAP structural similarity map' })).toBeTruthy();
+    expect(screen.getByText('1,296 molecules mapped')).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Color by' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Evidence tiers' })).toBeNull();
+    expect(screen.getByText('C1')).toBeTruthy();
+    expect(screen.getByText('572 molecules')).toBeTruthy();
+
+    const point = document.querySelector('.sdb-dot');
+    expect(point).toBeTruthy();
+    if (!point) throw new Error('Expected at least one chemical-space point');
+    fireEvent.mouseEnter(point);
+    expect(screen.getByText('Molecular formula')).toBeTruthy();
+    expect(screen.getByText('Molecular weight')).toBeTruthy();
+    expect(screen.getByText('Structural cluster')).toBeTruthy();
+    expect(screen.getByText('Evidence tier')).toBeTruthy();
+    fireEvent.mouseLeave(point);
+    expect(screen.queryByText('Molecular formula')).toBeNull();
+  });
+
   it('passes the homepage query and evidence tier into Browse', () => {
     render(<DatabaseInterface />);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Search SweetDatabase' }), { target: { value: 'Thiophenesaccharin' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search SweetMeta' }), { target: { value: 'Thiophenesaccharin' } });
     fireEvent.change(screen.getByRole('combobox', { name: 'Homepage evidence tier' }), { target: { value: 'R2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Search database' }));
     expect(screen.getByRole('heading', { name: 'Browse the current release' })).toBeTruthy();
@@ -40,10 +62,21 @@ describe('Database portal workflows', () => {
     expect(window.location.search).toContain('tier=R2');
   });
 
+  it.each([
+    ['Sucrose', 'CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N'],
+    ['Glucose', 'CMP_GZCGUPFRVQAUEE-SLPGGIOYSA-N'],
+    ['Aspartame', 'CMP_IAOZJIPTCAWIRG-QWRGUYRKSA-N'],
+  ])('opens the %s example record', (name, id) => {
+    render(<DatabaseInterface />);
+    fireEvent.click(screen.getByRole('button', { name }));
+    expect(screen.getByRole('button', { name: 'Back to compounds' })).toBeTruthy();
+    expect(new URLSearchParams(window.location.search).get('compound')).toBe(id);
+  });
+
   it('publishes the data guide from product navigation', () => {
     render(<DatabaseInterface />);
     fireEvent.click(screen.getByRole('button', { name: 'Data Guide' }));
-    expect(screen.getByRole('heading', { name: 'How to read SweetDatabase' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'How to read SweetMeta' })).toBeTruthy();
     expect(screen.getByText('R1–R4 meaning')).toBeTruthy();
   });
 

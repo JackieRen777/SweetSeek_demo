@@ -75,14 +75,25 @@ describe('Navbar', () => {
     expect(screen.getByRole('button', { name: 'References' })).toBeTruthy();
   });
 
-  it('exposes Database as a top-level navigation destination', () => {
+  it('exposes SweetMeta before Sweetness as a top-level navigation destination', () => {
     const onNavigate = vi.fn();
     render(<Navbar activeScreen={0} activeFeature={null} onNavigate={onNavigate} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Database' }));
+    const sweetMetaButton = screen.getByRole('button', { name: 'SweetMeta' });
+    const sweetnessButton = screen.getByRole('button', { name: 'Sweetness' });
+
+    expect(sweetMetaButton.compareDocumentPosition(sweetnessButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    fireEvent.click(sweetMetaButton);
     expect(onNavigate).toHaveBeenCalledWith(3);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sweetness' }));
+    fireEvent.click(sweetnessButton);
     expect(screen.queryByRole('button', { name: 'Sweet Database' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Database' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }));
+    const mobileSweetMetaButton = screen.getAllByRole('button', { name: 'SweetMeta' })[1];
+    fireEvent.click(mobileSweetMetaButton);
+    expect(onNavigate).toHaveBeenLastCalledWith(3);
   });
 });

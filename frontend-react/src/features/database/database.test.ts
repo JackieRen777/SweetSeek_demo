@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { CHEMICAL_SPACE } from './data/chemicalSpace';
 import { DATABASE_COMPOUNDS, DATABASE_METADATA, readable, tierCode } from './data/portalData';
 
-describe('Sweet Database release contract', () => {
+describe('SweetMeta release contract', () => {
   it('uses the 1,296-record source workbook as the sole compound master', () => {
     expect(DATABASE_COMPOUNDS).toHaveLength(1296);
     expect(DATABASE_METADATA.totalRecords).toBe(1296);
@@ -38,5 +39,23 @@ describe('Sweet Database release contract', () => {
     expect(tierCode('R3_dataset_supported')).toBe('R3');
     expect(readable('single_dataset_no_reference')).toBe('Single dataset no reference');
     expect(readable(null)).toBe('Not available');
+  });
+
+  it('maps every current record into a reproducible ECFP4 UMAP space', () => {
+    expect(CHEMICAL_SPACE.metadata.method).toBe('UMAP');
+    expect(CHEMICAL_SPACE.metadata.fingerprint).toContain('ECFP4');
+    expect(CHEMICAL_SPACE.metadata.distance).toBe('Tanimoto distance');
+    expect(CHEMICAL_SPACE.metadata.parameters.randomSeed).toBe(42);
+    expect(CHEMICAL_SPACE.points).toHaveLength(DATABASE_METADATA.totalRecords);
+    expect(CHEMICAL_SPACE.excluded).toHaveLength(0);
+    expect(CHEMICAL_SPACE.points.every((point) => point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1)).toBe(true);
+  });
+
+  it('assigns every mapped molecule to one of eight fingerprint-space clusters', () => {
+    const clusterIds = CHEMICAL_SPACE.metadata.clusters.map((cluster) => cluster.id);
+    expect(CHEMICAL_SPACE.metadata.clusterMethod).toContain('k-medoids');
+    expect(clusterIds).toEqual(['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8']);
+    expect(CHEMICAL_SPACE.metadata.clusters.reduce((total, cluster) => total + cluster.size, 0)).toBe(DATABASE_METADATA.totalRecords);
+    expect(CHEMICAL_SPACE.points.every((point) => clusterIds.includes(point.cluster))).toBe(true);
   });
 });

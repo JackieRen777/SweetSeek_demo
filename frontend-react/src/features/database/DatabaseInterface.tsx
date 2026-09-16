@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   AlertTriangle, ArrowLeft, ArrowRight, BarChart3, Beaker, BookOpen, ChevronDown,
   ChevronLeft, ChevronRight, CircleHelp, Database, Download, ExternalLink,
-  FileWarning, Filter, FlaskConical, Home, Library, LockKeyhole, Menu, Network,
+  FileWarning, Filter, FlaskConical, Home, Library, LockKeyhole, Menu,
   Search, ShieldCheck, TableProperties, X,
 } from 'lucide-react';
+import { CHEMICAL_SPACE, type ChemicalSpacePoint } from './data/chemicalSpace';
 import { DATABASE_COMPOUNDS, DATABASE_METADATA, formatNumber, readable, tierCode } from './data/portalData';
 import type { DatabaseCompound, DatabaseSection } from './types';
 import './database.css';
@@ -79,29 +80,42 @@ const DistributionBars = ({ data, total }: { data: Record<string, number>; total
 );
 
 const CompoundLandscape = ({ onSelect }: { onSelect: (id: string) => void }) => {
-  const points = useMemo(() => DATABASE_COMPOUNDS
-    .filter((compound) => compound.molecularWeight !== null)
-    .filter((_, index) => index % Math.max(1, Math.floor(DATABASE_COMPOUNDS.length / 220)) === 0)
-    .slice(0, 240), []);
-  const maxWeight = Math.max(...points.map((item) => Math.min(item.molecularWeight ?? 0, 1200)), 1);
-  const maxAssertions = Math.max(...points.map((item) => item.evidence.acceptedAssertions), 1);
+  const [hovered, setHovered] = useState<{ compound: DatabaseCompound; point: ChemicalSpacePoint } | null>(null);
+  const points = useMemo(() => {
+    const compoundsById = new Map(DATABASE_COMPOUNDS.map((compound) => [compound.id, compound]));
+    return CHEMICAL_SPACE.points.flatMap((point) => {
+      const compound = compoundsById.get(point.id);
+      return compound ? [{ point, compound }] : [];
+    });
+  }, []);
   return (
     <section className="sdb-landscape">
-      <div className="sdb-section-title"><div><span>Interactive data map</span><h2>Molecular-weight / evidence landscape</h2><p>Each point is a real workbook record. Position reflects molecular weight and accepted assertion count; color reflects release evidence tier.</p></div><Network /></div>
+      <div className="sdb-section-title"><div><span>Interactive chemical space</span><h2>ECFP4 structural similarity map</h2><p>Each point represents one molecule. Nearby points have similar ECFP4 fingerprints; colors represent deterministic fingerprint-space clusters.</p></div></div>
       <div className="sdb-landscape-canvas">
-        <svg viewBox="0 0 1000 430" role="img" aria-label="Compound evidence landscape">
-          <defs><pattern id="landscape-grid" width="100" height="70" patternUnits="userSpaceOnUse"><path d="M100 0H0V70" fill="none" stroke="#e7edf3" /></pattern></defs>
-          <rect x="62" y="22" width="910" height="350" fill="url(#landscape-grid)" />
-          <line x1="62" y1="372" x2="972" y2="372" className="sdb-axis" /><line x1="62" y1="22" x2="62" y2="372" className="sdb-axis" />
-          {points.map((compound) => {
-            const x = 72 + Math.min(compound.molecularWeight ?? 0, 1200) / maxWeight * 890;
-            const y = 360 - Math.log2(compound.evidence.acceptedAssertions + 1) / Math.log2(maxAssertions + 1) * 320;
-            return <circle key={compound.id} cx={x} cy={y} r={compound.review.required ? 6 : 4.5} className={`sdb-dot tier-${tierCode(compound.evidence.releaseTier).toLowerCase()}`} tabIndex={0} role="button" aria-label={`Open ${compound.name}`} onClick={() => onSelect(compound.id)} onKeyDown={(event) => event.key === 'Enter' && onSelect(compound.id)}><title>{compound.name} | MW {formatNumber(compound.molecularWeight)} | {compound.evidence.acceptedAssertions} assertions</title></circle>;
-          })}
-          <text x="517" y="414" textAnchor="middle" className="sdb-axis-label">Molecular weight (capped at 1,200 Da for display)</text>
-          <text x="18" y="197" transform="rotate(-90 18 197)" textAnchor="middle" className="sdb-axis-label">Accepted assertion count (log scale)</text>
-        </svg>
-        <div className="sdb-legend">{Object.keys(TIER_INFO).map((tier) => <span key={tier}><i className={`tier-${tier.toLowerCase()}`} />{tier}</span>)}</div>
+        <div className="sdb-space-stage">
+          <svg viewBox="0 0 1000 400" role="img" aria-label="ECFP4 UMAP structural similarity map">
+            <defs><pattern id="space-grid" width="92" height="72" patternUnits="userSpaceOnUse"><path d="M92 0H0V72" fill="none" stroke="#edf1f4" /></pattern></defs>
+            <rect x="44" y="20" width="924" height="330" rx="4" fill="url(#space-grid)" className="sdb-space-field" />
+            {points.map(({ point, compound }) => {
+              const x = 54 + point.x * 904;
+              const y = 340 - point.y * 310;
+              const show = () => setHovered({ compound, point });
+              return <circle key={compound.id} cx={x} cy={y} r={compound.review.required ? 2.25 : 1.7} className={`sdb-dot cluster-${point.cluster.toLowerCase()}`} tabIndex={0} role="button" aria-label={`Inspect ${compound.name}`} onMouseEnter={show} onMouseLeave={() => setHovered(null)} onFocus={show} onBlur={() => setHovered(null)} onClick={() => onSelect(compound.id)} onKeyDown={(event) => event.key === 'Enter' && onSelect(compound.id)} />;
+            })}
+            <text x="506" y="382" textAnchor="middle" className="sdb-axis-label">UMAP 1</text>
+            <text x="18" y="185" transform="rotate(-90 18 185)" textAnchor="middle" className="sdb-axis-label">UMAP 2</text>
+          </svg>
+          {hovered && <div className={`sdb-space-tooltip ${hovered.point.y > 0.72 ? 'below' : ''}`} role="status" style={{ left: `${17 + hovered.point.x * 66}%`, top: `${6 + (1 - hovered.point.y) * 78}%` }}>
+            <div className="sdb-space-tooltip-head"><MoleculeImage compound={hovered.compound} small /><span><strong>{hovered.compound.name}</strong><small>{hovered.compound.id}</small></span></div>
+            <dl><div><dt>Molecular formula</dt><dd>{hovered.compound.formula ?? 'Not available'}</dd></div><div><dt>Molecular weight</dt><dd>{formatNumber(hovered.compound.molecularWeight)} Da</dd></div><div><dt>Structural cluster</dt><dd>{hovered.point.cluster}</dd></div><div><dt>Evidence tier</dt><dd><TierBadge tier={hovered.compound.evidence.releaseTier} /></dd></div><div><dt>Assertions</dt><dd>{hovered.compound.evidence.acceptedAssertions}</dd></div></dl>
+            <small className="sdb-space-tooltip-action">Click to open record</small>
+          </div>}
+        </div>
+        <div className="sdb-space-footer">
+          <div className="sdb-legend">{CHEMICAL_SPACE.metadata.clusters.map((cluster) => <span key={cluster.id}><i className={`cluster-${cluster.id.toLowerCase()}`} /><b>{cluster.id}</b> {cluster.size.toLocaleString()} molecules</span>)}</div>
+          <p><span>{CHEMICAL_SPACE.metadata.mappedRecordCount.toLocaleString()} molecules mapped</span><span>ECFP4 · Tanimoto distance · k-medoids · UMAP</span></p>
+          <small>Proximity represents local structural similarity. UMAP axes are dimensionless and do not represent sweetness or a physical molecular property.</small>
+        </div>
       </div>
     </section>
   );
@@ -112,6 +126,12 @@ const HERO_MOLECULES = [
   { name: 'Aspartame', file: '/database-assets/aspartame.png' },
   { name: 'Stevioside', file: '/database-assets/stevioside.png' },
   { name: 'Thiophenesaccharin', file: '/database-assets/thiophenesaccharin.png' },
+];
+
+const EXAMPLE_COMPOUNDS = [
+  { name: 'Sucrose', id: 'CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N' },
+  { name: 'Glucose', id: 'CMP_GZCGUPFRVQAUEE-SLPGGIOYSA-N' },
+  { name: 'Aspartame', id: 'CMP_IAOZJIPTCAWIRG-QWRGUYRKSA-N' },
 ];
 
 const Overview = ({ onSection, onSelect, onSearch }: {
@@ -129,15 +149,15 @@ const Overview = ({ onSection, onSelect, onSearch }: {
     <section className="sdb-hero">
       <div className="sdb-hero-inner">
         <div className="sdb-hero-copy">
-          <h1>SweetDatabase</h1>
+          <h1>SweetMeta</h1>
           <p>Explore traceable identities, evidence readiness, and verified chemical properties across the evolving landscape of sweet entities.</p>
           <form className="sdb-hero-search" onSubmit={submitSearch}>
-            <label className="sdb-search-input"><Search size={20} /><input aria-label="Search SweetDatabase" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, stable ID, formula, InChIKey, or PubChem CID" /></label>
+            <label className="sdb-search-input"><Search size={20} /><input aria-label="Search SweetMeta" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, stable ID, formula, InChIKey, or PubChem CID" /></label>
             <label className="sdb-hero-select"><span>Entity</span><select aria-label="Entity type" defaultValue="all"><option value="all">All entities</option></select><ChevronDown size={15} /></label>
             <label className="sdb-hero-select"><span>Evidence</span><select aria-label="Homepage evidence tier" value={tier} onChange={(event) => setTier(event.target.value)}><option value="all">All tiers</option>{Object.keys(TIER_INFO).map((item) => <option value={item} key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
             <button type="submit" aria-label="Search database"><Search size={18} /><span>Search</span></button>
           </form>
-          <div className="sdb-hero-links"><span>Explore by:</span><button onClick={() => onSearch('', 'R1')}>high-readiness evidence</button><button onClick={() => onSection('evidence')}>manual review status</button><button onClick={() => onSection('statistics')}>release coverage</button></div>
+          <div className="sdb-hero-links"><span>Example:</span>{EXAMPLE_COMPOUNDS.map((example, index) => <span key={example.id}><button onClick={() => onSelect(example.id)}>{example.name}</button>{index < EXAMPLE_COMPOUNDS.length - 1 && ','}</span>)}</div>
         </div>
         <div className="sdb-molecule-stage" aria-label="Verified structures represented in the current release">
           {HERO_MOLECULES.map((molecule, index) => <figure key={molecule.name} className={`molecule-${index + 1}`}><img src={molecule.file} alt={`${molecule.name} structure`} /><figcaption>{molecule.name}</figcaption></figure>)}
@@ -227,8 +247,8 @@ const Statistics = () => {
 
 const Downloads = () => <div className="sdb-page"><header className="sdb-page-heading compact"><div><span className="sdb-kicker">Data access</span><h1>Downloads</h1><p>Release metadata is visible, while public file downloads are currently disabled by policy.</p></div></header><div className="sdb-download-list"><article><Database /><span><strong>Source workbook</strong><small>{DATABASE_METADATA.sourceWorkbook} · {DATABASE_METADATA.totalRecords} records</small></span><button disabled><LockKeyhole size={15} /> Restricted</button></article><article><FileWarning /><span><strong>Data quality report</strong><small>Missing fields, review queue, and enrichment coverage</small></span><button disabled><LockKeyhole size={15} /> Restricted</button></article><article><Download /><span><strong>Filtered compound export</strong><small>CSV export for current search results</small></span><button disabled><LockKeyhole size={15} /> Restricted</button></article></div><div className="sdb-policy-note"><LockKeyhole /><div><strong>Download access is not enabled</strong><p>This state is intentional and can be changed later without altering the database schema or compound portal.</p></div></div></div>;
 
-const DataGuide = () => <div className="sdb-page"><header className="sdb-page-heading compact"><div><span className="sdb-kicker">Data guide</span><h1>How to read SweetDatabase</h1><p>Definitions, provenance, and release boundaries for interpreting the current portal responsibly.</p></div></header>
-  <section className="sdb-guide-intro"><Database /><div><strong>Current release scope</strong><p>The current workbook contains {DATABASE_METADATA.totalRecords.toLocaleString()} small-molecule records. SweetDatabase is the product name, not an entity-type restriction: the schema is designed to add sweet proteins and other entity classes in later releases.</p></div></section>
+const DataGuide = () => <div className="sdb-page"><header className="sdb-page-heading compact"><div><span className="sdb-kicker">Data guide</span><h1>How to read SweetMeta</h1><p>Definitions, provenance, and release boundaries for interpreting the current portal responsibly.</p></div></header>
+  <section className="sdb-guide-intro"><Database /><div><strong>Current release scope</strong><p>The current workbook contains {DATABASE_METADATA.totalRecords.toLocaleString()} small-molecule records. SweetMeta is the product name, not an entity-type restriction: the schema is designed to add sweet proteins and other entity classes in later releases.</p></div></section>
   <div className="sdb-guide-grid">
     <section><div className="sdb-section-title"><div><span>Core fields</span><h2>Available now</h2></div></div><dl className="sdb-guide-list"><div><dt>Identity</dt><dd>Stable ID, preferred name, InChIKey, canonical tautomer key</dd></div><div><dt>Structure</dt><dd>Formula, molecular weight, charge, heavy atoms, SMILES</dd></div><div><dt>Evidence</dt><dd>Release tier, evidence gap, priority score, accepted assertion count</dd></div><div><dt>External enrichment</dt><dd>PubChem CID and properties retained separately from source values</dd></div><div><dt>Quality control</dt><dd>Identity status, manual-review flag, and review note</dd></div></dl></section>
     <section><div className="sdb-section-title"><div><span>Release tiers</span><h2>R1–R4 meaning</h2></div></div><div className="sdb-guide-tiers">{Object.entries(TIER_INFO).map(([tier, info]) => <div key={tier}><TierBadge tier={tier} /><span><strong>{info.title}</strong><small>{info.detail}</small></span></div>)}</div></section>
@@ -271,8 +291,8 @@ const DatabaseInterface = ({ onClose }: { onClose?: () => void }) => {
   const activeLabel = compound ? 'Entity record' : SECTIONS.find((item) => item.id === section)?.label;
   return <div className="sdb-shell">
     <header className="sdb-product-header">
-      <button className="sdb-product-brand" onClick={() => navigate('overview')} aria-label="SweetDatabase home"><span className="sdb-brand-mark"><Database /></span><span><strong>SweetDatabase</strong><small>Evidence-led sweet knowledgebase</small></span></button>
-      <nav className={menuOpen ? 'open' : ''} aria-label="SweetDatabase navigation">{SECTIONS.map(({ id, label }) => <button key={id} className={section === id && !compound ? 'active' : ''} onClick={() => navigate(id)}>{label}{id === 'downloads' && <LockKeyhole className="sdb-nav-lock" />}</button>)}</nav>
+      <button className="sdb-product-brand" onClick={() => navigate('overview')} aria-label="SweetMeta home"><span className="sdb-brand-mark"><Database /></span><span><strong>SweetMeta</strong><small>Evidence-led sweet knowledgebase</small></span></button>
+      <nav className={menuOpen ? 'open' : ''} aria-label="SweetMeta navigation">{SECTIONS.map(({ id, label }) => <button key={id} className={section === id && !compound ? 'active' : ''} onClick={() => navigate(id)}>{label}{id === 'downloads' && <LockKeyhole className="sdb-nav-lock" />}</button>)}</nav>
       <div className="sdb-header-actions"><button className="sdb-return" onClick={leaveDatabase}><ArrowLeft /> SweetSeek</button><button className="sdb-menu" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? 'Close database menu' : 'Open database menu'}>{menuOpen ? <X /> : <Menu />}</button></div>
     </header>
     <div className="sdb-mobile-context"><span>{activeLabel}</span><small>{DATABASE_METADATA.totalRecords.toLocaleString()} records</small></div>

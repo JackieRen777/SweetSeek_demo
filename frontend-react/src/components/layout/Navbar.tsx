@@ -56,7 +56,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   // References remains a standalone destination.
   const referencesItem = { label: 'References', index: 4, feature: 'references' };
-  const databaseItem = { label: 'Sweet Database', index: 3, feature: 'database' };
+  const databaseItem = { label: 'SweetMeta', index: 3, feature: 'database' };
 
   const isActive = (item: { feature: string | null }) => {
     if (activeFeature) {
@@ -136,6 +136,19 @@ const Navbar: React.FC<NavbarProps> = ({
             Home
           </button>
 
+          <button
+            onClick={() => handleItemClick(databaseItem)}
+            className={`
+              px-5 py-2.5 rounded-full text-base font-medium transition-all duration-300
+              ${isActive(databaseItem)
+                ? 'text-[var(--color-primary)] bg-blue-50/50'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-50/50'
+              }
+            `}
+          >
+            {databaseItem.label}
+          </button>
+
           {/* Category Dropdowns */}
           {categories.map((category) => {
             const isOpen = openCategory === category.label;
@@ -191,19 +204,6 @@ const Navbar: React.FC<NavbarProps> = ({
             );
           })}
 
-          <button
-            onClick={() => handleItemClick(databaseItem)}
-            className={`
-              px-5 py-2.5 rounded-full text-base font-medium transition-all duration-300
-              ${isActive(databaseItem)
-                ? 'text-[var(--color-primary)] bg-blue-50/50'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-50/50'
-              }
-            `}
-          >
-            Database
-          </button>
-
           {referencesNavEnabled && (
             <button
               onClick={() => handleItemClick(referencesItem)}
@@ -250,6 +250,15 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               Home
             </button>
+            <button
+              type="button"
+              onClick={() => handleItemClick(databaseItem)}
+              className={`mt-2 w-full border-t border-slate-100 px-3 py-3 text-left text-sm font-medium ${
+                isActive(databaseItem) ? 'bg-blue-50 text-[var(--color-primary)]' : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {databaseItem.label}
+            </button>
             {categories.map((category) => (
               <section key={category.label} className="mt-2 border-t border-slate-100 pt-2">
                 <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">{category.label}</div>
@@ -267,15 +276,6 @@ const Navbar: React.FC<NavbarProps> = ({
                 ))}
               </section>
             ))}
-            <button
-              type="button"
-              onClick={() => handleItemClick(databaseItem)}
-              className={`mt-2 w-full border-t border-slate-100 px-3 py-3 text-left text-sm font-medium ${
-                isActive(databaseItem) ? 'bg-blue-50 text-[var(--color-primary)]' : 'text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              Sweet Database
-            </button>
             {referencesNavEnabled && (
               <button
                 type="button"

@@ -188,7 +188,7 @@ function App() {
             </ErrorBoundary>
           </div>
 
-          {/* Section 4: Sweet Database */}
+          {/* Section 4: SweetMeta */}
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
             <ErrorBoundary name="DatabaseSection">
               <Database onTryNow={() => handleOpenFeature('database')} />
