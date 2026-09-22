@@ -57,6 +57,9 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "sha256sum -c -" in deploy
     assert 'pip install --index-url "$PYPI_INDEX" --prefer-binary' in deploy
     assert 'pip install --index-url "$PYPI_FALLBACK_INDEX" --prefer-binary' in deploy
+    assert '${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable}' in deploy
+    assert '--setenv=SWEETSEEK_ALLOW_LLM_UNAVAILABLE=' in deploy
+    assert '${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable}' in observe
     assert deploy.index('preflight_json="$(preflight)"') < deploy.index('mkdir -p "$BASE/incoming"')
     assert "legacy Gunicorn did not stop within 30 seconds" in deploy
     assert "sleep 1800" in observe

@@ -106,13 +106,31 @@ def run_suite(questions_per_domain: int, base_url: str = DEFAULT_BASE_URL) -> Di
     }
 
 
+def is_external_llm_billing_failure(result: Dict[str, Any]) -> bool:
+    error = str(result.get("error") or "").lower()
+    return (
+        result.get("status_code") == 200
+        and int(result.get("references") or 0) > 0
+        and "402" in error
+        and "balance is insufficient" in error
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--questions-per-domain", type=int, choices=(1, 2, 3), default=1)
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--allow-llm-unavailable", action="store_true")
     args = parser.parse_args()
     report = run_suite(args.questions_per_domain, base_url=args.base_url)
+    if args.allow_llm_unavailable and all(
+        row.get("done") and not row.get("error") or is_external_llm_billing_failure(row)
+        for row in report["results"]
+    ):
+        report["success"] = True
+        report["degraded"] = True
+        report["degraded_reason"] = "external_llm_billing_unavailable"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

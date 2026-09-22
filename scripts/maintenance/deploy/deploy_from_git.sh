@@ -361,7 +361,8 @@ wait_domain encapsulation /api/encapsulation/prewarm
 wait_domain proteoglycan /api/proteoglycan/prewarm
 curl -fsS http://127.0.0.1:5002/api/health >/dev/null
 "$VENV/bin/python" "$RELEASE/scripts/verify_rag_runtime.py" --base-url http://127.0.0.1:5002 \
-  --questions-per-domain 1 --output "$REPORT/canary-rag.json" >/dev/null
+  --questions-per-domain 1 ${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable} \
+  --output "$REPORT/canary-rag.json" >/dev/null
 "$VENV/bin/python" "$RELEASE/scripts/verify_md_builder_runtime.py" --base-url http://127.0.0.1:5002 \
   --output "$REPORT/canary-md-builder.json" >/dev/null
 cleanup_canary
@@ -416,12 +417,14 @@ wait_production_domain encapsulation /api/encapsulation/prewarm
 wait_production_domain proteoglycan /api/proteoglycan/prewarm
 curl -fsS http://127.0.0.1:5001/api/health >/dev/null
 "$VENV/bin/python" "$RELEASE/scripts/verify_rag_runtime.py" --questions-per-domain 1 \
+  ${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable} \
   --output "$REPORT/activation-rag.json" >/dev/null
 "$VENV/bin/python" "$RELEASE/scripts/verify_md_builder_runtime.py" \
   --output "$REPORT/activation-md-builder.json" >/dev/null
 
 printf '%s\n' "$COMMIT" > "$BASE/state/active-release"
 systemd-run --unit="sweetseek-observe-${COMMIT:0:12}" --collect \
+  --setenv=SWEETSEEK_ALLOW_LLM_UNAVAILABLE="${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:-}" \
   /bin/bash "$RELEASE/scripts/maintenance/deploy/observe_git_release.sh" "$COMMIT"
 trap - ERR INT TERM
 echo "DEPLOYMENT_ACTIVATED=$COMMIT"

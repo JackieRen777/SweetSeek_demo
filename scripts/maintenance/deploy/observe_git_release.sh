@@ -9,7 +9,8 @@ mkdir -p "$report"
 
 run_questions() {
   "$release/venv/bin/python" "$release/scripts/verify_rag_runtime.py" \
-    --questions-per-domain 1 --output "$report/rag-$1.json" >/dev/null
+    --questions-per-domain 1 ${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable} \
+    --output "$report/rag-$1.json" >/dev/null
 }
 
 run_builder() {
