@@ -91,8 +91,8 @@ propcache==0.5.2
 py-serializable==1.1.2
 pydantic==2.13.4
 pydantic_core==2.46.4
-PyMuPDF==1.26.5
 Pygments==2.21.0
+PyMuPDF==1.26.5
 pyparsing==3.3.2
 pypdf==6.16.1
 pytest==8.0.0
