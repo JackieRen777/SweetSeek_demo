@@ -190,8 +190,10 @@ VENV="$BASE/venvs/web-${requirements_hash}-py311"
 if [[ ! -f "$VENV/.install-complete" ]]; then
   [[ ! -e "$VENV" ]] || rm -rf "$VENV"
   python3.11 -m venv "$VENV"
-  PYPI_INDEX="${SWEETSEEK_PYPI_INDEX:-https://pypi.org/simple}"
-  "$VENV/bin/python" -m pip install --index-url "$PYPI_INDEX" --upgrade pip wheel
+  PYPI_INDEX="${SWEETSEEK_PYPI_INDEX:-https://mirrors.aliyun.com/pypi/simple}"
+  PYPI_FALLBACK_INDEX="${SWEETSEEK_PYPI_FALLBACK_INDEX:-https://pypi.org/simple}"
+  "$VENV/bin/python" -m pip install --index-url "$PYPI_INDEX" --upgrade pip wheel || \
+    "$VENV/bin/python" -m pip install --index-url "$PYPI_FALLBACK_INDEX" --upgrade pip wheel
   torch_spec="$(grep -E '^torch==' "$INCOMING/requirements-resolved-py311-linux.txt" | head -n 1)"
   [[ -n "$torch_spec" ]]
   TORCH_INDEX="${SWEETSEEK_TORCH_INDEX:-https://download.pytorch.org/whl/cpu}"
@@ -216,7 +218,9 @@ if [[ ! -f "$VENV/.install-complete" ]]; then
   fi
   grep -vE '^torch==' "$INCOMING/requirements-resolved-py311-linux.txt" > "$INCOMING/requirements-no-torch.txt"
   "$VENV/bin/python" -m pip install --index-url "$PYPI_INDEX" --prefer-binary \
-    -r "$INCOMING/requirements-no-torch.txt"
+    -r "$INCOMING/requirements-no-torch.txt" || \
+    "$VENV/bin/python" -m pip install --index-url "$PYPI_FALLBACK_INDEX" --prefer-binary \
+      -r "$INCOMING/requirements-no-torch.txt"
   "$VENV/bin/python" -m pip check
   "$VENV/bin/python" -c 'import faiss, flask, torch; assert torch.version.cuda is None'
   touch "$VENV/.install-complete"

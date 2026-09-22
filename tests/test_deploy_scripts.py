@@ -47,13 +47,16 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "MemoryMax=2600M" in deploy
     assert "MemoryHigh=1600M" in deploy
     assert "MemoryMax=2000M" in deploy
-    assert 'PYPI_INDEX="${SWEETSEEK_PYPI_INDEX:-https://pypi.org/simple}"' in deploy
+    assert 'PYPI_INDEX="${SWEETSEEK_PYPI_INDEX:-https://mirrors.aliyun.com/pypi/simple}"' in deploy
+    assert 'PYPI_FALLBACK_INDEX="${SWEETSEEK_PYPI_FALLBACK_INDEX:-https://pypi.org/simple}"' in deploy
     assert 'pip install --index-url "$PYPI_INDEX" --upgrade pip wheel' in deploy
+    assert 'pip install --index-url "$PYPI_FALLBACK_INDEX" --upgrade pip wheel' in deploy
     assert 'TORCH_INDEX="${SWEETSEEK_TORCH_INDEX:-https://download.pytorch.org/whl/cpu}"' in deploy
     assert 'TORCH_MIRROR="${SWEETSEEK_TORCH_MIRROR:-https://mirrors.aliyun.com/pytorch-wheels/cpu}"' in deploy
     assert 'torch_sha256="6746dbcbeb526eb61330b76b41ff1b4eb848951103a892eeb080dfa2b264667b"' in deploy
     assert "sha256sum -c -" in deploy
     assert 'pip install --index-url "$PYPI_INDEX" --prefer-binary' in deploy
+    assert 'pip install --index-url "$PYPI_FALLBACK_INDEX" --prefer-binary' in deploy
     assert deploy.index('preflight_json="$(preflight)"') < deploy.index('mkdir -p "$BASE/incoming"')
     assert "legacy Gunicorn did not stop within 30 seconds" in deploy
     assert "sleep 1800" in observe
