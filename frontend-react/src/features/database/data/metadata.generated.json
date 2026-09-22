@@ -1,9 +1,9 @@
 {
-  "title": "SweetSeek Sweet Compounds Database",
-  "version": "sweet_database_source_20260910",
-  "sourceWorkbook": "sweet_database_source_20260910.xlsx",
+  "title": "SweetMeta",
+  "version": "sweet_database_source_20260910_chembl_enriched",
+  "sourceWorkbook": "sweet_database_source_20260910_chembl_enriched.xlsx",
   "sourceSheet": "current_sweet_compounds_1296",
-  "generatedAt": "2026-09-10T12:39:23.302Z",
+  "generatedAt": "2026-09-16T09:49:25.509Z",
   "totalRecords": 1296,
   "currentEntityCoverage": {
     "small-molecule": 1296,
@@ -26,5 +26,6 @@
   "reviewRequired": 170,
   "acceptedAssertions": 2068,
   "pubchemMatched": 878,
-  "pubchemVerified": 877
+  "pubchemVerified": 877,
+  "chemblMatched": 143
 }

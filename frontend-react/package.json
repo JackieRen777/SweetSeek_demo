@@ -9,8 +9,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview",
-    "data:build": "node scripts/build-sweet-database.mjs && node scripts/generate-chemical-space.mjs",
-    "data:space": "node scripts/generate-chemical-space.mjs"
+    "data:build": "node scripts/build-sweet-database.mjs && node scripts/generate-structure-images.mjs && node scripts/generate-chemical-space.mjs && node scripts/generate-chemical-space-3d.mjs",
+    "data:space": "node scripts/generate-chemical-space.mjs && node scripts/generate-chemical-space-3d.mjs",
+    "data:structures": "node scripts/generate-structure-images.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

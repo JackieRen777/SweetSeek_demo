@@ -22,6 +22,9 @@ interface MoleculeModel {
   bonds: Bond3D[];
 }
 
+const modelCache = new Map<number, Promise<MoleculeModel>>();
+const cacheKey = (cid: number) => `sweetmeta:3d:${cid}`;
+
 const ELEMENTS: Record<number, { color: string; radius: number }> = {
   1: { color: '#f1f5f9', radius: 0.23 },
   6: { color: '#3f4b52', radius: 0.38 },
@@ -72,6 +75,52 @@ const normalizeRecord = (payload: unknown): MoleculeModel => {
   return { atoms, bonds };
 };
 
+const loadMolecule3D = (cid: number, smiles: string): Promise<MoleculeModel> => {
+  const cached = modelCache.get(cid);
+  if (cached) return cached;
+
+  const request = (async () => {
+    try {
+      const stored = sessionStorage.getItem(cacheKey(cid));
+      if (stored) return JSON.parse(stored) as MoleculeModel;
+    } catch {
+      // Storage can be unavailable in privacy-restricted browser contexts.
+    }
+
+    const endpoints = [
+      `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/record/JSON?record_type=3d`,
+      `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smiles)}/record/JSON?record_type=3d`,
+    ];
+    for (const endpoint of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 8_000);
+        const response = await fetch(endpoint, { signal: controller.signal });
+        window.clearTimeout(timeout);
+        if (!response.ok) continue;
+        const model = normalizeRecord(await response.json());
+        try {
+          sessionStorage.setItem(cacheKey(cid), JSON.stringify(model));
+        } catch {
+          // The in-memory cache still avoids repeat requests in this page session.
+        }
+        return model;
+      } catch {
+        // Try the next exact-identity endpoint.
+      }
+    }
+    throw new Error('No usable 3D conformer returned');
+  })();
+
+  modelCache.set(cid, request);
+  request.catch(() => modelCache.delete(cid));
+  return request;
+};
+
+export const preloadMolecule3D = (cid: number, smiles: string) => {
+  void loadMolecule3D(cid, smiles).catch(() => undefined);
+};
+
 const MolecularScene = ({ model }: { model: MoleculeModel }) => {
   const extent = useMemo(() => Math.max(3, ...model.atoms.map((atom) => Math.hypot(...atom.position))), [model]);
   const sceneScale = Math.min(1, 3.2 / extent);
@@ -98,26 +147,11 @@ const MolecularScene = ({ model }: { model: MoleculeModel }) => {
 export default function Molecule3DViewer({ cid, name, smiles }: { cid: number; name: string; smiles: string }) {
   const [state, setState] = useState<{ status: 'loading' | 'ready' | 'error'; model: MoleculeModel | null }>({ status: 'loading', model: null });
   useEffect(() => {
-    const controller = new AbortController();
-    const endpoints = [
-      `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encodeURIComponent(smiles)}/record/JSON?record_type=3d`,
-      `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/record/JSON?record_type=3d`,
-    ];
-    const load = async () => {
-      for (const endpoint of endpoints) {
-        try {
-          const response = await fetch(endpoint, { signal: controller.signal });
-          if (!response.ok) continue;
-          setState({ status: 'ready', model: normalizeRecord(await response.json()) });
-          return;
-        } catch (error: unknown) {
-          if ((error as Error).name === 'AbortError') return;
-        }
-      }
-      setState({ status: 'error', model: null });
-    };
-    void load();
-    return () => controller.abort();
+    let active = true;
+    void loadMolecule3D(cid, smiles)
+      .then((model) => { if (active) setState({ status: 'ready', model }); })
+      .catch(() => { if (active) setState({ status: 'error', model: null }); });
+    return () => { active = false; };
   }, [cid, smiles]);
   if (state.status === 'loading') return <div className="db-structure-message"><strong>Loading 3D conformer</strong><span>PubChem CID {cid}</span></div>;
   if (state.status === 'error' || !state.model) return <div className="db-structure-message"><strong>3D conformer unavailable</strong><span>No usable PubChem 3D record was returned for {name}.</span></div>;

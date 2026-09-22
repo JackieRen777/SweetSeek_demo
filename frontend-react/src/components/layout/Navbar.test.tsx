@@ -75,14 +75,14 @@ describe('Navbar', () => {
     expect(screen.getByRole('button', { name: 'References' })).toBeTruthy();
   });
 
-  it('exposes SweetMeta before Sweetness as a top-level navigation destination', () => {
+  it('exposes Sweetness before SweetMeta as a top-level navigation destination', () => {
     const onNavigate = vi.fn();
     render(<Navbar activeScreen={0} activeFeature={null} onNavigate={onNavigate} />);
 
     const sweetMetaButton = screen.getByRole('button', { name: 'SweetMeta' });
     const sweetnessButton = screen.getByRole('button', { name: 'Sweetness' });
 
-    expect(sweetMetaButton.compareDocumentPosition(sweetnessButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(sweetnessButton.compareDocumentPosition(sweetMetaButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     fireEvent.click(sweetMetaButton);
     expect(onNavigate).toHaveBeenCalledWith(3);
@@ -93,6 +93,8 @@ describe('Navbar', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }));
     const mobileSweetMetaButton = screen.getAllByRole('button', { name: 'SweetMeta' })[1];
+    const mobileSweetnessLabel = screen.getAllByText('Sweetness')[1];
+    expect(mobileSweetnessLabel.compareDocumentPosition(mobileSweetMetaButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(mobileSweetMetaButton);
     expect(onNavigate).toHaveBeenLastCalledWith(3);
   });

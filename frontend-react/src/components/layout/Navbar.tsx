@@ -57,6 +57,7 @@ const Navbar: React.FC<NavbarProps> = ({
   // References remains a standalone destination.
   const referencesItem = { label: 'References', index: 4, feature: 'references' };
   const databaseItem = { label: 'SweetMeta', index: 3, feature: 'database' };
+  const [sweetnessCategory, ...remainingCategories] = categories;
 
   const isActive = (item: { feature: string | null }) => {
     if (activeFeature) {
@@ -77,6 +78,59 @@ const Navbar: React.FC<NavbarProps> = ({
     onNavigate(item.index);
     setOpenCategory(null); // Close drawer after selection
     setMobileMenuOpen(false);
+  };
+
+  const renderDesktopCategory = (category: NavCategory) => {
+    const isOpen = openCategory === category.label;
+    const active = isCategoryActive(category);
+
+    return (
+      <div key={category.label} className="relative">
+        <button
+          onClick={() => handleCategoryClick(category.label)}
+          className={`
+            flex items-center gap-1 px-5 py-2.5 rounded-full text-base font-medium transition-all duration-300
+            ${active
+              ? 'text-[var(--color-primary)] bg-blue-50/50'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-50/50'
+            }
+          `}
+        >
+          {category.label}
+          <ChevronDown
+            className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden min-w-[200px] z-[120]"
+            >
+              {category.items.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => handleItemClick(item)}
+                  className={`
+                    w-full text-left px-4 py-3 text-sm font-medium transition-colors
+                    ${isActive(item)
+                      ? 'bg-blue-50 text-[var(--color-primary)]'
+                      : 'text-slate-700 hover:bg-slate-50'
+                    }
+                  `}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
   };
 
   return (
@@ -136,6 +190,8 @@ const Navbar: React.FC<NavbarProps> = ({
             Home
           </button>
 
+          {renderDesktopCategory(sweetnessCategory)}
+
           <button
             onClick={() => handleItemClick(databaseItem)}
             className={`
@@ -149,60 +205,7 @@ const Navbar: React.FC<NavbarProps> = ({
             {databaseItem.label}
           </button>
 
-          {/* Category Dropdowns */}
-          {categories.map((category) => {
-            const isOpen = openCategory === category.label;
-            const active = isCategoryActive(category);
-
-            return (
-              <div key={category.label} className="relative">
-                <button
-                  onClick={() => handleCategoryClick(category.label)}
-                  className={`
-                    flex items-center gap-1 px-5 py-2.5 rounded-full text-base font-medium transition-all duration-300
-                    ${active
-                      ? 'text-[var(--color-primary)] bg-blue-50/50'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-50/50'
-                    }
-                  `}
-                >
-                  {category.label}
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {/* Dropdown Drawer */}
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden min-w-[200px] z-[120]"
-                    >
-                      {category.items.map((item) => (
-                        <button
-                          key={item.label}
-                          onClick={() => handleItemClick(item)}
-                          className={`
-                            w-full text-left px-4 py-3 text-sm font-medium transition-colors
-                            ${isActive(item)
-                              ? 'bg-blue-50 text-[var(--color-primary)]'
-                              : 'text-slate-700 hover:bg-slate-50'
-                            }
-                          `}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+          {remainingCategories.map(renderDesktopCategory)}
 
           {referencesNavEnabled && (
             <button
@@ -250,6 +253,23 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               Home
             </button>
+            {[sweetnessCategory].map((category) => (
+              <section key={category.label} className="mt-2 border-t border-slate-100 pt-2">
+                <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">{category.label}</div>
+                {category.items.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => handleItemClick(item)}
+                    className={`w-full rounded-md px-3 py-2.5 text-left text-sm font-medium ${
+                      isActive(item) ? 'bg-blue-50 text-[var(--color-primary)]' : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </section>
+            ))}
             <button
               type="button"
               onClick={() => handleItemClick(databaseItem)}
@@ -259,7 +279,7 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               {databaseItem.label}
             </button>
-            {categories.map((category) => (
+            {remainingCategories.map((category) => (
               <section key={category.label} className="mt-2 border-t border-slate-100 pt-2">
                 <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">{category.label}</div>
                 {category.items.map((item) => (

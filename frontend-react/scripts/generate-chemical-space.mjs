@@ -168,6 +168,17 @@ const normalizeAxis = (axis) => {
 };
 const xs = normalizeAxis(0);
 const ys = normalizeAxis(1);
+const neighbors = Object.fromEntries(included.map((record, index) => [
+  record.id,
+  Array.from({ length: recordCount }, (_, neighborIndex) => neighborIndex)
+    .filter((neighborIndex) => neighborIndex !== index)
+    .map((neighborIndex) => ({
+      id: included[neighborIndex].id,
+      similarity: Number((1 - distanceAt(index, neighborIndex)).toFixed(4)),
+    }))
+    .sort((left, right) => right.similarity - left.similarity || left.id.localeCompare(right.id))
+    .slice(0, 6),
+]));
 
 const output = {
   metadata: {
@@ -188,6 +199,7 @@ const output = {
     y: Number(ys[index].toFixed(6)),
     cluster: clusterIdByOriginalIndex.get(assignments[index]),
   })),
+  neighbors,
   excluded,
 };
 

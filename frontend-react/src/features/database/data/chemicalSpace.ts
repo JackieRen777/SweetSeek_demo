@@ -32,6 +32,7 @@ export const CHEMICAL_SPACE = chemicalSpace as {
     generatedAt: string;
   };
   points: ChemicalSpacePoint[];
+  neighbors: Record<string, Array<{ id: string; similarity: number }>>;
   excluded: Array<{ id: string; name: string; reason: string }>;
 };
 

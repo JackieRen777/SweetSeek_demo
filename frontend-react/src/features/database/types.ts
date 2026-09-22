@@ -63,7 +63,7 @@ export interface SimilarCompound {
   sharedProperties: number;
 }
 
-export type DatabaseSection = 'overview' | 'compounds' | 'evidence' | 'literature' | 'statistics' | 'downloads' | 'guide';
+export type DatabaseSection = 'overview' | 'compounds' | 'literature' | 'statistics' | 'downloads';
 
 export interface PubChemValidation {
   inchiKeyMatch: boolean;
@@ -122,6 +122,13 @@ export interface DatabaseCompound {
     note: string | null;
   };
   pubchem: PubChemEnrichment | null;
+  chembl: {
+    id: string;
+    matchStatus: 'matched';
+    sourceUrl: string;
+    retrievedAt: string;
+    matchMethod: 'exact_full_inchikey';
+  } | null;
 }
 
 export interface DatabaseMetadata {
@@ -138,4 +145,5 @@ export interface DatabaseMetadata {
   acceptedAssertions: number;
   pubchemMatched: number;
   pubchemVerified: number;
+  chemblMatched: number;
 }

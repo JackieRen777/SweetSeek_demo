@@ -115,6 +115,10 @@ class Config:
     """Base configuration."""
     # Base Paths
     BASE_DIR = Path(__file__).resolve().parent
+    SWEETMETA_DB_PATH = Path(os.getenv(
+        "SWEETMETA_DB_PATH",
+        str(BASE_DIR / "outputs" / "sweetmeta-literature-rescan" / "SweetDatabase_v1.0.6_20260921.sqlite"),
+    )).expanduser()
     _SWEETNESS_PATHS = get_domain_paths("sweetness")
     METADATA_PATH = get_runtime_metadata_path("sweetness")
     LOG_DIR = Path(os.getenv("LOG_DIR", str(BASE_DIR / "logs"))).expanduser()

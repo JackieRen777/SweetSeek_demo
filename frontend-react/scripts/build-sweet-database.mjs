@@ -33,6 +33,9 @@ const isoDate = new Date().toISOString();
 const text = (value) => value === null || value === undefined || value === '' ? null : String(value);
 const number = (value) => value === null || value === undefined || value === '' || !Number.isFinite(Number(value)) ? null : Number(value);
 const formulaKey = (value) => text(value)?.replace(/\s+/g, '') ?? null;
+const dateText = (value) => typeof value === 'number'
+  ? new Date(Date.UTC(1899, 11, 30) + value * 86_400_000).toISOString()
+  : text(value);
 
 const compounds = sourceRows.map((row) => {
   const inchiKey = text(row.parent_inchikey);
@@ -50,6 +53,7 @@ const compounds = sourceRows.map((row) => {
   const verified = Boolean(validation?.inchiKeyMatch && validation?.formulaMatch
     && validation.molecularWeightDelta !== null && validation.molecularWeightDelta <= 0.1
     && validation.heavyAtomMatch !== false);
+  const chemblId = text(row.chembl_id);
 
   return {
     id: text(row.compound_id),
@@ -99,6 +103,13 @@ const compounds = sourceRows.map((row) => {
       matchStatus: verified ? 'verified' : 'matched-with-discrepancy',
       validation,
     } : null,
+    chembl: chemblId && text(row.chembl_match_status) === 'matched' ? {
+      id: chemblId,
+      matchStatus: 'matched',
+      sourceUrl: text(row.chembl_source_url) ?? `https://www.ebi.ac.uk/chembl/explore/compound/${chemblId}`,
+      retrievedAt: dateText(row.chembl_retrieved_at) ?? isoDate,
+      matchMethod: 'exact_full_inchikey',
+    } : null,
   };
 });
 
@@ -111,9 +122,10 @@ const missingIds = (getter) => compounds.filter((item) => getter(item) === null)
 const reviewIds = compounds.filter((item) => item.review.required).map((item) => item.id);
 const pubchemMatched = compounds.filter((item) => item.pubchem).length;
 const pubchemVerified = compounds.filter((item) => item.pubchem?.matchStatus === 'verified').length;
+const chemblMatched = compounds.filter((item) => item.chembl).length;
 
 const metadata = {
-  title: 'SweetSeek Sweet Compounds Database',
+  title: 'SweetMeta',
   version: path.basename(workbookPath, path.extname(workbookPath)),
   sourceWorkbook: path.basename(workbookPath),
   sourceSheet: sheetName,
@@ -126,6 +138,7 @@ const metadata = {
   acceptedAssertions: compounds.reduce((sum, item) => sum + item.evidence.acceptedAssertions, 0),
   pubchemMatched,
   pubchemVerified,
+  chemblMatched,
 };
 
 const quality = {
@@ -134,6 +147,7 @@ const quality = {
     canonicalTautomerInchiKey: missingIds((item) => item.canonicalTautomerInchiKey),
     heavyAtomCount: missingIds((item) => item.heavyAtomCount),
     pubchemMatch: missingIds((item) => item.pubchem),
+    chemblMatch: missingIds((item) => item.chembl),
     quantitativeSweetness: compounds.map((item) => item.id),
     evidenceRows: compounds.map((item) => item.id),
     literatureLinks: compounds.map((item) => item.id),
@@ -150,4 +164,4 @@ fs.mkdirSync(outputDir, { recursive: true });
 fs.writeFileSync(path.join(outputDir, 'database.generated.json'), JSON.stringify({ metadata, compounds }));
 fs.writeFileSync(path.join(outputDir, 'metadata.generated.json'), JSON.stringify(metadata, null, 2));
 fs.writeFileSync(path.join(outputDir, 'quality.generated.json'), JSON.stringify(quality, null, 2));
-console.log(JSON.stringify({ records: compounds.length, pubchemMatched, pubchemVerified, reviewRequired: reviewIds.length }));
+console.log(JSON.stringify({ records: compounds.length, pubchemMatched, pubchemVerified, chemblMatched, reviewRequired: reviewIds.length }));

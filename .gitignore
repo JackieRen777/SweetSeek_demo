@@ -78,9 +78,14 @@ logs/
 rag_outputs/
 output/
 outputs/
+results/
 temp/
 evaluation/reports/*.json
 evaluation/contexts/*.json
+
+# Local dependency links and exported office documents
+node_modules
+docs/*.docx
 
 # 测试文件
 .pytest_cache/
