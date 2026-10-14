@@ -138,6 +138,6 @@ jobs:
 
           # Execute deployment script on server
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$DEPLOY_SSH_USER@$DEPLOY_SSH_HOST" \
-            "sudo bash /www/sweetseek/repo.git/../scripts/maintenance/deploy/deploy_ecs_oneclick.sh --commit ${GITHUB_SHA}"
+            "cd /www/wwwroot/FCN_SweetSeek && bash scripts/maintenance/deploy/deploy_ecs_oneclick.sh --commit ${GITHUB_SHA}"
 
           echo "✅ Deployment completed for commit ${GITHUB_SHA}"
