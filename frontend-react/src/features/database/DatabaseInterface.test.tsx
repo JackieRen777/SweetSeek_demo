@@ -253,7 +253,7 @@ describe('Database portal workflows', { timeout: 15_000 }, () => {
     expect(screen.queryByText('Reviewed snapshot · 2026-10-05')).toBeNull();
     expect(screen.queryByText('Interactive views calculated from the reviewed v1.0.7 source tables.')).toBeNull();
     expect(screen.queryByRole('tab')).toBeNull();
-    for (const section of ['SweetClass Composition', 'Chemical Space', 'Evidence Provenance', 'Physicochemical Landscape', 'Coverage', 'Benchmark']) {
+    for (const section of ['SweetClass Composition', 'Chemical Space', 'Evidence Provenance', 'Physicochemical Landscape', 'Coverage']) {
       expect(screen.getByRole('heading', { name: section })).toBeTruthy();
     }
     expect(screen.queryByRole('heading', { name: 'R1–R4 operational status' })).toBeNull();

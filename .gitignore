@@ -14,8 +14,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
+# But allow frontend source lib
+!frontend-react/src/lib/
 parts/
 sdist/
 var/

@@ -574,6 +574,9 @@ const Detail = ({ compound, onBack, onSelect, sqliteDetail, detailError }: { com
     { label: 'Conflicts', count: modules.conflicts, section: 'quality', warning: modules.conflicts > 0 },
   ];
 
+  // Literature data hook must be at component top level
+  const { data: literatureData, error: literatureError } = useLiteratureData();
+
   const emptyModule = (title: string, copy: string, icon: typeof Database = CircleHelp) => <EmptyState icon={icon} title={title}>{copy}</EmptyState>;
 
   const renderSection = () => {
@@ -585,8 +588,6 @@ const Detail = ({ compound, onBack, onSelect, sqliteDetail, detailError }: { com
       case 'chemical-space':
         return <section className="sdb-data-section sdb-record-section"><DetailSectionTitle eyebrow="Chemical space" title="Position within the SweetClass family" note="The selected compound is shown against members of its reviewed level-1 family." /><CompoundProjection compoundId={compound.id} onCompound={onSelect} /></section>;
       case 'literature': {
-        const { data: literatureData, error: literatureError } = useLiteratureData();
-
         if (literatureError) {
           return <section className="sdb-data-section sdb-record-section">
             <DetailSectionTitle eyebrow="Literature" title="Literature and linked records" note="Evidence-based literature links from the SweetSeek corpus and related data modules." />
