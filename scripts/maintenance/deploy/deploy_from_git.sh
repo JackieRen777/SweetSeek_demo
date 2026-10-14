@@ -401,14 +401,25 @@ curl -fsS http://127.0.0.1:5001/api/live >/dev/null
 
 wait_production_domain() {
   local domain="$1" endpoint="$2" state
-  curl -fsS -X POST "http://127.0.0.1:5001$endpoint" >/dev/null
-  for _ in {1..180}; do
+  echo "Prewarming domain: $domain via $endpoint"
+  if ! curl -fsS -X POST "http://127.0.0.1:5001$endpoint" >/dev/null; then
+    echo "ERROR: Failed to call prewarm endpoint $endpoint" >&2
+    return 1
+  fi
+
+  for i in {1..180}; do
     state="$(curl -sS http://127.0.0.1:5001/api/health | "$VENV/bin/python" -c \
       'import json,sys; print(json.load(sys.stdin).get("domains",{}).get(sys.argv[1],{}).get("state","unknown"))' "$domain")"
-    [[ "$state" == ready ]] && return 0
-    [[ "$state" == failed ]] && return 1
+    [[ "$state" == ready ]] && { echo "Domain $domain is ready"; return 0; }
+    [[ "$state" == failed ]] && { echo "ERROR: Domain $domain failed to load" >&2; return 1; }
+
+    # Progress indicator every 30 seconds
+    if (( i % 15 == 0 )); then
+      echo "Still waiting for $domain (${i}/180, state=$state)..."
+    fi
     sleep 2
   done
+  echo "ERROR: Domain $domain timed out after 6 minutes (last state: $state)" >&2
   return 1
 }
 wait_production_domain sweetness /api/init
