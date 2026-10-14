@@ -141,13 +141,14 @@ jobs:
           DEPLOY_USER=$(echo "$DEPLOY_SSH_USER" | tr -d '[:space:]')
           DEPLOY_HOST=$(echo "$DEPLOY_SSH_HOST" | tr -d '[:space:]')
 
-          # Download and execute deployment script on server
-          # Server fetches the script directly from GitHub to ensure version consistency
+          # Upload deployment script via SSH (avoids server firewall/network issues)
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            scripts/maintenance/deploy/deploy_from_git.sh \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy-${GITHUB_SHA}.sh"
+
+          # Execute deployment script on server
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "curl -fsSL --retry 3 \
-              'https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_SHA}/scripts/maintenance/deploy/deploy_from_git.sh' \
-              -o '/tmp/deploy-${GITHUB_SHA}.sh' && \
-             chmod 700 '/tmp/deploy-${GITHUB_SHA}.sh' && \
+            "chmod 700 '/tmp/deploy-${GITHUB_SHA}.sh' && \
              sudo bash '/tmp/deploy-${GITHUB_SHA}.sh' --commit ${GITHUB_SHA}"
 
           echo "✅ Deployment completed for commit ${GITHUB_SHA}"
