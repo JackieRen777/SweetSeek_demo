@@ -54,26 +54,38 @@ The SSH user that has permission to run the deployment script with sudo.
 
 **Important**: This user must be able to run:
 ```bash
-sudo bash /www/sweetseek/repo.git/../scripts/maintenance/deploy/deploy_ecs_oneclick.sh
+sudo bash /tmp/deploy-*.sh --commit <COMMIT_SHA>
 ```
 
 without entering a password. Add to `/etc/sudoers.d/deploy`:
 ```
-deploy ALL=(ALL) NOPASSWD: /www/sweetseek/scripts/maintenance/deploy/deploy_ecs_oneclick.sh
-deploy ALL=(ALL) NOPASSWD: /www/sweetseek/scripts/maintenance/deploy/deploy_from_git.sh
+# Allow CI automated deployment from GitHub-downloaded scripts
+deploy ALL=(ALL) NOPASSWD: /bin/bash /tmp/deploy-*.sh*
 ```
+
+**Why this configuration:**
+- CI downloads the deployment script directly from GitHub to `/tmp/deploy-<commit>.sh`
+- This ensures the script version matches exactly the code being deployed
+- The wildcard pattern `/tmp/deploy-*.sh*` allows any commit hash
+- Security: The script comes from your official GitHub repository
 
 ---
 
 ## Testing the Setup
 
 ### Manual Test
-After adding secrets, test the SSH connection:
+After adding secrets, test the SSH connection and deployment flow:
 
 ```bash
-# From your local machine, using the same key
+# From your local machine, test downloading and executing the deploy script
+COMMIT=$(git ls-remote https://github.com/JackieRen777/SweetSeek_demo.git refs/heads/main | awk '{print $1}')
+
 ssh -i ~/.ssh/sweetseek_deploy_key deploy@your-server \
-  "sudo bash /www/sweetseek/repo.git/../scripts/maintenance/deploy/deploy_ecs_oneclick.sh --commit \$(git ls-remote https://github.com/JackieRen777/SweetSeek_demo.git refs/heads/main | awk '{print \$1}')"
+  "curl -fsSL --retry 3 \
+    'https://raw.githubusercontent.com/JackieRen777/SweetSeek_demo/${COMMIT}/scripts/maintenance/deploy/deploy_from_git.sh' \
+    -o '/tmp/deploy-${COMMIT}.sh' && \
+   chmod 700 '/tmp/deploy-${COMMIT}.sh' && \
+   sudo bash '/tmp/deploy-${COMMIT}.sh' --commit ${COMMIT}"
 ```
 
 ### Automated Test
