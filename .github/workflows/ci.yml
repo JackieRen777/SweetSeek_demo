@@ -104,7 +104,10 @@ jobs:
           path: release
       - name: Build checksums and manifest
         run: |
+          # Calculate citation catalog checksum from checked-out repo
           CATALOG_SHA="$(sha256sum data/citations/manifest.json | awk '{print $1}')"
+
+          # Generate deployment manifest and checksums in release directory
           cd release
           printf '{"schema_version":2,"commit":"%s","md_builder_enabled":true,"docking_enabled":false,"citation_style":"GB/T 7714-2015","citation_catalog_manifest_sha256":"%s"}\n' "$GITHUB_SHA" "$CATALOG_SHA" > manifest.json
           sha256sum sweetseek-frontend-${GITHUB_SHA}.tar.gz requirements-resolved-py311-linux.txt manifest.json > SHA256SUMS
