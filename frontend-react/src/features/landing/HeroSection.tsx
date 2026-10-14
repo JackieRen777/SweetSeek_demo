@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 // import MoleculeViewer from './components/MoleculeViewer';
-import { ArrowRight } from 'lucide-react';
 
 interface HeroProps {
   onNext: () => void;
@@ -48,14 +47,14 @@ const Hero: React.FC<HeroProps> = ({ onNext }) => {
             whileTap={{ scale: 0.98 }}
             onClick={onNext}
             className="
-              group relative px-8 py-4 rounded-xl 
-              bg-gradient-to-r from-blue-600 to-indigo-500 
+              group relative px-8 py-4 rounded-full
+              bg-blue-600
               text-white font-bold text-lg tracking-wide
               overflow-hidden shadow-lg transition-all duration-300
             "
           >
             <span className="relative z-10 flex items-center gap-2">
-              Try now！ <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              Try now！ →
             </span>
           </motion.button>
         </motion.div>

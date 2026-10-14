@@ -3,10 +3,26 @@ import type { DatabaseCompound } from './types';
 export interface SweetMetaPage {
   items: Array<Partial<DatabaseCompound> & {
     id: string;
+    displayId: string | null;
+    casNumbers: string[];
+    pubchemCid: string | null;
+    chemicalClass: string | null;
+    sourceNames: string[];
     name: string | null;
     releaseTier: string | null;
     releaseGap: string | null;
     reviewRequired: number;
+    sweetClassLevel1: string;
+    sweetClassLevel2: string;
+    evidenceGrade: 'E1' | 'E2' | 'E3';
+    sourceCollection: string;
+    reviewedSourceNames: string[];
+    molecularWeight: number;
+    clogp: number;
+    tpsa: number;
+    rotatableBonds: number;
+    hba: number;
+    hbd: number;
   }>;
   page: number;
   pageSize: number;
@@ -42,20 +58,124 @@ export interface SweetMetaLiteratureRecord {
 }
 
 export interface SweetMetaCompoundDetail {
-  compound: Record<string, unknown>;
-  release: Record<string, unknown>;
-  quality: Record<string, unknown>;
-  aliases: Array<Record<string, unknown>>;
+  compound: SweetMetaCompoundRecord;
+  identity: SweetMetaIdentity;
+  release: SweetMetaReleaseStatus;
+  quality: SweetMetaQuality;
+  aliases: SweetMetaAlias[];
+  externalIds: SweetMetaExternalId[];
+  classification: SweetMetaClassification | null;
+  provenance: SweetMetaProvenance | null;
+  physicochemical: SweetMetaPhysicochemical | null;
+  projections: SweetMetaProjection[];
+  stereoReview: SweetMetaDataRecord | null;
   evidence: {
-    tasteAssertions: Array<Record<string, unknown>>;
-    measurements: Array<Record<string, unknown>>;
-    conflicts: Array<Record<string, unknown>>;
+    tasteAssertions: SweetMetaDataRecord[];
+    measurements: SweetMetaDataRecord[];
+    conflicts: SweetMetaDataRecord[];
   };
   literature: SweetMetaLiteratureRecord[];
   literatureReview?: { candidateCount: number; reviewRequiredCount: number };
-  food: { count: number; items: Array<Record<string, unknown>> };
-  regulatory: { count: number; items: Array<Record<string, unknown>> };
-  receptors: { count: number; items: Array<Record<string, unknown>> };
+  food: { count: number; items: SweetMetaDataRecord[] };
+  regulatory: { count: number; items: SweetMetaDataRecord[] };
+  receptors: { count: number; items: SweetMetaDataRecord[] };
+  modules: { sweetness: number; literature: number; food: number; receptors: number; regulatory: number; conflicts: number };
+}
+
+export type SweetMetaDataValue = string | number | boolean | null | undefined;
+export type SweetMetaDataRecord = Record<string, SweetMetaDataValue>;
+
+export interface SweetMetaCompoundRecord extends SweetMetaDataRecord {
+  compound_id: string;
+  display_id: string | null;
+  preferred_name: string | null;
+  preferred_name_source: string | null;
+  parent_inchikey: string;
+  parent_isomeric_smiles: string;
+  parent_canonical_smiles: string;
+  molecular_formula: string | null;
+  molecular_weight: number | null;
+  formal_charge: number | null;
+  heavy_atom_count: number | null;
+}
+
+export interface SweetMetaIdentity {
+  stableId: string;
+  displayId: string | null;
+  preferredName: string | null;
+  preferredNameSource: string | null;
+  aliases: SweetMetaAlias[];
+  externalIds: SweetMetaExternalId[];
+}
+
+export interface SweetMetaAlias extends SweetMetaDataRecord {
+  alias: string;
+  source_id: string;
+  source_record_id: string | null;
+}
+
+export interface SweetMetaExternalId extends SweetMetaDataRecord {
+  namespace: string;
+  external_id: string;
+  source_id: string;
+  source_record_id: string | null;
+}
+
+export interface SweetMetaClassification extends SweetMetaDataRecord {
+  level1: string;
+  level2: string;
+}
+
+export interface SweetMetaProvenance extends SweetMetaDataRecord {
+  source_collection: string;
+  source_names: string;
+  evidence_grade: 'E1' | 'E2' | 'E3';
+  evidence_tier: string | null;
+  evidence_lineage_status: string | null;
+}
+
+export interface SweetMetaPhysicochemical extends SweetMetaDataRecord {
+  molecular_weight: number;
+  clogp: number;
+  tpsa: number;
+  rotatable_bonds: number;
+  hba: number;
+  hbd: number;
+  bertz_complexity: number;
+  fraction_csp3: number;
+  heavy_atom_count: number;
+}
+
+export interface SweetMetaQuality extends SweetMetaDataRecord {
+  structure_verified?: string | null;
+  stereochemistry_verified?: string | null;
+  form_verified?: string | null;
+  qc_training_use_status?: string | null;
+  qc_manual_review_required?: string | null;
+  qc_notes?: string | null;
+}
+
+export interface SweetMetaReleaseStatus extends SweetMetaDataRecord {
+  release_tier: string | null;
+  release_gap: string | null;
+  manual_review_required: number | string | null;
+  status_note: string | null;
+}
+
+export interface SweetMetaProjection extends SweetMetaDataRecord {
+  method: 'umap' | 'pca';
+  x: number;
+  y: number;
+  fingerprint: string;
+  metric: string;
+  random_seed: number;
+}
+
+export interface SweetMetaProjectionContext {
+  compoundId: string;
+  family: string;
+  subclass: string;
+  points: Array<{ id: string; method: 'umap' | 'pca'; x: number; y: number; name: string; sweetClassLevel1: string; sweetClassLevel2: string; selected: number }>;
 }
 
 export interface SweetMetaStatistics {
@@ -65,6 +185,7 @@ export interface SweetMetaStatistics {
     sha256: string;
     generatedAt: string | null;
     publicCompounds: number;
+    reviewDate?: string;
   };
   kpis: Array<{ key: string; label: string; value: number; detail: string }>;
   readiness: Array<{ key: string; label: string; count: number; percent: number }>;
@@ -73,6 +194,37 @@ export interface SweetMetaStatistics {
   domainCoverage: Array<{ key: string; label: string; records: number; compounds: number; percent: number; denominator: number }>;
   foodGroups: Array<{ key: string; label: string; records: number; foods: number; compounds: number; percent: number; denominator: number }>;
   qualityProfile: Array<{ key: string; label: string; verified: number; attention: number; unknown: number; denominator: number }>;
+  composition: {
+    level1: Array<{ key: string; label: string; count: number; percent: number }>;
+    level2: Array<{ parent: string; key: string; label: string; count: number; parentTotal: number; percentWithinParent: number; percentOverall: number }>;
+  };
+  chemicalSpace: Array<{
+    id: string; method: 'umap' | 'pca'; x: number; y: number; name: string;
+    formula: string | null; molecularWeight: number; sweetClassLevel1: string;
+    sweetClassLevel2: string; evidenceGrade: 'E1' | 'E2' | 'E3';
+    sourceCollection: string; sourceNames: string; releaseTier: string;
+    fingerprint: string; metric: string; randomSeed: number;
+  }>;
+  evidenceCoverage: {
+    sourceToGrade: Array<{ source: string; target: string; count: number }>;
+    gradeToFamily: Array<{ source: string; target: string; count: number }>;
+    paths: Array<{ source: string; grade: 'E1' | 'E2' | 'E3'; family: string; count: number }>;
+    familyGrades: Array<{ family: string; grade: string; count: number; total: number; percent: number }>;
+    modules: Array<{ module: string; displayMetric: string; nativeGrain: string; count: number; color: string }>;
+  };
+  properties: Array<{ key: string; label: string; unit: string; axisPrecision: number; groups: Array<{ family: string; n: number; min: number; q1: number; median: number; q3: number; max: number; density: Array<{ value: number; density: number }> }> }>;
+  featureCoverageComparison: Array<{ resource: string; entryScope: string; snapshot: string; features: Record<string, number> }>;
+  benchmark: {
+    splits: Array<{ split: string; negative: number; positive: number; total: number }>;
+    models: Array<{ model: string; displayModel: string; split: string; seed: string; n: number; threshold: number; rocAuc: number; prAuc: number; balancedAccuracy: number; mcc: number; brier: number }>;
+  };
+}
+
+export interface SweetMetaDownloads {
+  version: string;
+  reviewDate: string;
+  recordCount: number;
+  items: Array<{ key: string; label: string; filename: string; bytes: number; sha256: string; url: string }>;
 }
 
 const json = async <T>(url: string): Promise<T> => {
@@ -96,6 +248,16 @@ export const fetchSweetMetaCompounds = (params: {
   sweetnessMaxLog10?: number;
   qualityMetric?: string;
   qualityState?: string;
+  sweetClassL1?: string;
+  sweetClassL2?: string;
+  evidenceGrade?: string;
+  sourceCollection?: string;
+  mwMin?: number;
+  mwMax?: number;
+  clogpMin?: number;
+  clogpMax?: number;
+  tpsaMin?: number;
+  tpsaMax?: number;
 }) => {
   const search = new URLSearchParams();
   if (params.query) search.set('q', params.query);
@@ -109,12 +271,45 @@ export const fetchSweetMetaCompounds = (params: {
   if (params.sweetnessMaxLog10 !== undefined) search.set('sweetnessMaxLog10', String(params.sweetnessMaxLog10));
   if (params.qualityMetric) search.set('qualityMetric', params.qualityMetric);
   if (params.qualityState) search.set('qualityState', params.qualityState);
+  if (params.sweetClassL1) search.set('sweetClassL1', params.sweetClassL1);
+  if (params.sweetClassL2) search.set('sweetClassL2', params.sweetClassL2);
+  if (params.evidenceGrade) search.set('evidenceGrade', params.evidenceGrade);
+  if (params.sourceCollection) search.set('sourceCollection', params.sourceCollection);
+  (['mwMin', 'mwMax', 'clogpMin', 'clogpMax', 'tpsaMin', 'tpsaMax'] as const).forEach((key) => {
+    if (params[key] !== undefined) search.set(key, String(params[key]));
+  });
   return json<SweetMetaPage>(`/api/sweetmeta/compounds?${search.toString()}`);
 };
 
 export const fetchSweetMetaStats = () => json<Record<string, unknown>>('/api/sweetmeta/stats');
 
 export const fetchSweetMetaStatistics = () => json<SweetMetaStatistics>('/api/sweetmeta/statistics');
+export const fetchSweetMetaProjectionContext = async (compoundId: string): Promise<SweetMetaProjectionContext> => {
+  try {
+    return await json<SweetMetaProjectionContext>(`/api/sweetmeta/compounds/${encodeURIComponent(compoundId)}/projection-context`);
+  } catch (endpointError) {
+    const statistics = await fetchSweetMetaStatistics();
+    const selected = statistics.chemicalSpace.find((point) => point.id === compoundId);
+    if (!selected) throw endpointError;
+    return {
+      compoundId,
+      family: selected.sweetClassLevel1,
+      subclass: selected.sweetClassLevel2,
+      points: statistics.chemicalSpace
+        .filter((point) => point.sweetClassLevel1 === selected.sweetClassLevel1)
+        .map((point) => ({
+          id: point.id,
+          method: point.method,
+          x: point.x,
+          y: point.y,
+          name: point.name,
+          sweetClassLevel1: point.sweetClassLevel1,
+          sweetClassLevel2: point.sweetClassLevel2,
+          selected: point.id === compoundId ? 1 : 0,
+        })),
+    };
+  }
+};
 
 export const fetchSweetMetaCompound = (id: string) => json<SweetMetaCompoundDetail>(`/api/sweetmeta/compounds/${encodeURIComponent(id)}`);
 
@@ -136,3 +331,5 @@ export const fetchSweetMetaLiterature = (params: { query?: string; page?: number
 };
 
 export const fetchSweetMetaLiteratureDetail = (id: string) => json<Record<string, unknown>>(`/api/sweetmeta/literature/${encodeURIComponent(id)}`);
+
+export const fetchSweetMetaDownloads = () => json<SweetMetaDownloads>('/api/sweetmeta/downloads');

@@ -1,0 +1,22 @@
+family_short,evidence_short,molecule_count,family_total,within_family_percent
+Peptide / amino-acid,E1,181,502,36.05577689243028
+Peptide / amino-acid,E2,3,502,0.5976095617529881
+Peptide / amino-acid,E3,318,502,63.34661354581673
+Glycosidic natural,E1,148,277,53.42960288808664
+Glycosidic natural,E2,41,277,14.8014440433213
+Glycosidic natural,E3,88,277,31.768953068592058
+Aromatic / phenolic / flavonoid,E1,110,180,61.111111111111114
+Aromatic / phenolic / flavonoid,E2,4,180,2.2222222222222223
+Aromatic / phenolic / flavonoid,E3,66,180,36.666666666666664
+Heterocyclic / specialised,E1,57,119,47.89915966386555
+Heterocyclic / specialised,E2,6,119,5.042016806722689
+Heterocyclic / specialised,E3,56,119,47.05882352941177
+Sulfur / nitrogen synthetic,E1,21,115,18.26086956521739
+Sulfur / nitrogen synthetic,E2,0,115,0.0
+Sulfur / nitrogen synthetic,E3,94,115,81.73913043478261
+Carbohydrate / rare sugar / polyol,E1,57,67,85.07462686567165
+Carbohydrate / rare sugar / polyol,E2,2,67,2.985074626865672
+Carbohydrate / rare sugar / polyol,E3,8,67,11.940298507462687
+Terpenoid / steroid / lipid-like,E1,17,36,47.22222222222222
+Terpenoid / steroid / lipid-like,E2,5,36,13.88888888888889
+Terpenoid / steroid / lipid-like,E3,14,36,38.888888888888886

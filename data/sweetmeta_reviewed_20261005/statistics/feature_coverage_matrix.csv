@@ -1,0 +1,5 @@
+resource,entry_scope,snapshot,Structure,Taste / sweetness data,Quantitative sweetness,Reference identifier,Full-text corpus,Evidence tiering,Receptor activity,Food occurrence,Regulatory mapping,Experimental structures,Protein records
+SweetDatabase (this work),1296 canonical sweet small molecules,v1.0 / current submission snapshot,1,1,1,1,1,1,1,1,1,1,1
+ChemTastesDB,4075 source records,v2.1 imported snapshot,1,1,0,1,0,0,0,0,0,0,0
+SweetenersDB,316 compounds (log10 relative sweetness),2017 imported snapshot,1,1,1,0,0,0,0,0,0,0,0
+TastesDB,649 rows (435 sweet; 214 non-sweet),2017 curated QSTR snapshot,1,1,0,1,0,0,0,0,0,0,0

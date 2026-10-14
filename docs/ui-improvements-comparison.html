@@ -1,0 +1,972 @@
+<title>SweetMeta UI Improvements</title>
+
+<style>
+:root {
+  --ink: #0F1419;
+  --surface: #1A1F29;
+  --surface-hover: #22282F;
+  --border: #2D3540;
+  --muted: #9CA3AF;
+  --text: #E5E7EB;
+  --amber: #F59E0B;
+  --amber-dim: #FEF3C7;
+  --red: #DC2626;
+  --red-dim: #FEE2E2;
+  --green: #10B981;
+  --green-dim: #D1FAE5;
+  --blue: #3B82F6;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --ink: #FFFFFF;
+    --surface: #F9FAFB;
+    --surface-hover: #F3F4F6;
+    --border: #E5E7EB;
+    --muted: #6B7280;
+    --text: #1F2937;
+    --amber: #D97706;
+    --amber-dim: #FEF3C7;
+    --red: #DC2626;
+    --red-dim: #FEE2E2;
+    --green: #059669;
+    --green-dim: #D1FAE5;
+  }
+}
+
+:root[data-theme="light"] {
+  --ink: #FFFFFF;
+  --surface: #F9FAFB;
+  --surface-hover: #F3F4F6;
+  --border: #E5E7EB;
+  --muted: #6B7280;
+  --text: #1F2937;
+  --amber: #D97706;
+  --amber-dim: #FEF3C7;
+  --red: #DC2626;
+  --red-dim: #FEE2E2;
+  --green: #059669;
+  --green-dim: #D1FAE5;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--ink);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 48px);
+}
+
+header {
+  margin-bottom: clamp(32px, 6vw, 56px);
+  padding-bottom: clamp(24px, 4vw, 40px);
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: clamp(14px, 1.5vw, 16px);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-value.problem { color: var(--red); }
+.stat-value.warning { color: var(--amber); }
+.stat-value.good { color: var(--green); }
+
+.stat-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 32px;
+  overflow-x: auto;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  padding: 12px 20px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.tab.active {
+  color: var(--amber);
+  border-bottom-color: var(--amber);
+}
+
+.comparison-panel {
+  display: none;
+}
+
+.comparison-panel.active {
+  display: block;
+}
+
+.comparison-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.comparison-title h2 {
+  font-size: clamp(22px, 3vw, 28px);
+  margin-bottom: 8px;
+}
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.priority-badge.p0 {
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+.priority-badge.p1 {
+  background: var(--amber-dim);
+  color: var(--amber);
+}
+
+.impact-metrics {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.impact-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.impact-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.impact-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 900px) {
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.comparison-side {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+}
+
+.comparison-side.before {
+  border-color: var(--red);
+}
+
+.comparison-side.after {
+  border-color: var(--green);
+}
+
+.side-label {
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.comparison-side.before .side-label {
+  background: var(--red);
+  color: white;
+}
+
+.comparison-side.after .side-label {
+  background: var(--green);
+  color: white;
+}
+
+.code-block {
+  background: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  font-family: 'SF Mono', Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.mock-ui {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 16px;
+  color: #1F2937;
+}
+
+.mock-field {
+  display: flex;
+  padding: 10px 0;
+  border-bottom: 1px solid #E5E7EB;
+  font-size: 13px;
+}
+
+.mock-field:last-child {
+  border-bottom: none;
+}
+
+.mock-label {
+  width: 140px;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #6B7280;
+}
+
+.mock-value {
+  flex: 1;
+  color: #1F2937;
+}
+
+.mock-value.empty {
+  color: #9CA3AF;
+}
+
+.mock-value.highlight {
+  color: #10B981;
+  font-weight: 600;
+}
+
+.benefits-list {
+  list-style: none;
+  margin-top: 20px;
+}
+
+.benefits-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.benefits-list li::before {
+  content: '✓';
+  color: var(--green);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.problem-list {
+  list-style: none;
+  margin-top: 20px;
+}
+
+.problem-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.problem-list li::before {
+  content: '×';
+  color: var(--red);
+  font-weight: 700;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+.note {
+  background: var(--surface);
+  border-left: 3px solid var(--blue);
+  padding: 16px 20px;
+  margin-top: 24px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.note strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--blue);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.implementation-guide {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin-top: 32px;
+}
+
+.implementation-guide h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: var(--amber);
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.step-content h4 {
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.step-content p {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.mock-module-strip {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.mock-module {
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #E5E7EB;
+}
+
+.mock-module.has-data {
+  background: #DBEAFE;
+  color: #1E40AF;
+  border-color: #93C5FD;
+}
+
+.mock-module.no-data {
+  background: #FEE2E2;
+  color: #991B1B;
+  border-color: #FECACA;
+}
+
+.mock-module.hidden {
+  display: none;
+}
+</style>
+
+<div class="container">
+  <header>
+    <h1>SweetMeta 界面优化方案</h1>
+    <p class="subtitle">数据驱动的展示逻辑改进 · 1,296 分子分析</p>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">CAS Numbers 缺失率</div>
+      <div class="stat-value problem">100%</div>
+      <div class="stat-desc">所有分子都显示 "—"</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">ChEMBL ID 缺失率</div>
+      <div class="stat-value problem">89%</div>
+      <div class="stat-desc">1,153 / 1,296 分子无数据</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">PubChem 缺失率</div>
+      <div class="stat-value warning">33%</div>
+      <div class="stat-desc">418 分子整表为空</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">预期改善</div>
+      <div class="stat-value good">60-80%</div>
+      <div class="stat-desc">"Not available" 减少</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="hero-facts">Hero Facts</button>
+    <button class="tab" data-tab="module-strip">Module Strip</button>
+    <button class="tab" data-tab="linked-records">Linked Records</button>
+    <button class="tab" data-tab="property-table">属性对比表</button>
+    <button class="tab" data-tab="overview">Overview 基本信息</button>
+  </div>
+
+  <!-- Hero Facts Panel -->
+  <div class="comparison-panel active" data-panel="hero-facts">
+    <div class="comparison-header">
+      <div class="comparison-title">
+        <h2>改进 #1: Hero Facts 条件渲染</h2>
+        <p>只显示有数据的字段，避免空占位符</p>
+      </div>
+      <div>
+        <span class="priority-badge p0">🔴 P0 - 高优先级</span>
+        <div class="impact-metrics">
+          <div class="impact-item">
+            <span class="impact-label">影响分子</span>
+            <span class="impact-value">100%</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-label">预期改善</span>
+            <span class="impact-value">80%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      <div class="comparison-side before">
+        <span class="side-label">改进前</span>
+        <h3>固定 5 个字段槽位</h3>
+        <div class="mock-ui">
+          <div class="mock-field">
+            <span class="mock-label">Formula</span>
+            <span class="mock-value highlight">C₁₂H₂₂O₁₁</span>
+          </div>
+          <div class="mock-field">
+            <span class="mock-label">Molecular Weight</span>
+            <span class="mock-value highlight">342.30 Da</span>
+          </div>
+          <div class="mock-field">
+            <span class="mock-label">CAS</span>
+            <span class="mock-value empty">—</span>
+          </div>
+          <div class="mock-field">
+            <span class="mock-label">PubChem CID</span>
+            <span class="mock-value empty">—</span>
+          </div>
+          <div class="mock-field">
+            <span class="mock-label">ChEMBL ID</span>
+            <span class="mock-value empty">—</span>
+          </div>
+        </div>
+        <ul class="problem-list">
+          <li>CAS 字段 100% 显示 "—"（数据库中完全没有）</li>
+          <li>ChEMBL ID 字段 89% 显示 "—"（只有 143 条有数据）</li>
+          <li>PubChem CID 字段 33% 显示 "—"（418 条无数据）</li>
+          <li>空占位符占据视觉空间，降低信息密度</li>
+        </ul>
+      </div>
+
+      <div class="comparison-side after">
+        <span class="side-label">改进后</span>
+        <h3>动态布局，只显示有数据字段</h3>
+        <div class="mock-ui">
+          <div class="mock-field">
+            <span class="mock-label">Formula</span>
+            <span class="mock-value highlight">C₁₂H₂₂O₁₁</span>
+          </div>
+          <div class="mock-field">
+            <span class="mock-label">Molecular Weight</span>
+            <span class="mock-value highlight">342.30 Da</span>
+          </div>
+        </div>
+        <ul class="benefits-list">
+          <li>CAS 字段完全隐藏（因为 100% 无数据）</li>
+          <li>ChEMBL ID 只在 11% 有数据时显示</li>
+          <li>PubChem CID 只在 67% 有数据时显示</li>
+          <li>CSS Grid 自动调整布局，无空白</li>
+          <li>专业感显著提升</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-block">// DatabaseInterface.tsx 修改位置：第 654 行附近
+&lt;dl className="sdb-hero-facts"&gt;
+  {compound.formula && (
+    &lt;div&gt;&lt;dt&gt;Formula&lt;/dt&gt;&lt;dd&gt;{compound.formula}&lt;/dd&gt;&lt;/div&gt;
+  )}
+  {compound.molecularWeight !== null && (
+    &lt;div&gt;&lt;dt&gt;MW&lt;/dt&gt;&lt;dd&gt;{formatNumber(compound.molecularWeight)} Da&lt;/dd&gt;&lt;/div&gt;
+  )}
+  {casNumbers.length > 0 && (
+    &lt;div&gt;&lt;dt&gt;CAS&lt;/dt&gt;&lt;dd&gt;{casNumbers.join(', ')}&lt;/dd&gt;&lt;/div&gt;
+  )}
+  {pubchemId && (
+    &lt;div&gt;&lt;dt&gt;PubChem CID&lt;/dt&gt;&lt;dd&gt;&lt;a&gt;{pubchemId}&lt;/a&gt;&lt;/dd&gt;&lt;/div&gt;
+  )}
+  {chemblId && (
+    &lt;div&gt;&lt;dt&gt;ChEMBL ID&lt;/dt&gt;&lt;dd&gt;&lt;a&gt;{chemblId}&lt;/a&gt;&lt;/dd&gt;&lt;/div&gt;
+  )}
+&lt;/dl&gt;</div>
+
+    <div class="note">
+      <strong>实施建议</strong>
+      修改时间：约 10 分钟 · 无需修改 CSS · 向后兼容 · 零风险
+    </div>
+  </div>
+
+  <!-- Module Strip Panel -->
+  <div class="comparison-panel" data-panel="module-strip">
+    <div class="comparison-header">
+      <div class="comparison-title">
+        <h2>改进 #2: Module Strip 隐藏空模块</h2>
+        <p>避免突出显示"No record"文本</p>
+      </div>
+      <div>
+        <span class="priority-badge p0">🔴 P0 - 高优先级</span>
+        <div class="impact-metrics">
+          <div class="impact-item">
+            <span class="impact-label">影响模块</span>
+            <span class="impact-value">3个</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-label">视觉改善</span>
+            <span class="impact-value">显著</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      <div class="comparison-side before">
+        <span class="side-label">改进前</span>
+        <h3>显示所有模块，包括空模块</h3>
+        <div class="mock-module-strip">
+          <div class="mock-module has-data">📚 Literature · 78 records</div>
+          <div class="mock-module no-data">🍎 Food sources · No record</div>
+          <div class="mock-module no-data">🧬 Receptor binding · No record</div>
+          <div class="mock-module no-data">⚖️ Regulatory · No record</div>
+        </div>
+        <ul class="problem-list">
+          <li>突出显示"No record"，引导用户关注缺失</li>
+          <li>红色/灰色视觉引起负面感受</li>
+          <li>占用空间但无信息价值</li>
+        </ul>
+      </div>
+
+      <div class="comparison-side after">
+        <span class="side-label">改进后</span>
+        <h3>只显示有数据的模块</h3>
+        <div class="mock-module-strip">
+          <div class="mock-module has-data">📚 Literature · 78 records</div>
+          <div class="mock-module no-data hidden">🍎 Food sources · No record</div>
+          <div class="mock-module no-data hidden">🧬 Receptor binding · No record</div>
+          <div class="mock-module no-data hidden">⚖️ Regulatory · No record</div>
+        </div>
+        <ul class="benefits-list">
+          <li>只显示确实有关联数据的模块</li>
+          <li>突出"拥有"而非"缺失"</li>
+          <li>视觉更简洁，信息密度更高</li>
+          <li>可选：空模块降级显示（小号灰色文本）</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-block">// DatabaseInterface.tsx 修改位置：第 604-611 行
+const hasLiterature = literatureLinks.length > 0;
+const hasFoodSources = foodSources.length > 0;
+const hasReceptors = receptorBindings.length > 0;
+const hasRegulatory = regulatoryInfo.length > 0;
+
+&lt;div className="sdb-module-strip"&gt;
+  {hasLiterature && &lt;ModuleChip icon="📚" label="Literature" count={literatureLinks.length} /&gt;}
+  {hasFoodSources && &lt;ModuleChip icon="🍎" label="Food sources" count={foodSources.length} /&gt;}
+  {hasReceptors && &lt;ModuleChip icon="🧬" label="Receptor binding" count={receptorBindings.length} /&gt;}
+  {hasRegulatory && &lt;ModuleChip icon="⚖️" label="Regulatory" count={regulatoryInfo.length} /&gt;}
+&lt;/div&gt;</div>
+
+    <div class="note">
+      <strong>替代方案</strong>
+      如果希望保留空模块，可将其样式改为：小号灰色文本 + 低对比度边框，不突出显示"No record"
+    </div>
+  </div>
+
+  <!-- Linked Records Panel -->
+  <div class="comparison-panel" data-panel="linked-records">
+    <div class="comparison-header">
+      <div class="comparison-title">
+        <h2>改进 #3: Linked Records 统一空状态</h2>
+        <p>避免重复 3 次"无数据"提示</p>
+      </div>
+      <div>
+        <span class="priority-badge p0">🔴 P0 - 高优先级</span>
+        <div class="impact-metrics">
+          <div class="impact-item">
+            <span class="impact-label">影响分子</span>
+            <span class="impact-value">~40%</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-label">空间节省</span>
+            <span class="impact-value">66%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      <div class="comparison-side before">
+        <span class="side-label">改进前</span>
+        <h3>三个独立空状态</h3>
+        <div class="mock-ui">
+          <div style="padding: 20px; text-align: center; border-bottom: 1px solid #E5E7EB;">
+            <p style="color: #9CA3AF;">No food sources recorded for this compound.</p>
+          </div>
+          <div style="padding: 20px; text-align: center; border-bottom: 1px solid #E5E7EB;">
+            <p style="color: #9CA3AF;">No receptor binding data available.</p>
+          </div>
+          <div style="padding: 20px; text-align: center;">
+            <p style="color: #9CA3AF;">No regulatory information recorded.</p>
+          </div>
+        </div>
+        <ul class="problem-list">
+          <li>三个模块都为空时，占用大量垂直空间</li>
+          <li>重复说"无数据"，信息冗余</li>
+          <li>用户需要滚动浏览空白内容</li>
+        </ul>
+      </div>
+
+      <div class="comparison-side after">
+        <span class="side-label">改进后</span>
+        <h3>统一空状态 + 条件渲染</h3>
+        <div class="mock-ui">
+          <div style="padding: 28px; text-align: center;">
+            <p style="color: #6B7280; font-weight: 600; margin-bottom: 8px;">No linked records available</p>
+            <p style="color: #9CA3AF; font-size: 13px;">This compound has no food source, receptor binding, or regulatory data currently recorded.</p>
+          </div>
+        </div>
+        <ul class="benefits-list">
+          <li>三个空模块合并为一个统一提示</li>
+          <li>节省 66% 空间</li>
+          <li>只显示有数据的模块</li>
+          <li>所有为空时显示一次综合提示</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-block">// DatabaseInterface.tsx 修改位置：第 625-627 行
+const hasAnyLinkedData = hasFoodSources || hasReceptors || hasRegulatory;
+
+{!hasAnyLinkedData ? (
+  &lt;div className="sdb-empty-state"&gt;
+    &lt;h3&gt;No linked records available&lt;/h3&gt;
+    &lt;p&gt;This compound has no food source, receptor binding, or regulatory data currently recorded.&lt;/p&gt;
+  &lt;/div&gt;
+) : (
+  &lt;&gt;
+    {hasFoodSources && &lt;FoodSourcesTable data={foodSources} /&gt;}
+    {hasReceptors && &lt;ReceptorBindingTable data={receptorBindings} /&gt;}
+    {hasRegulatory && &lt;RegulatoryInfoTable data={regulatoryInfo} /&gt;}
+  &lt;/&gt;
+)}</div>
+
+    <div class="note">
+      <strong>用户体验提升</strong>
+      用户看到的是"确认的事实"而非"确认的缺失"，专业感显著提升
+    </div>
+  </div>
+
+  <!-- Property Table Panel -->
+  <div class="comparison-panel" data-panel="property-table">
+    <div class="comparison-header">
+      <div class="comparison-title">
+        <h2>改进 #4: 属性对比表条件显示</h2>
+        <p>33% 分子的整表为空时隐藏</p>
+      </div>
+      <div>
+        <span class="priority-badge p1">🟡 P1 - 中优先级</span>
+        <div class="impact-metrics">
+          <div class="impact-item">
+            <span class="impact-label">影响分子</span>
+            <span class="impact-value">418</span>
+          </div>
+          <div class="impact-item">
+            <span class="impact-label">占比</span>
+            <span class="impact-value">33%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      <div class="comparison-side before">
+        <span class="side-label">改进前</span>
+        <h3>即使全为空也显示表格</h3>
+        <div class="mock-ui">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #F9FAFB; border-bottom: 1px solid #E5E7EB;">
+                <th style="padding: 10px; text-align: left;">Property</th>
+                <th style="padding: 10px; text-align: left;">Our Database</th>
+                <th style="padding: 10px; text-align: left;">PubChem</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #E5E7EB;">
+                <td style="padding: 10px;">Molecular Weight</td>
+                <td style="padding: 10px;">342.30 Da</td>
+                <td style="padding: 10px; color: #9CA3AF;">—</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #E5E7EB;">
+                <td style="padding: 10px;">XLogP</td>
+                <td style="padding: 10px; color: #9CA3AF;">—</td>
+                <td style="padding: 10px; color: #9CA3AF;">—</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px;">TPSA</td>
+                <td style="padding: 10px; color: #9CA3AF;">—</td>
+                <td style="padding: 10px; color: #9CA3AF;">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="problem-list">
+          <li>418 条记录的 PubChem 数据全为空</li>
+          <li>整个对比表变成占位符的集合</li>
+          <li>用户需要扫描大量无意义的 "—"</li>
+        </ul>
+      </div>
+
+      <div class="comparison-side after">
+        <span class="side-label">改进后</span>
+        <h3>无 PubChem 数据时隐藏对比表</h3>
+        <div class="mock-ui">
+          <div style="padding: 20px; text-align: center;">
+            <p style="color: #6B7280; font-size: 13px;">PubChem cross-validation is not available for this compound.</p>
+          </div>
+        </div>
+        <ul class="benefits-list">
+          <li>检测 PubChem 列是否全为空</li>
+          <li>全为空时隐藏整个对比表</li>
+          <li>显示简洁的说明文本</li>
+          <li>有部分数据时正常显示表格</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-block">// DatabaseInterface.tsx 修改位置：第 632-640 行
+const hasPubchemData = pubchemValidation && Object.values(pubchemValidation).some(v => v !== null);
+
+{hasPubchemData ? (
+  &lt;table className="sdb-property-comparison"&gt;
+    {/* 正常渲染表格 */}
+  &lt;/table&gt;
+) : (
+  &lt;p className="sdb-muted"&gt;PubChem cross-validation is not available for this compound.&lt;/p&gt;
+)}</div>
+  </div>
+
+  <!-- Overview Panel -->
+  <div class="comparison-panel" data-panel="overview">
+    <div class="comparison-header">
+      <div class="comparison-title">
+        <h2>改进 #5: Overview 基本信息条件渲染</h2>
+        <p>可选字段只在有数据时显示</p>
+      </div>
+      <div>
+        <span class="priority-badge p1">🟡 P1 - 中优先级</span>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      <div class="comparison-side before">
+        <span class="side-label">改进前</span>
+        <h3>固定字段列表</h3>
+        <div class="mock-ui">
+          <div class="mock-field">
+            <span class="mock-label">Common Names</span>
+            <span class="mock-value empty">—</span>
+          </div>
+          <div class="mock-field">
+            <span class="mock-label">IUPAC Name</span>
+            <span class="mock-value empty">—</span>
+          </div>
+          <div class="mock-field">
+            <span class="mock-label">Description</span>
+            <span class="mock-value empty">—</span>
+          </div>
+        </div>
+        <ul class="problem-list">
+          <li>部分分子缺少描述性文本字段</li>
+          <li>显示多个空占位符</li>
+        </ul>
+      </div>
+
+      <div class="comparison-side after">
+        <span class="side-label">改进后</span>
+        <h3>动态字段列表</h3>
+        <div class="mock-ui">
+          <div style="padding: 20px; color: #6B7280; font-size: 13px;">
+            <p>Only InChIKey and SMILES available for this compound.</p>
+          </div>
+        </div>
+        <ul class="benefits-list">
+          <li>可选字段只在有数据时显示</li>
+          <li>必填字段始终显示</li>
+          <li>避免大量空白占位符</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="implementation-guide">
+    <h3>实施路线图</h3>
+    <div class="step">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h4>阶段 1：P0 改进（1-2 小时）</h4>
+        <p>Hero Facts + Module Strip + Linked Records 三个高优先级改进，显著提升专业感</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h4>阶段 2：测试验证（30 分钟）</h4>
+        <p>在典型分子（有数据/无数据/部分数据）上验证效果</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h4>阶段 3：P1 改进（1 小时）</h4>
+        <p>属性对比表 + Overview 基本信息，进一步优化用户体验</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h4>阶段 4：用户反馈（持续）</h4>
+        <p>收集实际使用反馈，决定是否需要进一步调整</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.comparison-panel');
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const targetPanel = tab.dataset.tab;
+
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    panels.forEach(p => {
+      p.classList.remove('active');
+      if (p.dataset.panel === targetPanel) {
+        p.classList.add('active');
+      }
+    });
+  });
+});
+</script>

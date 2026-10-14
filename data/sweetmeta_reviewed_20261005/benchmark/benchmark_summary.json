@@ -1,0 +1,28 @@
+{
+  "task": "binary sweet vs mixed negative classification from connectivity SMILES",
+  "master_rows": 2412,
+  "positive": 1206,
+  "negative": 1206,
+  "negative_design": "1206 negatives = 603 bitter-only + 603 explicit_non_sweet_or_tasteless, property matched in 2D descriptor space",
+  "multitaste_conflict_held_out": 90,
+  "split_counts": {
+    "train": {
+      "0": 844,
+      "1": 843,
+      "total": 1687
+    },
+    "validation": {
+      "0": 182,
+      "1": 181,
+      "total": 363
+    },
+    "test": {
+      "0": 180,
+      "1": 182,
+      "total": 362
+    }
+  },
+  "scaffold_overlap_all_pairs": 0,
+  "cross_label_connectivity_overlap": 0,
+  "recommended_baseline": "ECFP4 + XGBoost"
+}

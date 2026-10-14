@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import os
 import sqlite3
@@ -9,8 +10,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
 
-
-DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "outputs" / "sweetmeta-literature-rescan" / "SweetDatabase_v1.0.6_20260921.sqlite"
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DB_PATH = ROOT / "outputs" / "sweetmeta-reviewed-v107" / "SweetDatabase_v1.0.7_20261005.sqlite"
+DEFAULT_SOURCE_CSV = ROOT / "data" / "sweetmeta_reviewed_20261005" / "compound_master_1296.csv"
 PUBLIC_LITERATURE_STATUSES = ("accepted", "reviewed")
 TIER_NAMES = {
     "R1": "R1_high_readiness",
@@ -23,8 +25,39 @@ TIER_NAMES = {
 class SweetMetaDatabase:
     """Small, parameterized query layer for the public SweetMeta release."""
 
-    def __init__(self, path: str | os.PathLike[str] | None = None) -> None:
+    def __init__(
+        self,
+        path: str | os.PathLike[str] | None = None,
+        source_workbook: str | os.PathLike[str] | None = None,
+    ) -> None:
         self.path = Path(path or os.getenv("SWEETMETA_DB_PATH", DEFAULT_DB_PATH)).expanduser()
+        source_path = Path(
+            source_workbook or os.getenv("SWEETMETA_SOURCE_CSV", DEFAULT_SOURCE_CSV)
+        ).expanduser()
+        self._display_order = self._load_display_order(source_path)
+
+    @staticmethod
+    def _load_display_order(source_path: Path) -> dict[str, int]:
+        """Freeze public display IDs to the reviewed master row order."""
+        if not source_path.is_file():
+            return {}
+        if source_path.suffix.lower() == ".csv":
+            with source_path.open(encoding="utf-8-sig", newline="") as handle:
+                return {
+                    str(row["compound_id"]): index
+                    for index, row in enumerate(csv.DictReader(handle), start=1)
+                    if row.get("compound_id")
+                }
+        # Compatibility for callers that still provide the historical workbook.
+        from openpyxl import load_workbook
+        workbook = load_workbook(source_path, read_only=True, data_only=True)
+        try:
+            sheet = workbook["current_sweet_compounds_1296"]
+            headers = [str(cell.value or "") for cell in next(sheet.iter_rows(min_row=1, max_row=1))]
+            column = headers.index("compound_id")
+            return {str(row[column]): index for index, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=1) if row[column]}
+        finally:
+            workbook.close()
 
     @property
     def available(self) -> bool:
@@ -38,6 +71,19 @@ class SweetMetaDatabase:
             f"file:{self.path.resolve()}?mode=ro&immutable=1", uri=True, timeout=5,
         )
         conn.row_factory = sqlite3.Row
+        conn.create_function(
+            "sweetmeta_display_order",
+            1,
+            lambda compound_id: self._display_order.get(str(compound_id), 1_000_000),
+        )
+        conn.create_function(
+            "sweetmeta_display_id",
+            1,
+            lambda compound_id: (
+                f"{self._display_order[str(compound_id)]:06d}"
+                if str(compound_id) in self._display_order else None
+            ),
+        )
         try:
             yield conn
         finally:
@@ -84,6 +130,7 @@ class SweetMetaDatabase:
                     counts[table] = 0
             rescan_release: dict[str, Any] = {}
             review_release: dict[str, Any] = {}
+            reviewed_release = manifest("reviewed_release_metadata")
             try:
                 run = conn.execute("SELECT * FROM literature_rescan_runs ORDER BY created_at DESC LIMIT 1").fetchone()
                 if run:
@@ -103,6 +150,11 @@ class SweetMetaDatabase:
                 "releaseV1": manifest("release_v1_manifest"),
                 "rescanRelease": rescan_release,
                 "reviewRelease": review_release,
+                "reviewedRelease": {
+                    **reviewed_release,
+                    "version": reviewed_release.get("version", "v1.0.7"),
+                    "databaseFile": self.path.name,
+                } if reviewed_release else {},
                 "integrity": self.integrity(),
                 "counts": counts,
             }
@@ -287,12 +339,119 @@ class SweetMetaDatabase:
             for metric in quality_profile:
                 metric["denominator"] = public_total
 
+            release_meta = {str(row[0]): str(row[1]) for row in conn.execute("SELECT key, value FROM reviewed_release_metadata")}
+            composition = {
+                "level1": [dict(row) for row in conn.execute("""
+                    SELECT level1 AS key, level1 AS label, count(*) AS count,
+                           round(count(*) * 100.0 / ?, 2) AS percent
+                    FROM compound_sweetclass GROUP BY level1 ORDER BY count DESC, level1
+                """, (public_total,))],
+                "level2": [dict(row) for row in conn.execute("""
+                    SELECT sc.level1 AS parent, sc.level2 AS key, sc.level2 AS label,
+                           count(*) AS count, totals.parent_total AS parentTotal,
+                           round(count(*) * 100.0 / totals.parent_total, 2) AS percentWithinParent,
+                           round(count(*) * 100.0 / ?, 2) AS percentOverall
+                    FROM compound_sweetclass sc
+                    JOIN (
+                        SELECT level1, count(*) AS parent_total
+                        FROM compound_sweetclass GROUP BY level1
+                    ) totals ON totals.level1=sc.level1
+                    GROUP BY sc.level1, sc.level2, totals.parent_total
+                    ORDER BY sc.level1, count DESC, sc.level2
+                """, (public_total,))],
+            }
+            chemical_space = [dict(row) for row in conn.execute("""
+                SELECT p.compound_id AS id, p.method, p.x, p.y, p.fingerprint, p.metric,
+                       p.random_seed AS randomSeed, c.preferred_name AS name,
+                       c.molecular_formula AS formula, pc.molecular_weight AS molecularWeight,
+                       sc.level1 AS sweetClassLevel1, sc.level2 AS sweetClassLevel2,
+                       pv.evidence_grade AS evidenceGrade, pv.source_collection AS sourceCollection,
+                       pv.source_names AS sourceNames, s.release_evidence_readiness_tier AS releaseTier
+                FROM compound_projection p JOIN compounds c ON c.compound_id=p.compound_id
+                JOIN compound_sweetclass sc ON sc.compound_id=p.compound_id
+                JOIN compound_provenance pv ON pv.compound_id=p.compound_id
+                JOIN compound_physicochemical pc ON pc.compound_id=p.compound_id
+                JOIN release_v1_compound_status s ON s.compound_id=p.compound_id
+                ORDER BY p.method, p.compound_id
+            """)]
+            evidence = {
+                "sourceToGrade": [dict(row) for row in conn.execute("SELECT source_collection AS source, evidence_grade AS target, molecule_count AS count FROM reviewed_stat_source_evidence ORDER BY source, target")],
+                "gradeToFamily": [dict(row) for row in conn.execute("SELECT evidence_grade AS source, family_short AS target, molecule_count AS count FROM reviewed_stat_evidence_family ORDER BY source, target")],
+                "paths": [dict(row) for row in conn.execute("""
+                    SELECT pv.source_collection AS source, pv.evidence_grade AS grade,
+                           sc.level1 AS family, count(*) AS count
+                    FROM compound_provenance pv
+                    JOIN compound_sweetclass sc ON sc.compound_id=pv.compound_id
+                    GROUP BY pv.source_collection, pv.evidence_grade, sc.level1
+                    ORDER BY pv.source_collection, pv.evidence_grade, sc.level1
+                """)],
+                "familyGrades": [dict(row) for row in conn.execute("SELECT family_short AS family, evidence_grade AS grade, molecule_count AS count, family_total AS total, within_family_percent AS percent FROM reviewed_stat_evidence_by_family ORDER BY family, grade")],
+                "modules": [dict(row) for row in conn.execute("SELECT module, display_metric AS displayMetric, native_grain AS nativeGrain, count, color FROM reviewed_stat_module_counts ORDER BY rowid")],
+            }
+
+            def property_distribution(column: str, key: str, label: str,
+                                      unit: str, axis_precision: int) -> dict[str, Any]:
+                groups = []
+                for family_row in conn.execute("SELECT DISTINCT level1 FROM compound_sweetclass ORDER BY level1"):
+                    family = family_row[0]
+                    values = [float(row[0]) for row in conn.execute(f"""
+                        SELECT p.{column} FROM compound_physicochemical p
+                        JOIN compound_sweetclass sc ON sc.compound_id=p.compound_id
+                        WHERE sc.level1=? ORDER BY p.{column}
+                    """, (family,))]
+                    n = len(values)
+                    quantile = lambda fraction: values[round((n - 1) * fraction)]
+                    low, high = values[0], values[-1]
+                    width = (high - low) / 20 if high > low else 1.0
+                    bins = []
+                    for index in range(20):
+                        start = low + index * width
+                        end = high + 1e-12 if index == 19 else start + width
+                        count = sum(1 for value in values if start <= value < end)
+                        bins.append({"value": round(start + width / 2, 6), "density": round(count / n, 6)})
+                    groups.append({"family": family, "n": n, "min": low, "q1": quantile(.25),
+                                   "median": quantile(.5), "q3": quantile(.75), "max": high,
+                                   "density": bins})
+                return {"key": key, "label": label, "unit": unit,
+                        "axisPrecision": axis_precision, "groups": groups}
+
+            properties = [
+                property_distribution("molecular_weight", "molecularWeight", "Molecular weight", "Da", 0),
+                property_distribution("clogp", "clogp", "cLogP", "", 1),
+                property_distribution("tpsa", "tpsa", "TPSA", "A2", 0),
+                property_distribution("rotatable_bonds", "rotatableBonds", "Rotatable bonds", "count", 0),
+                property_distribution("hba", "hba", "H-bond acceptors", "count", 0),
+                property_distribution("hbd", "hbd", "H-bond donors", "count", 0),
+                property_distribution("bertz_complexity", "bertzComplexity", "Bertz complexity", "", 0),
+                property_distribution("fraction_csp3", "fractionCsp3", "Fraction Csp3", "fraction", 2),
+            ]
+            coverage_path = Path(__file__).resolve().parents[1] / "data" / "sweetmeta_reviewed_20261005" / "statistics" / "feature_coverage_matrix.csv"
+            feature_coverage = []
+            if coverage_path.is_file():
+                with coverage_path.open(encoding="utf-8-sig", newline="") as handle:
+                    for row in csv.DictReader(handle):
+                        feature_coverage.append({
+                            "resource": row.pop("resource"),
+                            "entryScope": row.pop("entry_scope"),
+                            "snapshot": row.pop("snapshot"),
+                            "features": {key: int(value) for key, value in row.items()},
+                        })
+            benchmark = {
+                "splits": [dict(row) for row in conn.execute("SELECT split, negative_count AS negative, positive_count AS positive, total FROM reviewed_benchmark_splits ORDER BY CASE split WHEN 'train' THEN 1 WHEN 'validation' THEN 2 ELSE 3 END")],
+                "models": [dict(row) for row in conn.execute("""
+                    SELECT model, display_model AS displayModel, split, seed, n, threshold,
+                           roc_auc AS rocAuc, pr_auc AS prAuc,
+                           balanced_accuracy AS balancedAccuracy, mcc, brier
+                    FROM reviewed_benchmark_metrics ORDER BY roc_auc DESC
+                """)],
+            }
             rescan = conn.execute("SELECT created_at FROM literature_rescan_runs ORDER BY created_at DESC LIMIT 1").fetchone()
             return {
                 "release": {
-                    "version": "v1.0.6", "databaseFile": self.path.name,
+                    "version": release_meta.get("version", "v1.0.7"), "databaseFile": self.path.name,
                     "sha256": hashlib.sha256(self.path.read_bytes()).hexdigest(),
-                    "generatedAt": rescan[0] if rescan else None, "publicCompounds": public_total,
+                    "generatedAt": release_meta.get("created_at") or (rescan[0] if rescan else None),
+                    "reviewDate": release_meta.get("review_date"), "publicCompounds": public_total,
                 },
                 "kpis": [
                     {"key": "compounds", "label": "Public compounds", "value": public_total, "detail": "Formally released compound records"},
@@ -310,26 +469,62 @@ class SweetMetaDatabase:
                 "domainCoverage": domain_coverage,
                 "foodGroups": food_groups,
                 "qualityProfile": quality_profile,
+                "composition": composition,
+                "chemicalSpace": chemical_space,
+                "evidenceCoverage": evidence,
+                "properties": properties,
+                "featureCoverageComparison": feature_coverage,
+                "benchmark": benchmark,
             }
 
     def list_compounds(self, *, query: str = "", page: int = 1, page_size: int = 25,
                        tier: str = "", review: str = "", domain: str = "",
                        food_group: str = "", sweetness_min_log10: float | None = None,
                        sweetness_max_log10: float | None = None, quality_metric: str = "",
-                       quality_state: str = "") -> dict[str, Any]:
+                       quality_state: str = "", sweet_class_l1: str = "",
+                       sweet_class_l2: str = "", evidence_grade: str = "",
+                       source_collection: str = "",
+                       mw_min: float | None = None, mw_max: float | None = None,
+                       clogp_min: float | None = None, clogp_max: float | None = None,
+                       tpsa_min: float | None = None, tpsa_max: float | None = None) -> dict[str, Any]:
         page = max(1, min(int(page), 100000))
         page_size = max(1, min(int(page_size), 100))
         params: list[Any] = []
         clauses = ["c.compound_id IN (SELECT compound_id FROM release_v1_compound_status)"]
         if query.strip():
-            clauses.append("(lower(c.compound_id) LIKE ? OR lower(c.preferred_name) LIKE ? OR lower(c.parent_inchikey) LIKE ? OR lower(c.molecular_formula) LIKE ? OR EXISTS (SELECT 1 FROM compound_aliases a WHERE a.compound_id=c.compound_id AND lower(a.alias) LIKE ?))")
+            clauses.append("""(
+                lower(c.compound_id) LIKE ? OR lower(sweetmeta_display_id(c.compound_id)) LIKE ?
+                OR lower(c.preferred_name) LIKE ? OR lower(c.parent_inchikey) LIKE ?
+                OR lower(c.molecular_formula) LIKE ?
+                OR EXISTS (SELECT 1 FROM compound_aliases a WHERE a.compound_id=c.compound_id AND lower(a.alias) LIKE ?)
+                OR EXISTS (
+                    SELECT 1 FROM compound_external_ids e
+                    WHERE e.compound_id=c.compound_id AND lower(e.external_id) LIKE ?
+                )
+            )""")
             needle = f"%{query.strip().lower()}%"
-            params.extend([needle] * 5)
+            params.extend([needle] * 7)
         if tier and tier != "all":
             normalized_tier = TIER_NAMES.get(tier.upper(), tier)
             clauses.append("s.release_evidence_readiness_tier = ?"); params.append(normalized_tier)
         if review == "required": clauses.append("s.manual_review_required = 1")
         if review == "released": clauses.append("s.manual_review_required = 0")
+        if sweet_class_l1:
+            clauses.append("sc.level1 = ?"); params.append(sweet_class_l1)
+        if sweet_class_l2:
+            clauses.append("sc.level2 = ?"); params.append(sweet_class_l2)
+        if evidence_grade:
+            clauses.append("pv.evidence_grade = ?"); params.append(evidence_grade.upper())
+        if source_collection:
+            clauses.append("pv.source_collection = ?"); params.append(source_collection)
+        for column, lower, upper in (
+            ("molecular_weight", mw_min, mw_max), ("clogp", clogp_min, clogp_max),
+            ("tpsa", tpsa_min, tpsa_max),
+        ):
+            if lower is not None:
+                clauses.append(f"pc.{column} >= ?"); params.append(lower)
+            if upper is not None:
+                clauses.append(f"pc.{column} <= ?"); params.append(upper)
         domain_clauses = {
             "taste": "EXISTS (SELECT 1 FROM taste_assertions t WHERE t.compound_id=c.compound_id AND t.assertion_status='accepted')",
             "sweetness": "EXISTS (SELECT 1 FROM sweetness_measurements m WHERE m.compound_id=c.compound_id AND m.log10_relative_sweetness IS NOT NULL)",
@@ -365,25 +560,83 @@ class SweetMetaDatabase:
             clauses.append(f"NOT {conflict}" if quality_state == "verified" else conflict)
         where = " AND ".join(clauses)
         with self.connection() as conn:
-            total = conn.execute(f"SELECT count(*) FROM compounds c JOIN release_v1_compound_status s ON s.compound_id=c.compound_id LEFT JOIN compound_final_qc_v1 q ON q.compound_id=c.compound_id WHERE {where}", params).fetchone()[0]
+            reviewed = bool(conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='compound_sweetclass'").fetchone())
+            if reviewed:
+                joins = """FROM compounds c JOIN release_v1_compound_status s ON s.compound_id=c.compound_id
+                    LEFT JOIN compound_final_qc_v1 q ON q.compound_id=c.compound_id
+                    JOIN compound_sweetclass sc ON sc.compound_id=c.compound_id
+                    JOIN compound_provenance pv ON pv.compound_id=c.compound_id
+                    JOIN compound_physicochemical pc ON pc.compound_id=c.compound_id"""
+                reviewed_select = """pc.molecular_weight AS molecularWeight, pc.heavy_atom_count AS heavyAtomCount,
+                       pc.clogp, pc.tpsa, pc.rotatable_bonds AS rotatableBonds, pc.hba, pc.hbd,
+                       sc.level1 AS sweetClassLevel1, sc.level2 AS sweetClassLevel2,
+                       pv.evidence_grade AS evidenceGrade, pv.source_collection AS sourceCollection,
+                       pv.source_names AS reviewedSourceNames,"""
+            else:
+                if any((sweet_class_l1, sweet_class_l2, evidence_grade, source_collection,
+                        mw_min, mw_max, clogp_min, clogp_max, tpsa_min, tpsa_max)):
+                    return {"items": [], "page": page, "pageSize": page_size, "total": 0, "pageCount": 1}
+                joins = """FROM compounds c JOIN release_v1_compound_status s ON s.compound_id=c.compound_id
+                    LEFT JOIN compound_final_qc_v1 q ON q.compound_id=c.compound_id"""
+                reviewed_select = """c.molecular_weight AS molecularWeight, c.heavy_atom_count AS heavyAtomCount,
+                       NULL AS clogp, NULL AS tpsa, NULL AS rotatableBonds, NULL AS hba, NULL AS hbd,
+                       NULL AS sweetClassLevel1, NULL AS sweetClassLevel2, NULL AS evidenceGrade,
+                       NULL AS sourceCollection, NULL AS reviewedSourceNames,"""
+            total = conn.execute(f"SELECT count(*) {joins} WHERE {where}", params).fetchone()[0]
             rows = conn.execute(f"""
-                SELECT c.compound_id AS id, 'small-molecule' AS entityType, c.preferred_name AS name,
+                SELECT c.compound_id AS id, sweetmeta_display_id(c.compound_id) AS displayId,
+                       'small-molecule' AS entityType, c.preferred_name AS name,
                        c.parent_inchikey AS inchiKey, c.parent_isomeric_smiles AS isomericSmiles,
                        c.parent_canonical_smiles AS canonicalSmiles, c.molecular_formula AS formula,
-                       c.molecular_weight AS molecularWeight, c.formal_charge AS formalCharge,
-                       c.heavy_atom_count AS heavyAtomCount, s.release_evidence_readiness_tier AS releaseTier,
-                       s.release_evidence_gap_type AS releaseGap, s.manual_review_required AS reviewRequired
-                FROM compounds c JOIN release_v1_compound_status s ON s.compound_id=c.compound_id
-                LEFT JOIN compound_final_qc_v1 q ON q.compound_id=c.compound_id
-                WHERE {where} ORDER BY lower(coalesce(c.preferred_name, c.compound_id)), c.compound_id
+                       {reviewed_select} c.formal_charge AS formalCharge,
+                       s.release_evidence_readiness_tier AS releaseTier,
+                       s.release_evidence_gap_type AS releaseGap, s.manual_review_required AS reviewRequired,
+                       (
+                           SELECT group_concat(external_id, char(31)) FROM (
+                               SELECT DISTINCT e.external_id
+                               FROM compound_external_ids e
+                               WHERE e.compound_id=c.compound_id AND lower(e.namespace)='cas'
+                               ORDER BY e.external_id
+                           )
+                       ) AS casNumbers,
+                       (
+                           SELECT e.external_id FROM compound_external_ids e
+                           WHERE e.compound_id=c.compound_id AND lower(e.namespace)='pubchemcid'
+                           ORDER BY e.external_id LIMIT 1
+                       ) AS pubchemCid,
+                       (
+                           SELECT cm.chemical_class FROM coconut_memberships cm
+                           WHERE cm.compound_id=c.compound_id AND trim(coalesce(cm.chemical_class, ''))<>''
+                           ORDER BY cm.annotation_level DESC, cm.chemical_class LIMIT 1
+                       ) AS chemicalClass,
+                       (
+                           SELECT group_concat(source_name, char(31)) FROM (
+                               SELECT DISTINCT coalesce(sr.source_name, records.source_id) AS source_name,
+                                      CASE WHEN records.source_id=c.preferred_name_source THEN 0 ELSE 1 END AS source_rank
+                               FROM source_records records
+                               LEFT JOIN source_registry sr ON sr.source_id=records.source_id
+                               WHERE records.compound_id=c.compound_id
+                               ORDER BY source_rank, lower(source_name)
+                           )
+                       ) AS sourceNames
+                {joins}
+                WHERE {where} ORDER BY sweetmeta_display_order(c.compound_id), c.compound_id
                 LIMIT ? OFFSET ?
             """, [*params, page_size, (page - 1) * page_size]).fetchall()
-        return {"items": [dict(row) for row in rows], "page": page, "pageSize": page_size, "total": total, "pageCount": max(1, (total + page_size - 1) // page_size)}
+        items = []
+        for row in rows:
+            item = dict(row)
+            item["casNumbers"] = item["casNumbers"].split(chr(31)) if item["casNumbers"] else []
+            item["sourceNames"] = item["sourceNames"].split(chr(31)) if item["sourceNames"] else []
+            item["reviewedSourceNames"] = item["reviewedSourceNames"].split(";") if item["reviewedSourceNames"] else []
+            items.append(item)
+        return {"items": items, "page": page, "pageSize": page_size, "total": total, "pageCount": max(1, (total + page_size - 1) // page_size)}
 
     def compound(self, compound_id: str) -> dict[str, Any] | None:
         with self.connection() as conn:
             row = conn.execute("""
-                SELECT c.*, s.release_evidence_readiness_tier AS release_tier,
+                SELECT c.*, sweetmeta_display_id(c.compound_id) AS display_id,
+                       s.release_evidence_readiness_tier AS release_tier,
                        s.release_evidence_gap_type AS release_gap, s.manual_review_required,
                        s.status_note, q.*
                 FROM compounds c JOIN release_v1_compound_status s ON s.compound_id=c.compound_id
@@ -393,6 +646,16 @@ class SweetMetaDatabase:
             if row is None: return None
             result = dict(row)
             result["aliases"] = [dict(r) for r in conn.execute("SELECT alias, source_id, source_record_id FROM compound_aliases WHERE compound_id=? ORDER BY alias", (compound_id,))]
+            result["externalIds"] = [dict(r) for r in conn.execute("SELECT namespace, external_id, source_id, source_record_id FROM compound_external_ids WHERE compound_id=? ORDER BY namespace, external_id", (compound_id,))]
+            classification = conn.execute("SELECT * FROM compound_sweetclass WHERE compound_id=?", (compound_id,)).fetchone()
+            provenance = conn.execute("SELECT * FROM compound_provenance WHERE compound_id=?", (compound_id,)).fetchone()
+            physicochemical = conn.execute("SELECT * FROM compound_physicochemical WHERE compound_id=?", (compound_id,)).fetchone()
+            stereo_review = conn.execute("SELECT * FROM compound_stereo_review WHERE compound_id=?", (compound_id,)).fetchone()
+            result["classification"] = dict(classification) if classification else None
+            result["provenance"] = dict(provenance) if provenance else None
+            result["physicochemical"] = dict(physicochemical) if physicochemical else None
+            result["projections"] = [dict(r) for r in conn.execute("SELECT method, x, y, fingerprint, metric, random_seed FROM compound_projection WHERE compound_id=? ORDER BY method", (compound_id,))]
+            result["stereoReview"] = dict(stereo_review) if stereo_review else None
             result["tasteAssertions"] = [dict(r) for r in conn.execute("SELECT * FROM taste_assertions WHERE compound_id=? ORDER BY assertion_id", (compound_id,)).fetchall()]
             result["measurements"] = [dict(r) for r in conn.execute("SELECT * FROM sweetness_measurements WHERE compound_id=? ORDER BY rowid", (compound_id,)).fetchall()]
             link_table = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='literature_compound_links'").fetchone()
@@ -423,14 +686,55 @@ class SweetMetaDatabase:
             """, (compound_id, compound_id)).fetchall()]
                 result["literatureCandidateCount"] = 0
                 result["literatureReviewRequiredCount"] = 0
-            result["foodOccurrences"] = [dict(r) for r in conn.execute("SELECT * FROM food_occurrences WHERE compound_id=? LIMIT 100", (compound_id,)).fetchall()]
+            result["foodOccurrences"] = [dict(r) for r in conn.execute("""
+                SELECT f.*, i.* FROM food_occurrences f
+                LEFT JOIN food_items i ON i.food_id=f.food_id
+                WHERE f.compound_id=? ORDER BY i.food_group, i.food_name LIMIT 100
+            """, (compound_id,)).fetchall()]
             result["regulatory"] = [dict(r) for r in conn.execute("""
-                SELECT re.* FROM regulatory_evaluations re
-                JOIN regulatory_substances rs ON rs.regulatory_substance_id=re.regulatory_substance_id
-                WHERE rs.compound_id=?
+                SELECT rs.*, re.* FROM regulatory_substances rs
+                LEFT JOIN regulatory_evaluations re ON re.regulatory_substance_id=rs.regulatory_substance_id
+                WHERE rs.compound_id=? ORDER BY rs.regulatory_substance_id
             """, (compound_id,)).fetchall()]
             result["receptorActivities"] = [dict(r) for r in conn.execute("SELECT * FROM receptor_activities WHERE compound_id=?", (compound_id,)).fetchall()]
+            result["moduleCounts"] = {
+                "sweetness": conn.execute("SELECT count(*) FROM sweetness_measurements WHERE compound_id=?", (compound_id,)).fetchone()[0],
+                "literature": len(result["literature"]),
+                "food": conn.execute("SELECT count(*) FROM food_occurrences WHERE compound_id=?", (compound_id,)).fetchone()[0],
+                "receptors": conn.execute("SELECT count(*) FROM receptor_activities WHERE compound_id=?", (compound_id,)).fetchone()[0],
+                "regulatory": conn.execute("SELECT count(*) FROM regulatory_substances WHERE compound_id=?", (compound_id,)).fetchone()[0],
+                "conflicts": conn.execute("SELECT count(*) FROM data_conflicts WHERE compound_id=?", (compound_id,)).fetchone()[0],
+            }
             return result
+
+    def projection_context(self, compound_id: str) -> dict[str, Any] | None:
+        """Return only the selected compound's SweetClass projection context."""
+        with self.connection() as conn:
+            selected = conn.execute("""
+                SELECT sc.level1, sc.level2 FROM compound_sweetclass sc
+                JOIN release_v1_compound_status s ON s.compound_id=sc.compound_id
+                WHERE sc.compound_id=?
+            """, (compound_id,)).fetchone()
+            if selected is None:
+                return None
+            points = [dict(row) for row in conn.execute("""
+                SELECT p.compound_id AS id, p.method, p.x, p.y,
+                       c.preferred_name AS name, sc.level1 AS sweetClassLevel1,
+                       sc.level2 AS sweetClassLevel2,
+                       CASE WHEN p.compound_id=? THEN 1 ELSE 0 END AS selected
+                FROM compound_projection p
+                JOIN compounds c ON c.compound_id=p.compound_id
+                JOIN compound_sweetclass sc ON sc.compound_id=p.compound_id
+                JOIN release_v1_compound_status s ON s.compound_id=p.compound_id
+                WHERE sc.level1=?
+                ORDER BY p.method, p.compound_id
+            """, (compound_id, selected["level1"])).fetchall()]
+            return {
+                "compoundId": compound_id,
+                "family": selected["level1"],
+                "subclass": selected["level2"],
+                "points": points,
+            }
 
     def literature(self, *, query: str = "", page: int = 1, page_size: int = 25,
                    year: int | None = None, year_from: int | None = None,

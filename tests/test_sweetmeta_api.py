@@ -12,7 +12,7 @@ from flask import Flask
 
 
 DB_PATH = Path("/Users/jackieren/Desktop/SweetDatabase_v1.0.4_20260820.sqlite")
-CURRENT_DB_PATH = Path(__file__).resolve().parents[1] / "outputs/sweetmeta-literature-rescan/SweetDatabase_v1.0.6_20260921.sqlite"
+CURRENT_DB_PATH = Path(__file__).resolve().parents[1] / "outputs/sweetmeta-reviewed-v107/SweetDatabase_v1.0.7_20261005.sqlite"
 
 
 @pytest.fixture()
@@ -72,7 +72,7 @@ def test_statistics_endpoint_reports_public_release_only():
         pytest.skip("current SweetMeta release is not available")
     current = SweetMetaDatabase(CURRENT_DB_PATH)
     stats = current.statistics()
-    assert stats["release"]["version"] == "v1.0.6"
+    assert stats["release"]["version"] == "v1.0.7"
     assert stats["release"]["publicCompounds"] == 1296
     assert sum(item["count"] for item in stats["readiness"]) == 1296
     literature = next(item for item in stats["domainCoverage"] if item["key"] == "literature")
@@ -99,12 +99,117 @@ def test_statistics_drilldown_filters_match_aggregates():
     assert page["total"] == interval["records"]
 
 
+def test_compound_catalog_uses_stable_workbook_ids_and_identity_fields():
+    if not CURRENT_DB_PATH.is_file():
+        pytest.skip("current SweetMeta release is not available")
+    current = SweetMetaDatabase(CURRENT_DB_PATH)
+
+    first_page = current.list_compounds(page=1, page_size=2)
+    first = first_page["items"][0]
+    assert first["displayId"] == "000001"
+    assert first["id"] == "CMP_ABUUSHLXFTWWDH-UHFFFAOYSA-N"
+    assert isinstance(first["casNumbers"], list)
+    assert first["pubchemCid"] == "78171367"
+    assert first["sourceNames"][0] == "ChemTastesDB"
+
+    searched = current.list_compounds(query="000001", page_size=10)
+    assert searched["total"] == 1
+    assert searched["items"][0]["displayId"] == "000001"
+
+    last = current.list_compounds(query="001296", page_size=10)
+    assert last["total"] == 1
+    assert last["items"][0]["displayId"] == "001296"
+
+
 def test_statistics_endpoint_returns_503_when_database_is_missing(tmp_path):
     app = Flask(__name__)
     app.register_blueprint(create_sweetmeta_blueprint(SweetMetaDatabase(tmp_path / "missing.sqlite")))
     response = app.test_client().get("/api/sweetmeta/statistics")
     assert response.status_code == 503
     assert response.get_json()["success"] is False
+
+
+def test_reviewed_release_filters_detail_and_statistics():
+    current = SweetMetaDatabase(CURRENT_DB_PATH)
+    stats = current.statistics()
+    assert len(stats["composition"]["level1"]) == 7
+    assert len(stats["composition"]["level2"]) == 28
+    assert all(row["parentTotal"] >= row["count"] for row in stats["composition"]["level2"])
+    assert len(stats["chemicalSpace"]) == 2592
+    assert len(stats["properties"]) == 8
+    assert len(stats["benchmark"]["models"]) == 4
+    assert sum(row["count"] for row in stats["evidenceCoverage"]["sourceToGrade"]) == 1296
+    assert sum(row["count"] for row in stats["evidenceCoverage"]["paths"]) == 1296
+    assert len(stats["featureCoverageComparison"]) == 4
+    family = stats["composition"]["level1"][0]
+    assert current.list_compounds(sweet_class_l1=family["key"], page_size=1)["total"] == family["count"]
+    e1 = current.list_compounds(evidence_grade="E1", page_size=1)
+    assert e1["total"] > 0
+    path = stats["evidenceCoverage"]["paths"][0]
+    path_result = current.list_compounds(
+        source_collection=path["source"], evidence_grade=path["grade"],
+        sweet_class_l1=path["family"], page_size=1,
+    )
+    assert path_result["total"] == path["count"]
+    detail = current.compound(e1["items"][0]["id"])
+    assert detail["classification"]["level1"]
+    assert detail["provenance"]["evidence_grade"] == "E1"
+    assert detail["physicochemical"]["calculation_source"].startswith("RDKit")
+    assert {row["method"] for row in detail["projections"]} == {"umap", "pca"}
+
+
+def test_compound_detail_api_exposes_identity_modules_and_family_projection_context():
+    if not CURRENT_DB_PATH.is_file():
+        pytest.skip("current SweetMeta release is not available")
+    database = SweetMetaDatabase(CURRENT_DB_PATH)
+    app = Flask(__name__)
+    app.register_blueprint(create_sweetmeta_blueprint(database))
+    client = app.test_client()
+    compound_id = "CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N"
+
+    detail_response = client.get(f"/api/sweetmeta/compounds/{compound_id}")
+    assert detail_response.status_code == 200
+    detail = detail_response.get_json()["data"]
+    assert detail["identity"]["stableId"] == compound_id
+    assert detail["identity"]["displayId"]
+    assert detail["identity"]["aliases"] == detail["aliases"]
+    assert detail["identity"]["externalIds"] == detail["externalIds"]
+    assert detail["modules"]["literature"] == len(detail["literature"])
+    assert detail["modules"]["food"] == detail["food"]["count"]
+    assert detail["modules"]["receptors"] == detail["receptors"]["count"]
+    assert detail["modules"]["regulatory"] == detail["regulatory"]["count"]
+
+    context_response = client.get(f"/api/sweetmeta/compounds/{compound_id}/projection-context")
+    assert context_response.status_code == 200
+    context = context_response.get_json()["data"]
+    assert context["compoundId"] == compound_id
+    assert {point["method"] for point in context["points"]} == {"umap", "pca"}
+    assert all(point["sweetClassLevel1"] == context["family"] for point in context["points"])
+    selected = [point for point in context["points"] if point["selected"]]
+    assert len(selected) == 2
+    assert {point["id"] for point in selected} == {compound_id}
+
+
+def test_reviewed_downloads_are_allowlisted():
+    app = Flask(__name__)
+    app.register_blueprint(create_sweetmeta_blueprint(SweetMetaDatabase(CURRENT_DB_PATH)))
+    client = app.test_client()
+    manifest = client.get("/api/sweetmeta/downloads").get_json()["data"]
+    assert manifest["version"] == "v1.0.7"
+    assert {item["key"] for item in manifest["items"]} == {"database", "sources", "dictionary", "manifest"}
+    assert all(len(item["sha256"]) == 64 for item in manifest["items"])
+    assert client.get("/api/sweetmeta/downloads/database").status_code == 200
+    assert client.get("/api/sweetmeta/downloads/not-allowed").status_code == 404
+
+
+def test_representative_reviewed_records():
+    current = SweetMetaDatabase(CURRENT_DB_PATH)
+    ordinary = current.compound("CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N")
+    assert ordinary and ordinary["classification"] and ordinary["physicochemical"]
+    stereo = current.compound("CMP_ALCCZPQMMCGQSQ-UHFFFAOYSA-N")
+    assert stereo and stereo["stereoReview"] and stereo["stereoReview"]["qc_applicable"]
+    missing_external = current.compound("CMP_ABXDYPWRPFNMFF-UHFFFAOYSA-N")
+    assert missing_external and missing_external["externalIds"] == []
 
 
 def test_only_accepted_and_reviewed_links_are_public(tmp_path):

@@ -1,0 +1,13 @@
+module,display_metric,native_grain,count,color
+Data sources,57 registered sources,source registry,57,#2D9CDB
+Literature corpus,"1,735 records",literature record,1735,#18A7C9
+Full-text archive,"1,753 PDFs
+25,095 pages",PDF / page,1753,#11BFAE
+Taste annotations,"7,312 assertions",taste assertion,7312,#36C775
+Quantitative sweetness,316 compiled labels,measurement label,316,#85CA33
+Receptor biology,298 activity records,activity record,298,#E6D42E
+Food occurrence,"84,566 co-occurrences",food–compound record,84566,#F5A446
+Safety & regulation,"5 patent families
+195 substances",patent family / substance,195,#F06A79
+Experimental structures,287 structure records,structure record,287,#B367BD
+Sweet proteins,12 products,protein product,12,#5B70C9

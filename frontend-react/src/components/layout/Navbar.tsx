@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Menu, X } from 'lucide-react';
+import type { Session } from '@supabase/supabase-js';
 import type { FeatureType } from '../../routing';
 import { MD_BUILDER_ENABLED, REFERENCES_NAV_ENABLED } from '../../featureFlags';
+import UserMenu from './UserMenu';
 
 interface NavbarProps {
   activeScreen: number;
@@ -10,6 +12,8 @@ interface NavbarProps {
   activeFeature: FeatureType;
   mdBuilderEnabled?: boolean;
   referencesNavEnabled?: boolean;
+  onSignInClick?: () => void;
+  session?: Session | null;
 }
 
 interface NavCategory {
@@ -23,6 +27,8 @@ const Navbar: React.FC<NavbarProps> = ({
   activeFeature,
   mdBuilderEnabled = MD_BUILDER_ENABLED,
   referencesNavEnabled = REFERENCES_NAV_ENABLED,
+  onSignInClick,
+  session,
 }) => {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -221,6 +227,18 @@ const Navbar: React.FC<NavbarProps> = ({
               References
             </button>
           )}
+
+          {/* Sign In Button or User Menu */}
+          {session ? (
+            <UserMenu session={session} />
+          ) : onSignInClick ? (
+            <button
+              onClick={onSignInClick}
+              className="ml-2 px-5 py-2.5 rounded-full text-base font-medium transition-all duration-300 bg-[var(--color-primary)] text-white hover:bg-blue-600"
+            >
+              Sign In
+            </button>
+          ) : null}
         </div>
 
         {/* Mobile Menu Button */}

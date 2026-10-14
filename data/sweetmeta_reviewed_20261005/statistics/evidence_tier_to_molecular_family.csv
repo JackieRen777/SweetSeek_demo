@@ -1,0 +1,22 @@
+evidence_short,family_short,molecule_count
+E1,Peptide / amino-acid,181
+E1,Glycosidic natural,148
+E1,Aromatic / phenolic / flavonoid,110
+E1,Heterocyclic / specialised,57
+E1,Sulfur / nitrogen synthetic,21
+E1,Carbohydrate / rare sugar / polyol,57
+E1,Terpenoid / steroid / lipid-like,17
+E2,Peptide / amino-acid,3
+E2,Glycosidic natural,41
+E2,Aromatic / phenolic / flavonoid,4
+E2,Heterocyclic / specialised,6
+E2,Sulfur / nitrogen synthetic,0
+E2,Carbohydrate / rare sugar / polyol,2
+E2,Terpenoid / steroid / lipid-like,5
+E3,Peptide / amino-acid,318
+E3,Glycosidic natural,88
+E3,Aromatic / phenolic / flavonoid,66
+E3,Heterocyclic / specialised,56
+E3,Sulfur / nitrogen synthetic,94
+E3,Carbohydrate / rare sugar / polyol,8
+E3,Terpenoid / steroid / lipid-like,14

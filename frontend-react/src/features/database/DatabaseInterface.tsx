@@ -1,21 +1,21 @@
-import { lazy, Suspense, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
-  AlertTriangle, ArrowLeft, ArrowUpDown, BarChart3, Beaker, BookOpen, ChevronDown,
+  AlertTriangle, ArrowLeft, ArrowUpDown, Atom, BarChart3, Beaker, BookOpen, Check, ChevronDown,
   ChevronLeft, ChevronRight, CircleHelp, Cuboid, Database, Download, ExternalLink,
-  FileWarning, Filter, FlaskConical, Home, Library, LockKeyhole, Menu,
-  Search, ShieldCheck, X,
+  FileCheck2, FileWarning, Filter, FlaskConical, Home, Library, Menu,
+  Network, Search, ShieldCheck, X, Copy,
 } from 'lucide-react';
-import { CHEMICAL_SPACE, type ChemicalSpacePoint } from './data/chemicalSpace';
+import { CHEMICAL_SPACE } from './data/chemicalSpace';
 import { DATABASE_COMPOUNDS, DATABASE_METADATA, formatNumber, readable, tierCode } from './data/portalData';
 import LITERATURE_SUMMARY from './data/literatureSummary.generated.json';
+import LiteratureEvidenceTable from './components/LiteratureTable';
 import type { DatabaseCompound, DatabaseSection } from './types';
-import { fetchSweetMetaCompound, fetchSweetMetaCompounds, fetchSweetMetaLiterature, type SweetMetaCompoundDetail, type SweetMetaLiteratureRecord } from './sweetmetaApi';
-import { loadLiteratureData, RELATIONSHIP_LABELS, type CompoundPaperLink, type LiteratureData, type LiteratureRelationship } from './literature';
+import { fetchSweetMetaCompound, fetchSweetMetaCompounds, fetchSweetMetaDownloads, fetchSweetMetaLiterature, type SweetMetaCompoundDetail, type SweetMetaDataRecord, type SweetMetaDownloads, type SweetMetaLiteratureRecord } from './sweetmetaApi';
+import { loadLiteratureData, RELATIONSHIP_LABELS, type CompoundPaperLink, type LiteratureData } from './literature';
 import Molecule3DViewer, { preloadMolecule3D } from './components/Molecule3DViewer';
+import CompoundProjection from './components/CompoundProjection';
 import StatisticsDashboard from './components/StatisticsDashboard';
 import './database.css';
-
-const ChemicalSpace3D = lazy(() => import('./components/ChemicalSpace3D'));
 
 const SECTIONS: Array<{ id: DatabaseSection; label: string; icon: typeof Database }> = [
   { id: 'overview', label: 'Home', icon: Home },
@@ -26,22 +26,20 @@ const SECTIONS: Array<{ id: DatabaseSection; label: string; icon: typeof Databas
 ];
 
 const DETAIL_SECTIONS = [
-  { id: 'overview', label: 'Overview', icon: CircleHelp },
-  { id: 'sweetness', label: 'Relative Sweetness', icon: FlaskConical },
-  { id: 'structure', label: 'Structure & Identifiers', icon: Cuboid },
-  { id: 'properties', label: 'Physicochemical Properties', icon: Beaker },
-  { id: 'similar', label: 'Similar Compounds', icon: Database },
-  { id: 'literature-evidence', label: 'Literature & Evidence', icon: BookOpen },
-  { id: 'sources', label: 'Data Sources', icon: Library },
+  { id: 'basic', label: 'Overview', icon: CircleHelp, group: 'Compound profile' },
+  { id: 'sweetness', label: 'Sweetness & evidence', icon: FlaskConical, group: 'Compound profile' },
+  { id: 'chemical-space', label: 'Chemical space', icon: Network, group: 'Compound profile' },
+  { id: 'literature', label: 'Literature', icon: BookOpen, group: 'Evidence' },
+  { id: 'linked', label: 'Linked records', icon: FileCheck2, group: 'Evidence' },
+  { id: 'structure', label: 'Structure & similarity', icon: Cuboid, group: 'Structure quality' },
+  { id: 'quality', label: 'QC & review', icon: ShieldCheck, group: 'Structure quality' },
 ] as const;
 
 type DetailSection = typeof DETAIL_SECTIONS[number]['id'];
 
-const TIER_INFO = {
-  R1: { title: 'High readiness', detail: 'Strong traceability and no significant evidence gap.' },
-  R2: { title: 'Traceable', detail: 'Traceable sweet evidence with partial depth or coverage.' },
-  R3: { title: 'Dataset supported', detail: 'Supported by a single dataset; independent references are still needed.' },
-  R4: { title: 'High-risk identity', detail: 'Connectivity or identity requires manual scientific review.' },
+const LEGACY_DETAIL_PANELS: Record<string, DetailSection> = {
+  classification: 'basic', properties: 'basic', provenance: 'sweetness',
+  food: 'linked', receptors: 'linked', regulatory: 'linked', similar: 'structure',
 };
 
 const initialState = () => {
@@ -58,6 +56,13 @@ const initialState = () => {
     sweetnessMaxLog10: params.get('sweetnessMaxLog10') ?? '',
     qualityMetric: params.get('qualityMetric') ?? '',
     qualityState: params.get('qualityState') ?? '',
+    sweetClassL1: params.get('sweetClassL1') ?? '',
+    sweetClassL2: params.get('sweetClassL2') ?? '',
+    evidenceGrade: params.get('evidenceGrade') ?? '',
+    sourceCollection: params.get('sourceCollection') ?? '',
+    mwMin: params.get('mwMin') ?? '', mwMax: params.get('mwMax') ?? '',
+    clogpMin: params.get('clogpMin') ?? '', clogpMax: params.get('clogpMax') ?? '',
+    tpsaMin: params.get('tpsaMin') ?? '', tpsaMax: params.get('tpsaMax') ?? '',
     literatureYearFrom: params.get('yearFrom') ?? '',
     literatureYearTo: params.get('yearTo') ?? '',
     compoundFamily: params.get('compoundFamily') ?? 'all',
@@ -78,15 +83,11 @@ const MoleculeImage = ({ compound, small = false }: { compound: DatabaseCompound
   const smiles = compound.pubchem?.smiles ?? compound.isomericSmiles ?? compound.canonicalSmiles;
   const localSource = smiles ? `/database-data/structures-2d/${compound.id}.svg` : null;
   const remoteSource = cid ? `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/PNG?record_type=2d&image_size=${small ? 140 : 500}x${small ? 140 : 500}` : null;
-  const [source, setSource] = useState(localSource ?? remoteSource);
-  useEffect(() => setSource(localSource ?? remoteSource), [localSource, remoteSource]);
+  const [failure, setFailure] = useState<{ id: string; source: 'local' | 'remote' } | null>(null);
+  const failed = failure?.id === compound.id ? failure.source : null;
+  const source = failed === 'local' ? remoteSource : failed === 'remote' ? null : localSource ?? remoteSource;
   if (!source) return <div className={`sdb-structure-empty ${small ? 'small' : ''}`}><FlaskConical /></div>;
-  return <img className={`sdb-structure ${small ? 'small' : ''}`} src={source} alt={`${compound.name} verified structure`} onError={() => setSource(source === localSource ? remoteSource : null)} />;
-};
-
-const TierBadge = ({ tier }: { tier: string | null }) => {
-  const code = tierCode(tier);
-  return <span className={`sdb-tier tier-${code.toLowerCase()}`}>{code}</span>;
+  return <img className={`sdb-structure ${small ? 'small' : ''}`} src={source} alt={`${compound.name} verified structure`} onError={() => setFailure({ id: compound.id, source: source === localSource ? 'local' : 'remote' })} />;
 };
 
 const ReviewBadge = ({ compound }: { compound: DatabaseCompound }) => compound.review.required || compound.pubchem?.matchStatus === 'matched-with-discrepancy'
@@ -97,56 +98,33 @@ const EmptyState = ({ icon: Icon, title, children }: { icon: typeof Database; ti
   <div className="sdb-empty-state"><Icon /><h3>{title}</h3><p>{children}</p></div>
 );
 
-const CompoundLandscape = ({ onSelect }: { onSelect: (id: string) => void }) => {
-  const [mode, setMode] = useState<'2d' | '3d'>('2d');
-  const [hovered, setHovered] = useState<{ compound: DatabaseCompound; point: ChemicalSpacePoint } | null>(null);
-  const points = useMemo(() => {
-    const compoundsById = new Map(DATABASE_COMPOUNDS.map((compound) => [compound.id, compound]));
-    return CHEMICAL_SPACE.points.flatMap((point) => {
-      const compound = compoundsById.get(point.id);
-      return compound ? [{ point, compound }] : [];
-    });
-  }, []);
-  return (
-    <section className="sdb-landscape">
-      <div className="sdb-landscape-heading"><h2 className="sdb-landscape-title">ECFP4 Molecular Similarity Landscape</h2><div className="sdb-space-mode" role="group" aria-label="Map dimension"><button type="button" className={mode === '2d' ? 'active' : ''} aria-pressed={mode === '2d'} onClick={() => setMode('2d')}>2D</button><button type="button" className={mode === '3d' ? 'active' : ''} aria-pressed={mode === '3d'} onClick={() => setMode('3d')}>3D</button></div></div>
-      <div className="sdb-landscape-canvas">
-        {mode === '3d' ? <Suspense fallback={<div className="sdb-space-3d-state" role="status">Loading 3D molecular space...</div>}><ChemicalSpace3D onSelect={onSelect} /></Suspense> : <div className="sdb-space-stage">
-          <svg viewBox="0 0 1000 400" role="img" aria-label="ECFP4 UMAP structural similarity map">
-            <defs><pattern id="space-grid" width="92" height="72" patternUnits="userSpaceOnUse"><path d="M92 0H0V72" fill="none" stroke="#edf1f4" /></pattern></defs>
-            <rect x="44" y="20" width="924" height="330" rx="4" fill="url(#space-grid)" className="sdb-space-field" />
-            {points.map(({ point, compound }) => {
-              const x = 54 + point.x * 904;
-              const y = 340 - point.y * 310;
-              const show = () => setHovered({ compound, point });
-              return <circle key={compound.id} cx={x} cy={y} r={compound.review.required ? 2.25 : 1.7} className={`sdb-dot cluster-${point.cluster.toLowerCase()}`} tabIndex={0} role="button" aria-label={`Inspect ${compound.name}`} onMouseEnter={show} onMouseLeave={() => setHovered(null)} onFocus={show} onBlur={() => setHovered(null)} onClick={() => onSelect(compound.id)} onKeyDown={(event) => event.key === 'Enter' && onSelect(compound.id)} />;
-            })}
-            <text x="506" y="382" textAnchor="middle" className="sdb-axis-label">UMAP 1</text>
-            <text x="18" y="185" transform="rotate(-90 18 185)" textAnchor="middle" className="sdb-axis-label">UMAP 2</text>
-          </svg>
-          {hovered && <div className={`sdb-space-tooltip ${hovered.point.y > 0.72 ? 'below' : ''}`} role="status" style={{ left: `${17 + hovered.point.x * 66}%`, top: `${6 + (1 - hovered.point.y) * 78}%` }}>
-            <div className="sdb-space-tooltip-head"><MoleculeImage compound={hovered.compound} small /><span><strong>{hovered.compound.name}</strong><small>{hovered.compound.id}</small></span></div>
-            <dl><div><dt>Molecular formula</dt><dd>{hovered.compound.formula ?? 'Not available'}</dd></div><div><dt>Molecular weight</dt><dd>{formatNumber(hovered.compound.molecularWeight)} Da</dd></div><div><dt>Structural cluster</dt><dd>{hovered.point.cluster}</dd></div><div><dt>Evidence tier</dt><dd><TierBadge tier={hovered.compound.evidence.releaseTier} /></dd></div><div><dt>Assertions</dt><dd>{hovered.compound.evidence.acceptedAssertions}</dd></div></dl>
-            <small className="sdb-space-tooltip-action">Click to open record</small>
-          </div>}
-        </div>}
-        <div className="sdb-space-footer">
-          <div className="sdb-legend">{CHEMICAL_SPACE.metadata.clusters.map((cluster) => <span key={cluster.id}><i className={`cluster-${cluster.id.toLowerCase()}`} /><b>{cluster.id}</b> {cluster.size.toLocaleString()} molecules</span>)}</div>
-          <p><span>{CHEMICAL_SPACE.metadata.mappedRecordCount.toLocaleString()} molecules mapped</span><span>ECFP4 · Tanimoto distance · k-medoids · UMAP</span></p>
-          <small>Each point represents one molecule. Nearby points have similar ECFP4 fingerprints; colors represent deterministic fingerprint-space clusters.</small>
-          <small>Proximity represents local structural similarity. UMAP axes are dimensionless and do not represent sweetness or a physical molecular property.</small>
-        </div>
-      </div>
-    </section>
-  );
-};
+const HERO_STATISTICS_SLIDES = [
+  { title: 'SweetClass Composition', section: 'Composition', image: '/database-assets/statistics-preview/sweetclass-composition.png' },
+  { title: 'PCA Molecular Space', section: 'Chemical space', image: '/database-assets/statistics-preview/pca-molecular-space.png' },
+  { title: 'Evidence Provenance', section: 'Evidence', image: '/database-assets/statistics-preview/evidence-provenance.png' },
+  { title: 'Family Evidence Grades', section: 'Evidence', image: '/database-assets/statistics-preview/family-evidence-grades.png' },
+  { title: 'Physicochemical Landscape', section: 'Properties', image: '/database-assets/statistics-preview/physicochemical-landscape.png' },
+] as const;
 
-const HERO_MOLECULES = [
-  { name: 'Sucralose', file: '/database-assets/sucralose.png' },
-  { name: 'Aspartame', file: '/database-assets/aspartame.png' },
-  { name: 'Stevioside', file: '/database-assets/stevioside.png' },
-  { name: 'Thiophenesaccharin', file: '/database-assets/thiophenesaccharin.png' },
-];
+const HeroStatisticsPreview = ({ onOpen }: { onOpen: () => void }) => {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const direction = useRef<1 | -1>(1);
+  useEffect(() => {
+    if (paused || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => setIndex((current) => {
+      if (current === HERO_STATISTICS_SLIDES.length - 1) direction.current = -1;
+      if (current === 0) direction.current = 1;
+      return current + direction.current;
+    }), 4200);
+    return () => window.clearInterval(timer);
+  }, [paused]);
+  return <section className="sdb-hero-stat-preview" aria-roledescription="carousel" aria-label="SweetMeta Statistics previews" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}>
+    <button type="button" className="sdb-hero-stat-plot" onClick={onOpen} aria-label={`Open ${HERO_STATISTICS_SLIDES[index].title} in Statistics`}>
+      {HERO_STATISTICS_SLIDES.map((item, itemIndex) => <img key={item.title} className={itemIndex === index ? 'active' : ''} src={item.image} alt={item.title} aria-hidden={itemIndex !== index} />)}
+    </button>
+  </section>;
+};
 
 const EXAMPLE_COMPOUNDS = [
   { name: 'Sucrose', id: 'CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N' },
@@ -154,9 +132,22 @@ const EXAMPLE_COMPOUNDS = [
   { name: 'Aspartame', id: 'CMP_IAOZJIPTCAWIRG-QWRGUYRKSA-N' },
 ];
 
-const Overview = ({ onSelect, onSearch }: {
+const BUNDLED_DISPLAY_IDS = new Map(
+  DATABASE_COMPOUNDS.map((compound, index) => [compound.id, String(index + 1).padStart(6, '0')]),
+);
+
+const compactIdentifiers = (values: string[] | undefined) => {
+  if (!values?.length) return { label: '—', title: undefined };
+  return {
+    label: values.length === 1 ? values[0] : `${values[0]} +${values.length - 1}`,
+    title: values.join(', '),
+  };
+};
+
+const Overview = ({ onSelect, onSearch, onStatistics }: {
   onSelect: (id: string) => void;
   onSearch: (query: string) => void;
+  onStatistics: () => void;
 }) => {
   const [query, setQuery] = useState('');
   const submitSearch = (event: FormEvent) => {
@@ -175,10 +166,7 @@ const Overview = ({ onSelect, onSearch }: {
           </form>
           <div className="sdb-hero-links"><span>Example:</span>{EXAMPLE_COMPOUNDS.map((example, index) => <span key={example.id}><button onClick={() => onSelect(example.id)}>{example.name}</button>{index < EXAMPLE_COMPOUNDS.length - 1 && ','}</span>)}</div>
         </div>
-        <div className="sdb-molecule-stage" aria-label="Verified structures represented in the current release">
-          {HERO_MOLECULES.map((molecule, index) => <figure key={molecule.name} className={`molecule-${index + 1}`}><img src={molecule.file} alt={`${molecule.name} structure`} /><figcaption>{molecule.name}</figcaption></figure>)}
-          <div className="sdb-stage-label"><ShieldCheck size={17} /><span><strong>{DATABASE_METADATA.pubchemVerified.toLocaleString()}</strong> structures cross-checked</span></div>
-        </div>
+        <HeroStatisticsPreview onOpen={onStatistics} />
       </div>
     </section>
     <div className="sdb-home-content">
@@ -191,37 +179,71 @@ const Overview = ({ onSelect, onSearch }: {
           <article><span className="sdb-release-icon"><Library /></span><div><h3>Indexed publications</h3><strong>{LITERATURE_SUMMARY.indexedPaperCount.toLocaleString()}</strong><p>Publications in the SweetSeek corpus</p></div></article>
         </div>
       </section>
-      <CompoundLandscape onSelect={onSelect} />
     </div>
   </div>;
 };
 
-const CompoundIndex = ({ onSelect, initialQuery, initialTier, initialDrilldown }: { onSelect: (id: string) => void; initialQuery: string; initialTier: string; initialDrilldown: { domain: string; foodGroup: string; sweetnessMinLog10: string; sweetnessMaxLog10: string; qualityMetric: string; qualityState: string } }) => {
+type BrowseDrilldown = { domain: string; foodGroup: string; sweetnessMinLog10: string; sweetnessMaxLog10: string; qualityMetric: string; qualityState: string; sweetClassL1: string; sweetClassL2: string; evidenceGrade: string; sourceCollection: string; mwMin: string; mwMax: string; clogpMin: string; clogpMax: string; tpsaMin: string; tpsaMax: string };
+const EMPTY_BROWSE_DRILLDOWN: BrowseDrilldown = { domain: '', foodGroup: '', sweetnessMinLog10: '', sweetnessMaxLog10: '', qualityMetric: '', qualityState: '', sweetClassL1: '', sweetClassL2: '', evidenceGrade: '', sourceCollection: '', mwMin: '', mwMax: '', clogpMin: '', clogpMax: '', tpsaMin: '', tpsaMax: '' };
+
+const SWEETCLASS_TAXONOMY: Record<string, string[]> = {
+  'Peptide and amino-acid sweeteners': ['Amino acids and amino-acid derivatives', 'Aspartic-acid derivatives', 'Dipeptide and hybrid-peptide sweeteners', 'Peptide sweeteners'],
+  'Glycosidic natural sweeteners': ['Fatty-acyl glycosides', 'Flavonoid glycosides', 'Other O- and C-glycosides', 'Steroidal glycosides', 'Steviol glycosides', 'Triterpene and saponin glycosides'],
+  'Aromatic, phenolic and flavonoid sweeteners': ['Benzoic- and phenylpropanoic-acid derivatives', 'Chalcones and dihydrochalcones', 'Flavonoids and flavans', 'N-Phenylureas', 'Other aromatic sweeteners', 'Phenols and methoxyphenols'],
+  'Heterocyclic and other specialised sweeteners': ['Heterocyclic sweeteners', 'Other specialised structures'],
+  'Sulfur- and nitrogen-containing synthetic sweeteners': ['Cyclamate-type sweeteners', 'Saccharin and related oxathiazinones', 'Sulfamates and sulfuric-acid monoamides', 'Sulfanilides'],
+  'Carbohydrates, rare sugars and polyols': ['Monosaccharides and rare sugars', 'Oligosaccharides', 'Other carbohydrate derivatives', 'Sugar alcohols and polyols'],
+  'Non-glycosidic terpenoid, steroid and lipid-like sweeteners': ['Fatty acids and lipid-like sweeteners', 'Non-glycosidic steroids'],
+};
+const SWEETCLASS_FAMILIES = Object.keys(SWEETCLASS_TAXONOMY);
+
+const CompoundIndex = ({ onSelect, initialQuery, initialTier, initialDrilldown }: { onSelect: (id: string) => void; initialQuery: string; initialTier: string; initialDrilldown: BrowseDrilldown }) => {
   const [query, setQuery] = useState(initialQuery);
-  const [tier, setTier] = useState(initialTier);
-  const [review, setReview] = useState('all');
-  const [pubchem, setPubchem] = useState('all');
+  const [tier] = useState(initialTier);
   const [page, setPage] = useState(1);
   const [drilldown, setDrilldown] = useState(initialDrilldown);
+  const [advancedOpen, setAdvancedOpen] = useState(() => Boolean(
+    initialDrilldown.sweetClassL2 || initialDrilldown.mwMin || initialDrilldown.mwMax
+    || initialDrilldown.clogpMin || initialDrilldown.clogpMax
+    || initialDrilldown.tpsaMin || initialDrilldown.tpsaMax,
+  ));
   const pageSize = 25;
   const [remote, setRemote] = useState<{ items: DatabaseCompound[]; total: number; pageCount: number } | null>(null);
   const [remoteError, setRemoteError] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     fetchSweetMetaCompounds({
-      query, page, pageSize, tier, review,
+      query, page, pageSize, tier,
       domain: drilldown.domain,
       foodGroup: drilldown.foodGroup,
       sweetnessMinLog10: drilldown.sweetnessMinLog10 === '' ? undefined : Number(drilldown.sweetnessMinLog10),
       sweetnessMaxLog10: drilldown.sweetnessMaxLog10 === '' ? undefined : Number(drilldown.sweetnessMaxLog10),
       qualityMetric: drilldown.qualityMetric,
       qualityState: drilldown.qualityState,
+      sweetClassL1: drilldown.sweetClassL1,
+      sweetClassL2: drilldown.sweetClassL2,
+      evidenceGrade: drilldown.evidenceGrade,
+      sourceCollection: drilldown.sourceCollection,
+      mwMin: drilldown.mwMin === '' ? undefined : Number(drilldown.mwMin), mwMax: drilldown.mwMax === '' ? undefined : Number(drilldown.mwMax),
+      clogpMin: drilldown.clogpMin === '' ? undefined : Number(drilldown.clogpMin), clogpMax: drilldown.clogpMax === '' ? undefined : Number(drilldown.clogpMax),
+      tpsaMin: drilldown.tpsaMin === '' ? undefined : Number(drilldown.tpsaMin), tpsaMax: drilldown.tpsaMax === '' ? undefined : Number(drilldown.tpsaMax),
     })
       .then((payload) => {
         if (!active) return;
         setRemote({
           items: payload.items.map((item) => ({
             id: item.id,
+            displayId: item.displayId,
+            casNumbers: item.casNumbers,
+            browsePubchemCid: item.pubchemCid,
+            chemicalClass: item.chemicalClass,
+            sourceNames: item.sourceNames,
+            reviewedSourceNames: item.reviewedSourceNames,
+            sourceCollection: item.sourceCollection,
+            sweetClassLevel1: item.sweetClassLevel1,
+            sweetClassLevel2: item.sweetClassLevel2,
+            evidenceGrade: item.evidenceGrade,
+            reviewedProperties: { clogp: item.clogp, tpsa: item.tpsa, rotatableBonds: item.rotatableBonds, hba: item.hba, hbd: item.hbd },
             entityType: 'small-molecule',
             name: item.name ?? item.id,
             nameSource: null,
@@ -248,33 +270,48 @@ const CompoundIndex = ({ onSelect, initialQuery, initialTier, initialDrilldown }
         if (active) setRemoteError(error instanceof Error ? error.message : 'SweetMeta API unavailable');
       });
     return () => { active = false; };
-  }, [drilldown, page, pageSize, query, review, tier]);
+  }, [drilldown, page, pageSize, query, tier]);
   const filtered = useMemo(() => {
     if (remote) return remote.items;
     const q = query.trim().toLocaleLowerCase();
     return DATABASE_COMPOUNDS.filter((compound) => {
       const searchable = [compound.id, compound.name, compound.inchiKey, compound.formula, compound.pubchem?.cid, compound.pubchem?.iupacName].filter(Boolean).join(' ').toLocaleLowerCase();
       return (!q || searchable.includes(q))
-        && (tier === 'all' || tierCode(compound.evidence.releaseTier) === tier)
-        && (review === 'all' || (review === 'required') === compound.review.required)
-        && (pubchem === 'all' || (pubchem === 'matched') === Boolean(compound.pubchem));
+        && (tier === 'all' || tierCode(compound.evidence.releaseTier) === tier);
     });
-  }, [pubchem, query, remote, review, tier]);
+  }, [query, remote, tier]);
   const pageCount = remote?.pageCount ?? Math.max(1, Math.ceil(filtered.length / pageSize));
   const visible = remote ? filtered : filtered.slice((page - 1) * pageSize, page * pageSize);
   return (
     <div className="sdb-page">
-      <header className="sdb-page-heading compact"><div><span className="sdb-kicker">Compound index</span><h1>Browse the current release</h1><p>Search stable IDs, preferred names, formulae, InChIKeys, or verified PubChem identifiers.</p></div></header>
+      <header className="sdb-page-heading compact"><div><span className="sdb-kicker">Compound index</span><h1>Browse the current release</h1><p>Search IDs, names, CAS numbers, formulae, InChIKeys, or verified PubChem identifiers.</p></div></header>
       <div className="sdb-filterbar">
         <label className="sdb-search"><Search size={18} /><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search compounds" aria-label="Search compounds" />{query && <button title="Clear search" onClick={() => { setQuery(''); setPage(1); }}><X size={16} /></button>}</label>
-        <label className="sdb-flat-select"><Filter size={16} /><select aria-label="Evidence tier" value={tier} onChange={(event) => { setTier(event.target.value); setPage(1); }}><option value="all">All evidence tiers</option>{Object.keys(TIER_INFO).map((item) => <option value={item} key={item}>{item}</option>)}</select><ChevronDown className="sdb-select-chevron" aria-hidden="true" /></label>
-        <label className="sdb-flat-select"><select aria-label="Review status" value={review} onChange={(event) => { setReview(event.target.value); setPage(1); }}><option value="all">All review states</option><option value="required">Manual review</option><option value="released">Released</option></select><ChevronDown className="sdb-select-chevron" aria-hidden="true" /></label>
-        <label className="sdb-flat-select"><select aria-label="PubChem status" value={pubchem} onChange={(event) => { setPubchem(event.target.value); setPage(1); }}><option value="all">All PubChem states</option><option value="matched">PubChem matched</option><option value="unmatched">Not matched</option></select><ChevronDown className="sdb-select-chevron" aria-hidden="true" /></label>
+        <label className="sdb-flat-select"><Filter size={16} /><select aria-label="SweetClass family" value={drilldown.sweetClassL1} onChange={(event) => { setDrilldown((value) => ({ ...value, sweetClassL1: event.target.value, sweetClassL2: '' })); setPage(1); }}><option value="">All SweetClass families</option>{SWEETCLASS_FAMILIES.map((family) => <option key={family}>{family}</option>)}</select><ChevronDown className="sdb-select-chevron" aria-hidden="true" /></label>
+        <label className="sdb-flat-select"><select aria-label="Evidence grade" value={drilldown.evidenceGrade} onChange={(event) => { setDrilldown((value) => ({ ...value, evidenceGrade: event.target.value })); setPage(1); }}><option value="">All provenance grades</option><option value="E1">E1 · primary</option><option value="E2">E2 · supported</option><option value="E3">E3 · database curated</option></select><ChevronDown className="sdb-select-chevron" aria-hidden="true" /></label>
+        <button type="button" className={`sdb-more-filters ${advancedOpen ? 'active' : ''}`} aria-expanded={advancedOpen} aria-controls="browse-advanced-filters" onClick={() => setAdvancedOpen((value) => !value)}><Filter size={15} /> More filters <ChevronDown size={14} /></button>
       </div>
-      {Object.values(drilldown).some(Boolean) && <div className="sdb-drilldown-banner" role="status"><span>Statistics filter: {[drilldown.domain, drilldown.foodGroup, drilldown.qualityMetric, drilldown.qualityState].filter(Boolean).map(readable).join(' · ') || 'Relative sweetness range'}</span><button onClick={() => { setDrilldown({ domain: '', foodGroup: '', sweetnessMinLog10: '', sweetnessMaxLog10: '', qualityMetric: '', qualityState: '' }); setPage(1); }}>Clear filter</button></div>}
+      {advancedOpen && <div className="sdb-advanced-filters" id="browse-advanced-filters">
+        <label className="sdb-advanced-select"><span>SweetClass level 2</span><select aria-label="SweetClass subclass" value={drilldown.sweetClassL2} disabled={!drilldown.sweetClassL1} onChange={(event) => { setDrilldown((value) => ({ ...value, sweetClassL2: event.target.value })); setPage(1); }}><option value="">{drilldown.sweetClassL1 ? 'All subclasses in family' : 'Select a level-1 family first'}</option>{(SWEETCLASS_TAXONOMY[drilldown.sweetClassL1] ?? []).map((subclass) => <option key={subclass}>{subclass}</option>)}</select><ChevronDown aria-hidden="true" /></label>
+        {([['MW', 'mwMin', 'mwMax'], ['cLogP', 'clogpMin', 'clogpMax'], ['TPSA', 'tpsaMin', 'tpsaMax']] as const).map(([label, minKey, maxKey]) => <fieldset className="sdb-property-range" key={label}><legend>{label}</legend><label><span>Min</span><input type="number" step="any" aria-label={`${label} minimum`} value={drilldown[minKey]} onChange={(event) => { setDrilldown((value) => ({ ...value, [minKey]: event.target.value })); setPage(1); }} /></label><i>to</i><label><span>Max</span><input type="number" step="any" aria-label={`${label} maximum`} value={drilldown[maxKey]} onChange={(event) => { setDrilldown((value) => ({ ...value, [maxKey]: event.target.value })); setPage(1); }} /></label></fieldset>)}
+        <button type="button" className="sdb-clear-advanced" onClick={() => { setDrilldown((value) => ({ ...value, sweetClassL2: '', mwMin: '', mwMax: '', clogpMin: '', clogpMax: '', tpsaMin: '', tpsaMax: '' })); setPage(1); }}>Reset properties</button>
+      </div>}
+      {Object.values(drilldown).some(Boolean) && <div className="sdb-drilldown-banner" role="status"><span>Active filters: {[drilldown.domain, drilldown.foodGroup, drilldown.sourceCollection, drilldown.sweetClassL1, drilldown.sweetClassL2, drilldown.evidenceGrade, drilldown.qualityMetric, drilldown.qualityState].filter(Boolean).map(readable).join(' · ') || 'Numeric range'}</span><button onClick={() => { setDrilldown(EMPTY_BROWSE_DRILLDOWN); setPage(1); }}>Clear filters</button></div>}
       <div className="sdb-result-meta"><strong>{(remote?.total ?? filtered.length).toLocaleString()}</strong> records <span>Source: {remote ? 'SweetMeta SQLite API' : DATABASE_METADATA.sourceWorkbook}</span></div>
       {remoteError && <div className="sdb-inline-notice" role="status">Live SQLite API unavailable; showing the bundled release snapshot.</div>}
-      <div className="sdb-table-wrap"><table className="sdb-table"><thead><tr><th>Compound</th><th>Formula</th><th>MW</th><th>Evidence</th><th>Assertions</th><th>Status</th><th>PubChem</th></tr></thead><tbody>{visible.map((compound) => <tr key={compound.id} onClick={() => onSelect(compound.id)}><td><div className="sdb-compound-cell"><MoleculeImage compound={compound} small /><span><strong>{compound.name}</strong><small>{compound.id}</small></span></div></td><td className="sdb-mono">{compound.formula ?? 'Not available'}</td><td>{formatNumber(compound.molecularWeight)}</td><td><TierBadge tier={compound.evidence.releaseTier} /></td><td>{compound.evidence.acceptedAssertions}</td><td><ReviewBadge compound={compound} /></td><td>{compound.pubchem?.cid ? <span className="sdb-pubchem-cell"><a href={compound.pubchem.sourceUrl ?? '#'} onClick={(event) => event.stopPropagation()} target="_blank" rel="noreferrer">CID {compound.pubchem.cid}<ExternalLink size={13} /></a>{compound.pubchem.matchStatus !== 'verified' && <span className="sdb-discrepancy"><AlertTriangle size={12} /> Discrepancy</span>}</span> : <span className="sdb-muted">Not matched</span>}</td></tr>)}</tbody></table></div>
+      <div className="sdb-table-wrap sdb-catalog-table-wrap"><table className="sdb-table sdb-catalog-table"><thead><tr><th>ID</th><th>Name</th><th>Formula</th><th>SweetClass</th><th>Evidence grade</th><th>MW</th><th>Source</th></tr></thead><tbody>{visible.map((compound) => {
+        const sources = compactIdentifiers(compound.sourceNames);
+        const displayId = compound.displayId ?? BUNDLED_DISPLAY_IDS.get(compound.id) ?? '—';
+        return <tr key={compound.id} onClick={() => onSelect(compound.id)}>
+          <td><span className="sdb-display-id">{displayId}</span></td>
+          <td><button type="button" className="sdb-compound-name" onClick={() => onSelect(compound.id)}>{compound.name}</button></td>
+          <td className="sdb-mono">{compound.formula ?? '—'}</td>
+          <td title={compound.sweetClassLevel2 ?? undefined}><strong>{compound.sweetClassLevel1 ?? compound.chemicalClass ?? '—'}</strong><small>{compound.sweetClassLevel2}</small></td>
+          <td><span className="sdb-tier">{compound.evidenceGrade ?? '—'}</span></td>
+          <td>{formatNumber(compound.molecularWeight)} Da</td>
+          <td title={(compound.reviewedSourceNames ?? compound.sourceNames)?.join(', ')}>{compound.sourceCollection ?? sources.label}</td>
+        </tr>;
+      })}</tbody></table></div>
       {!visible.length && <EmptyState icon={Search} title="No matching compounds">Adjust the search term or clear one of the filters.</EmptyState>}
       <div className="sdb-pagination"><button disabled={page === 1} onClick={() => setPage((value) => value - 1)}><ChevronLeft size={17} /> Previous</button><span>Page {page} of {pageCount}</span><button disabled={page === pageCount} onClick={() => setPage((value) => value + 1)}>Next <ChevronRight size={17} /></button></div>
     </div>
@@ -290,28 +327,6 @@ const useLiteratureData = () => {
     return () => { active = false; };
   }, []);
   return { data, error };
-};
-
-const LiteratureLinks = ({ links, data, onSelect }: { links: CompoundPaperLink[]; data: LiteratureData; onSelect: (id: string) => void }) => {
-  const [expanded, setExpanded] = useState<string | null>(null);
-  return <div className="sdb-literature-list">
-    {links.map((link) => {
-      const paper = data.papers[link.paperId];
-      const compound = DATABASE_COMPOUNDS.find((item) => item.id === link.compoundId);
-      if (!paper || !compound) return null;
-      const open = expanded === link.linkId;
-      return <article className={open ? 'open' : ''} key={link.linkId}>
-        <div className="sdb-literature-row">
-          <button className="sdb-lit-expand" onClick={() => setExpanded(open ? null : link.linkId)} aria-expanded={open} title={open ? 'Hide evidence' : 'Show evidence'}><ChevronDown size={17} /></button>
-          <button className="sdb-lit-compound" onClick={() => onSelect(compound.id)}><strong>{compound.name}</strong><small>{compound.id}</small></button>
-          <span className={`sdb-relation relation-${link.relationshipType}`}>{RELATIONSHIP_LABELS[link.relationshipType]}</span>
-          <div className="sdb-lit-citation"><strong>{paper.title}</strong><small>{[paper.journal, paper.year].filter(Boolean).join(' · ') || 'Publication details unavailable'}</small></div>
-          <div className="sdb-lit-identifiers">{paper.doi ? <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">DOI <ExternalLink size={12} /></a> : <span>DOI unavailable</span>}{paper.pmid ? <a href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`} target="_blank" rel="noreferrer">PMID {paper.pmid} <ExternalLink size={12} /></a> : <span>PMID unavailable</span>}</div>
-        </div>
-        {open && <div className="sdb-lit-evidence"><div><span>Why linked</span><strong>{RELATIONSHIP_LABELS[link.relationshipType]} via {link.matchMethod.replaceAll('_', ' ')}</strong></div><blockquote>{link.evidenceExcerpt || 'Evidence excerpt unavailable.'}</blockquote><dl><div><dt>PDF page</dt><dd>{link.pageNumber ?? 'Title record'}</dd></div><div><dt>Matched term</dt><dd>{link.matchedAlias}</dd></div><div><dt>Confidence</dt><dd>{Math.round(link.confidence * 100)}%</dd></div><div><dt>Review status</dt><dd>Auto high confidence</dd></div></dl></div>}
-      </article>;
-    })}
-  </div>;
 };
 
 type LiteratureSort = 'compound' | 'family' | 'title' | 'journal' | 'year' | 'pmid' | 'doi';
@@ -330,10 +345,20 @@ const LiteratureTable = ({ links, data, onSelect, sort, sortDirection, onSort }:
           <td><button className="sdb-lit-table-compound" onClick={() => onSelect(compound.id)}>{compound.name}</button></td>
           <td>{paper.family ?? <span className="sdb-lit-not-curated">Not curated</span>}</td>
           <td className="sdb-lit-table-title">{paper.title}</td>
-          <td>{paper.journal ?? <span className="sdb-muted">Not available</span>}</td>
-          <td>{paper.year ?? <span className="sdb-muted">—</span>}</td>
-          <td>{paper.pmid ? <a href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`} target="_blank" rel="noreferrer">{paper.pmid} <ExternalLink size={12} /></a> : <span className="sdb-muted">Not available</span>}</td>
-          <td>{paper.doi ? <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">{paper.doi} <ExternalLink size={12} /></a> : <span className="sdb-muted">Not available</span>}</td>
+          {paper.journal && <td>{paper.journal}</td>}
+          {!paper.journal && <td><span className="sdb-muted">—</span></td>}
+          {paper.year && <td>{paper.year}</td>}
+          {!paper.year && <td><span className="sdb-muted">—</span></td>}
+          {paper.pmid ? (
+            <td><a href={`https://pubmed.ncbi.nlm.nih.gov/${paper.pmid}/`} target="_blank" rel="noreferrer">{paper.pmid} <ExternalLink size={12} /></a></td>
+          ) : (
+            <td><span className="sdb-muted">—</span></td>
+          )}
+          {paper.doi ? (
+            <td><a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">{paper.doi} <ExternalLink size={12} /></a></td>
+          ) : (
+            <td><span className="sdb-muted">—</span></td>
+          )}
         </tr>;
       })}</tbody>
     </table>
@@ -433,93 +458,375 @@ const Literature = ({ onSelect, initialYearFrom = '', initialYearTo = '', initia
   </div>;
 };
 
-const CompoundLiterature = ({ compound, onSelect }: { compound: DatabaseCompound; onSelect: (id: string) => void }) => {
-  const { data, error } = useLiteratureData();
-  const [tab, setTab] = useState<'core' | 'comparators' | 'synthesis' | 'background'>('core');
-  if (error) return <EmptyState icon={FileWarning} title="Literature data could not be loaded">{error}</EmptyState>;
-  if (!data) return <EmptyState icon={BookOpen} title="Loading linked literature">Reading traceable paper-level evidence.</EmptyState>;
-  const compoundLinks = data.links.filter((link) => link.compoundId === compound.id);
-  const groups: Record<typeof tab, LiteratureRelationship[]> = {
-    core: ['primary_subject', 'tested_sweetener', 'receptor_ligand'],
-    comparators: ['comparator_control'],
-    synthesis: ['synthesis_production'],
-    background: ['background_mention'],
-  };
-  const counts = Object.fromEntries(Object.entries(groups).map(([key, relationships]) => [key, compoundLinks.filter((link) => relationships.includes(link.relationshipType)).length]));
-  const visible = compoundLinks.filter((link) => groups[tab].includes(link.relationshipType));
-  return <div className="sdb-compound-literature">
-    <div className="sdb-lit-tabs" role="tablist" aria-label="Literature evidence groups">
-      {([['core', 'Core evidence'], ['comparators', 'Comparators'], ['synthesis', 'Synthesis & production'], ['background', 'Background mentions']] as const).map(([value, label]) => <button role="tab" aria-selected={tab === value} className={tab === value ? 'active' : ''} key={value} onClick={() => setTab(value)}>{label}<span>{counts[value]}</span></button>)}
-    </div>
-    {visible.length ? <LiteratureLinks links={visible} data={data} onSelect={onSelect} /> : <EmptyState icon={BookOpen} title="No accepted links in this category">{tab === 'background' ? 'Background-only mentions are held in the manual review queue and are not published as formal evidence.' : 'No high-confidence local paper association has been accepted for this category.'}</EmptyState>}
-  </div>;
+const Downloads = () => {
+  const [data, setData] = useState<SweetMetaDownloads | null>(null);
+  const [error, setError] = useState('');
+  useEffect(() => { void fetchSweetMetaDownloads().then(setData).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Downloads unavailable')); }, []);
+  const size = (bytes: number) => bytes >= 1_000_000 ? `${(bytes / 1_000_000).toFixed(1)} MB` : `${Math.ceil(bytes / 1000)} KB`;
+  return <div className="sdb-page relative"><div className="relative z-0"><header className="sdb-page-heading compact"><div><span className="sdb-kicker">Data access</span><h1>Downloads</h1><p>SweetMeta v1.0.7 reviewed snapshot, dated 2026-10-05. Files are served from the allowlisted release package.</p></div></header>{error && <div className="sdb-inline-notice">{error}</div>}<div className="sdb-download-list">{data?.items.map((item) => <article key={item.key}><Database /><span><strong>{item.label}</strong><small>{item.filename} · {size(item.bytes)} · {data.recordCount.toLocaleString()} compounds</small><code>SHA-256 {item.sha256}</code></span><a className="sdb-download-button" href={item.url} download><Download size={15} /> Download</a></article>)}</div><div className="sdb-policy-note"><FileWarning /><div><strong>E1-E3 and R1-R4 are separate systems</strong><p>The data dictionary defines provenance grades, release readiness, units, sources, and null-value rules.</p></div></div></div><div className="absolute inset-0 backdrop-blur-md bg-white/70 flex items-center justify-center z-10"><div className="text-center"><p className="text-2xl font-bold text-slate-700">Temporarily unavailable</p></div></div></div>;
 };
 
-const Downloads = () => <div className="sdb-page"><header className="sdb-page-heading compact"><div><span className="sdb-kicker">Data access</span><h1>Downloads</h1><p>Release metadata is visible, while public file downloads are currently disabled by policy.</p></div></header><div className="sdb-download-list"><article><Database /><span><strong>Source workbook</strong><small>{DATABASE_METADATA.sourceWorkbook} · {DATABASE_METADATA.totalRecords} records</small></span><button disabled><LockKeyhole size={15} /> Restricted</button></article><article><FileWarning /><span><strong>Data quality report</strong><small>Missing fields, review queue, and enrichment coverage</small></span><button disabled><LockKeyhole size={15} /> Restricted</button></article><article><Download /><span><strong>Filtered compound export</strong><small>CSV export for current search results</small></span><button disabled><LockKeyhole size={15} /> Restricted</button></article></div><div className="sdb-policy-note"><LockKeyhole /><div><strong>Download access is not enabled</strong><p>This state is intentional and can be changed later without altering the database schema or compound portal.</p></div></div></div>;
+const RecordTable = ({ title, records }: { title: string; records: SweetMetaDataRecord[] }) => {
+  const [sortKey, setSortKey] = useState('');
+  const [descending, setDescending] = useState(false);
+  if (!records.length) return null;
+  const columns = [...new Set(records.flatMap((record) => Object.keys(record)))].filter((key) => key !== 'raw_json').slice(0, 7);
+  const sorted = [...records].sort((a, b) => {
+    if (!sortKey) return 0;
+    const result = String(a[sortKey] ?? '').localeCompare(String(b[sortKey] ?? ''), undefined, { numeric: true, sensitivity: 'base' });
+    return descending ? -result : result;
+  });
+  const changeSort = (column: string) => {
+    if (sortKey === column) setDescending((value) => !value);
+    else { setSortKey(column); setDescending(false); }
+  };
+  if (records.length <= 3) return <section className="sdb-record-table sdb-record-table-visible sdb-record-cards"><header><strong>{title}</strong><span>{records.length}</span></header><div>{records.map((record, index) => <dl key={index}>{columns.map((column) => <div key={column}><dt>{readable(column)}</dt><dd>{record[column] === null || record[column] === undefined || record[column] === '' ? '—' : String(record[column])}</dd></div>)}</dl>)}</div></section>;
+  const table = <div className="sdb-table-wrap"><table className="sdb-table"><thead><tr>{columns.map((column) => <th key={column}><button type="button" onClick={() => changeSort(column)}>{readable(column)} <ArrowUpDown size={11} /></button></th>)}</tr></thead><tbody>{sorted.slice(0, 100).map((record, index) => <tr key={index}>{columns.map((column) => <td key={column}>{record[column] === null || record[column] === undefined || record[column] === '' ? '—' : String(record[column])}</td>)}</tr>)}</tbody></table></div>;
+  if (records.length <= 8) return <section className="sdb-record-table sdb-record-table-visible"><header><strong>{title}</strong><span>{records.length}</span></header>{table}</section>;
+  return <details className="sdb-record-table"><summary>{title} <span>{records.length}</span></summary>{table}</details>;
+};
+
+const SweetnessMeasurements = ({ records }: { records: SweetMetaDataRecord[] }) => <div className="sdb-measurement-list">
+  {records.map((record, index) => {
+    const relative = typeof record.relative_sweetness === 'number' ? record.relative_sweetness : null;
+    const logValue = typeof record.log10_relative_sweetness === 'number' ? record.log10_relative_sweetness : null;
+    return <article className="sdb-measurement" key={String(record.measurement_id ?? index)}>
+      <div className="sdb-measurement-value"><span>Relative sweetness</span><strong>{relative === null ? 'Not reported' : `${formatNumber(relative, relative >= 100 ? 0 : 1)}×`}</strong><small>{logValue === null ? 'Original log10 value unavailable' : `log10 value ${formatNumber(logValue, 2)}`}</small></div>
+      <dl>
+        <div><dt>Reference compound</dt><dd>{String(record.reference_compound ?? 'Not reported')}</dd></div>
+        <div><dt>Reference concentration</dt><dd>{String(record.reference_concentration ?? 'Not reported')}</dd></div>
+        <div><dt>Measurement status</dt><dd>{String(record.measurement_status ?? 'Not reported')}</dd></div>
+        <div><dt>Evidence reference</dt><dd>{String(record.evidence_reference ?? 'Not available')}</dd></div>
+      </dl>
+      <details className="sdb-record-metadata"><summary>Record metadata</summary><dl><div><dt>Measurement ID</dt><dd>{String(record.measurement_id ?? '—')}</dd></div><div><dt>Source</dt><dd>{String(record.source_id ?? '—')}</dd></div><div><dt>Source record</dt><dd>{String(record.source_record_id ?? '—')}</dd></div></dl></details>
+    </article>;
+  })}
+</div>;
+
+const TasteAssertions = ({ records }: { records: SweetMetaDataRecord[] }) => <section className="sdb-assertions">
+  <header><div><span>Taste assertions</span><strong>Accepted source-level records</strong></div><b>{records.length}</b></header>
+  <div className="sdb-assertion-list">{records.map((record, index) => <article key={String(record.assertion_id ?? index)}>
+    <div className="sdb-assertion-taste"><strong>{String(record.source_taste_text ?? record.normalized_taste ?? 'Taste not specified')}</strong><span>{String(record.normalized_taste ?? 'Unclassified')}</span></div>
+    <div><span>Status</span><strong>{String(record.assertion_status ?? 'Not reported')}</strong></div>
+    <div><span>Source</span><strong>{String(record.source_id ?? 'Not reported')}</strong></div>
+    <p>{String(record.evidence_reference ?? 'No bibliographic reference supplied')}</p>
+  </article>)}</div>
+</section>;
+
+const DetailSectionTitle = ({ eyebrow, title, note }: { eyebrow: string; title: string; note?: string }) => <div className="sdb-section-title"><div><span>{eyebrow}</span><h2>{title}</h2>{note && <p>{note}</p>}</div></div>;
+
+const CopyValue = ({ label, value }: { label: string; value: string | null | undefined }) => {
+  const [copied, setCopied] = useState(false);
+  const shown = value || 'Not available';
+  return <div className="sdb-copy-row"><span><small>{label}</small><code>{shown}</code></span>{value && <button type="button" title={`Copy ${label}`} aria-label={`Copy ${label}`} onClick={() => { void navigator.clipboard?.writeText(value); setCopied(true); window.setTimeout(() => setCopied(false), 1200); }}>{copied ? <Check /> : <Copy />}</button>}</div>;
+};
+
+const externalIdUrl = (namespace: string, value: string) => {
+  const key = namespace.toLowerCase();
+  if (key === 'pubchemcid') return `https://pubchem.ncbi.nlm.nih.gov/compound/${encodeURIComponent(value)}`;
+  if (key === 'chembl') return `https://www.ebi.ac.uk/chembl/explore/compound/${encodeURIComponent(value)}`;
+  if (key === 'cas') return `https://commonchemistry.cas.org/detail?cas_rn=${encodeURIComponent(value)}`;
+  if (key === 'iuphar_ligand') return `https://www.guidetopharmacology.org/GRAC/LigandDisplayForward?ligandId=${encodeURIComponent(value)}`;
+  return null;
+};
 
 const Detail = ({ compound, onBack, onSelect, sqliteDetail, detailError }: { compound: DatabaseCompound; onBack: () => void; onSelect: (id: string) => void; sqliteDetail: SweetMetaCompoundDetail | null; detailError: string | null }) => {
+  const panelParam = new URLSearchParams(window.location.search).get('panel');
+  const requestedPanel: DetailSection | null = panelParam ? (LEGACY_DETAIL_PANELS[panelParam] ?? (DETAIL_SECTIONS.some((item) => item.id === panelParam) ? panelParam as DetailSection : null)) : null;
+  const [activeSection, setActiveSection] = useState<DetailSection>(requestedPanel ?? 'basic');
   const [structureMode, setStructureMode] = useState<'2d' | '3d'>('2d');
-  const [activeSection, setActiveSection] = useState<DetailSection>('overview');
   const neighbors = (CHEMICAL_SPACE.neighbors?.[compound.id] ?? []).flatMap((neighbor) => {
     const match = DATABASE_COMPOUNDS.find((item) => item.id === neighbor.id);
     return match ? [{ compound: match, similarity: neighbor.similarity }] : [];
   });
   const viewerCid = compound.pubchem?.matchStatus === 'verified' ? compound.pubchem.cid : null;
   const viewerSmiles = compound.pubchem?.smiles ?? compound.isomericSmiles ?? compound.canonicalSmiles;
+  const classification = sqliteDetail?.classification;
+  const provenance = sqliteDetail?.provenance;
+  const grade = provenance?.evidence_grade ?? compound.evidenceGrade ?? null;
+  const aliases = (sqliteDetail?.aliases ?? []).map((item) => item.alias).filter((item) => item && item.toLocaleLowerCase() !== compound.name.toLocaleLowerCase());
+  const externalIds = sqliteDetail?.externalIds ?? [];
+  const casNumbers = [...new Set([...externalIds.filter((item) => item.namespace.toLowerCase() === 'cas').map((item) => item.external_id), ...(compound.casNumbers ?? [])])];
+  const pubchemId = externalIds.find((item) => item.namespace.toLowerCase() === 'pubchemcid')?.external_id ?? (compound.pubchem?.cid ? String(compound.pubchem.cid) : compound.browsePubchemCid ?? null);
+  const chemblId = externalIds.find((item) => item.namespace.toLowerCase() === 'chembl')?.external_id ?? compound.chembl?.id ?? null;
+  const modules = sqliteDetail?.modules ?? { sweetness: sqliteDetail?.evidence.measurements.length ?? 0, literature: sqliteDetail?.literature.length ?? 0, food: sqliteDetail?.food.count ?? 0, receptors: sqliteDetail?.receptors.count ?? 0, regulatory: sqliteDetail?.regulatory.count ?? 0, conflicts: sqliteDetail?.evidence.conflicts.length ?? 0 };
+
+  useEffect(() => { if (viewerCid && viewerSmiles) preloadMolecule3D(viewerCid, viewerSmiles); }, [viewerCid, viewerSmiles]);
   useEffect(() => {
-    if (viewerCid && viewerSmiles) preloadMolecule3D(viewerCid, viewerSmiles);
-  }, [viewerCid, viewerSmiles]);
-  useEffect(() => setActiveSection('overview'), [compound.id]);
+    if (!panelParam || !LEGACY_DETAIL_PANELS[panelParam]) return;
+    const params = new URLSearchParams(window.location.search);
+    params.set('panel', LEGACY_DETAIL_PANELS[panelParam]);
+    window.history.replaceState({ database: true }, '', `${window.location.pathname}?${params}`);
+  }, [panelParam]);
+
+  const selectSection = (id: DetailSection) => {
+    setActiveSection(id);
+    const params = new URLSearchParams(window.location.search);
+    params.set('panel', id);
+    window.history.replaceState({ database: true }, '', `${window.location.pathname}?${params}`);
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    document.querySelector('.sdb-record-layout')?.scrollIntoView?.({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
+
+  const moduleItems: Array<{ label: string; count: number; section: DetailSection; warning?: boolean }> = [
+    { label: 'Sweetness', count: modules.sweetness, section: 'sweetness' },
+    { label: 'Literature', count: modules.literature + modules.food + modules.receptors + modules.regulatory, section: 'literature' },
+    { label: 'Conflicts', count: modules.conflicts, section: 'quality', warning: modules.conflicts > 0 },
+  ];
+
+  const emptyModule = (title: string, copy: string, icon: typeof Database = CircleHelp) => <EmptyState icon={icon} title={title}>{copy}</EmptyState>;
 
   const renderSection = () => {
     switch (activeSection) {
-      case 'sweetness':
-        return <section className="sdb-data-section sdb-record-section"><div className="sdb-section-title"><div><span>Relative Sweetness</span><h2>Quantitative sweetness</h2></div></div>{sqliteDetail?.evidence.measurements.length ? <div className="sdb-detail-grid">{sqliteDetail.evidence.measurements.map((measurement, index) => <dl className="sdb-definition-list" key={String(measurement.measurement_id ?? index)}><div><dt>Relative sweetness</dt><dd>{String(measurement.relative_sweetness ?? 'Not available')}</dd></div><div><dt>Reference</dt><dd>{String(measurement.reference_compound ?? 'Not available')}</dd></div><div><dt>Reference concentration</dt><dd>{String(measurement.reference_concentration ?? 'Not available')}</dd></div><div><dt>Status</dt><dd>{readable(String(measurement.measurement_status ?? ''))}</dd></div><div><dt>Evidence reference</dt><dd>{String(measurement.evidence_reference ?? 'Not available')}</dd></div></dl>)}</div> : <EmptyState icon={CircleHelp} title="Relative sweetness is not available">No reviewed quantitative sweetness measurement is linked to this record in the current SQLite release.</EmptyState>}</section>;
+      case 'sweetness': {
+        const sourceNames = String(provenance?.source_names ?? '').split(';').map((item) => item.trim()).filter(Boolean);
+        return <section className="sdb-data-section sdb-record-section"><DetailSectionTitle eyebrow="Sweetness & evidence" title="Reviewed sensory evidence" note="Primary values are shown first; source identifiers remain available as record metadata." />{sqliteDetail?.evidence.measurements.length ? <SweetnessMeasurements records={sqliteDetail.evidence.measurements} /> : emptyModule('No reviewed quantitative sweetness', 'No quantitative sweetness measurement is linked to this compound in the current release.', FlaskConical)}{sqliteDetail?.evidence.tasteAssertions.length ? <TasteAssertions records={sqliteDetail.evidence.tasteAssertions} /> : emptyModule('No reviewed taste assertions', 'No accepted taste assertion is available for this compound.', FlaskConical)}<div className="sdb-section-divider"><span>Evidence lineage</span></div><ol className="sdb-provenance-flow"><li><span>Source collection</span><strong>{provenance?.source_collection ?? 'Not available'}</strong></li><li><span>Evidence grade</span><strong className={`grade-${String(grade ?? '').toLowerCase()}`}>{grade ?? 'Not available'}</strong></li><li><span>Lineage status</span><strong>{provenance?.evidence_lineage_status ?? 'Not available'}</strong></li></ol><dl className="sdb-definition-list sdb-provenance-detail"><div><dt>Evidence tier</dt><dd>{provenance?.evidence_tier ?? 'Not available'}</dd></div><div><dt>Accepted assertions</dt><dd>{sqliteDetail?.evidence.tasteAssertions.length ?? compound.evidence.acceptedAssertions}</dd></div><div><dt>Source names</dt><dd>{sourceNames.join(', ') || 'Not available'}</dd></div></dl></section>;
+      }
+      case 'chemical-space':
+        return <section className="sdb-data-section sdb-record-section"><DetailSectionTitle eyebrow="Chemical space" title="Position within the SweetClass family" note="The selected compound is shown against members of its reviewed level-1 family." /><CompoundProjection compoundId={compound.id} onCompound={onSelect} /></section>;
+      case 'literature': {
+        const { data: literatureData, error: literatureError } = useLiteratureData();
+
+        if (literatureError) {
+          return <section className="sdb-data-section sdb-record-section">
+            <DetailSectionTitle eyebrow="Literature" title="Literature and linked records" note="Evidence-based literature links from the SweetSeek corpus and related data modules." />
+            <EmptyState icon={FileWarning} title="Literature data could not be loaded">{literatureError}</EmptyState>
+          </section>;
+        }
+
+        if (!literatureData) {
+          return <section className="sdb-data-section sdb-record-section">
+            <DetailSectionTitle eyebrow="Literature" title="Literature and linked records" note="Evidence-based literature links from the SweetSeek corpus and related data modules." />
+            <EmptyState icon={BookOpen} title="Loading literature registry">Reading the compound-paper evidence index.</EmptyState>
+          </section>;
+        }
+
+        const compoundLinks = literatureData.links.filter((link) => link.compoundId === compound.id);
+
+        return <section className="sdb-data-section sdb-record-section">
+          <DetailSectionTitle eyebrow="Literature" title="Literature and linked records" note="Evidence-based literature links from the SweetSeek corpus and related data modules." />
+
+          {sqliteDetail?.literatureReview?.reviewRequiredCount ? (
+            <div className="sdb-inline-notice" role="status">
+              Additional candidate literature links are pending review ({sqliteDetail.literatureReview.reviewRequiredCount}).
+            </div>
+          ) : null}
+
+          <LiteratureEvidenceTable
+            links={compoundLinks}
+            papers={literatureData.papers}
+            compoundName={compound.name}
+          />
+        </section>;
+      }
       case 'structure':
-        return <section className="sdb-data-section sdb-record-section"><div className="sdb-section-title"><div><span>Structure &amp; Identifiers</span><h2>Chemical representation</h2></div></div><dl className="sdb-code-list"><div><dt>Isomeric SMILES</dt><dd>{compound.isomericSmiles ?? 'Not available'}</dd></div><div><dt>Canonical SMILES</dt><dd>{compound.canonicalSmiles ?? 'Not available'}</dd></div><div><dt>Canonical tautomer InChIKey</dt><dd>{compound.canonicalTautomerInchiKey ?? 'Not available'}</dd></div></dl></section>;
-      case 'properties':
-        return <section className="sdb-data-section sdb-record-section"><div className="sdb-section-title"><div><span>Physicochemical Properties</span><h2>Source and PubChem values</h2><p>External values remain separate and require an exact InChIKey match.</p></div>{compound.pubchem?.sourceUrl && <a href={compound.pubchem.sourceUrl} target="_blank" rel="noreferrer">Open PubChem <ExternalLink size={15} /></a>}</div><dl className="sdb-property-grid"><div><dt>Formal charge</dt><dd>{formatNumber(compound.formalCharge, 0)}</dd></div><div><dt>Heavy atom count</dt><dd>{formatNumber(compound.heavyAtomCount, 0)}</dd></div><div><dt>XLogP</dt><dd>{formatNumber(compound.pubchem?.xlogp ?? null)}</dd></div><div><dt>TPSA</dt><dd>{compound.pubchem?.tpsa === null || compound.pubchem?.tpsa === undefined ? 'Not available' : `${formatNumber(compound.pubchem.tpsa)} Å²`}</dd></div><div><dt>H-bond donors</dt><dd>{formatNumber(compound.pubchem?.hBondDonorCount ?? null, 0)}</dd></div><div><dt>H-bond acceptors</dt><dd>{formatNumber(compound.pubchem?.hBondAcceptorCount ?? null, 0)}</dd></div><div><dt>Rotatable bonds</dt><dd>{formatNumber(compound.pubchem?.rotatableBondCount ?? null, 0)}</dd></div><div className="wide"><dt>IUPAC name</dt><dd>{compound.pubchem?.iupacName ?? 'Not available'}</dd></div></dl></section>;
-      case 'similar':
-        return <section className="sdb-data-section sdb-record-section"><div className="sdb-section-title"><div><span>Similar Compounds</span><h2>ECFP4 structural neighbors</h2><p>Tanimoto similarity calculated from 2,048-bit radius-2 Morgan fingerprints.</p></div></div>{neighbors.length ? <div className="sdb-similar-grid">{neighbors.map((item) => <button key={item.compound.id} onClick={() => onSelect(item.compound.id)}><MoleculeImage compound={item.compound} small /><span><strong>{item.compound.name}</strong><small>{item.compound.formula ?? 'Formula not available'}</small></span><b>{Math.round(item.similarity * 100)}%</b></button>)}</div> : <EmptyState icon={Beaker} title="Similar compounds are not available">A valid structure fingerprint is required to calculate molecular neighbors.</EmptyState>}</section>;
-      case 'literature-evidence':
-        return <section className="sdb-data-section sdb-record-section"><div className="sdb-section-title"><div><span>Literature &amp; Evidence</span><h2>Traceable supporting records</h2><p>SQLite evidence is shown first; the bundled relationship index remains available as a fallback.</p></div></div>{sqliteDetail?.evidence.tasteAssertions.length ? <div className="sdb-detail-grid">{sqliteDetail.evidence.tasteAssertions.map((assertion, index) => <dl className="sdb-definition-list" key={String(assertion.assertion_id ?? index)}><div><dt>Taste</dt><dd>{String(assertion.normalized_taste ?? 'Not available')}</dd></div><div><dt>Polarity</dt><dd>{String(assertion.assertion_polarity ?? 'Not available')}</dd></div><div><dt>Status</dt><dd>{String(assertion.assertion_status ?? 'Not available')}</dd></div><div><dt>Source evidence</dt><dd>{String(assertion.evidence_reference ?? 'Not available')}</dd></div></dl>)}</div> : null}{sqliteDetail?.literatureReview?.reviewRequiredCount ? <div className="sdb-inline-notice" role="status">Additional candidate literature links are pending review ({sqliteDetail.literatureReview.reviewRequiredCount}).</div> : null}{sqliteDetail?.literature.length ? <div className="sdb-literature-list">{sqliteDetail.literature.slice(0, 8).map((paper) => <article key={paper.record_id}><div className="sdb-literature-row"><div className="sdb-lit-citation"><strong>{paper.title}</strong><small>{[paper.relation_type, paper.journal, paper.year].filter(Boolean).join(' · ') || 'Publication details unavailable'}</small>{paper.evidence_excerpt && <small>{paper.evidence_excerpt}</small>}</div>{paper.pmid && <a href={`https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(paper.pmid)}/`} target="_blank" rel="noreferrer">PMID {paper.pmid} <ExternalLink size={13} /></a>}{paper.doi && <a href={`https://doi.org/${encodeURIComponent(paper.doi)}`} target="_blank" rel="noreferrer">DOI <ExternalLink size={13} /></a>}</div></article>)}</div> : <CompoundLiterature compound={compound} onSelect={onSelect} />}</section>;
-      case 'sources':
-        return <section className="sdb-data-section sdb-record-section"><div className="sdb-section-title"><div><span>Data Sources</span><h2>Provenance</h2></div></div><div className="sdb-source-list"><div><strong>SweetMeta SQLite</strong><span>{sqliteDetail ? 'Live release API' : 'Offline snapshot'}</span><small>{sqliteDetail ? 'Current read-only database response' : 'Bundled JSON fallback; not guaranteed current'}</small></div><div><strong>Food associations</strong><span>{sqliteDetail ? `${sqliteDetail.food.count} records` : 'Not available'}</span><small>Food occurrence records linked to this compound</small></div><div><strong>Regulatory evaluations</strong><span>{sqliteDetail ? `${sqliteDetail.regulatory.count} records` : 'Not available'}</span><small>Regulatory records are not safety conclusions</small></div><div><strong>Receptor activities</strong><span>{sqliteDetail ? `${sqliteDetail.receptors.count} records` : 'Not available'}</span><small>Activity records from linked assays</small></div><div><strong>PubChem</strong>{compound.pubchem?.sourceUrl ? <a href={compound.pubchem.sourceUrl} target="_blank" rel="noreferrer">Exact-key enrichment <ExternalLink size={13} /></a> : <span>Not available</span>}<small>Properties and structure conformer</small></div><div><strong>ChEMBL</strong>{compound.chembl ? <a href={compound.chembl.sourceUrl} target="_blank" rel="noreferrer">{compound.chembl.id} <ExternalLink size={13} /></a> : <span>Not available</span>}<small>Unique exact full-InChIKey identity match</small></div></div></section>;
-      default:
-        return <section className="sdb-data-section sdb-record-section"><div className="sdb-section-title"><div><span>Overview</span><h2>Evidence and identity status</h2></div></div>{detailError && <div className="sdb-inline-notice" role="status">SQLite detail unavailable; showing offline snapshot data. {detailError}</div>}<div className="sdb-detail-grid"><dl className="sdb-definition-list"><div><dt>Release tier</dt><dd>{readable(compound.evidence.releaseTier)}</dd></div><div><dt>Accepted assertions</dt><dd>{sqliteDetail ? sqliteDetail.evidence.tasteAssertions.length : compound.evidence.acceptedAssertions}</dd></div><div><dt>Evidence gap</dt><dd>{readable(compound.evidence.releaseGap)}</dd></div><div><dt>Priority score</dt><dd>{formatNumber(compound.evidence.priorityScore, 0)}</dd></div></dl><dl className="sdb-definition-list"><div><dt>QC sweet status</dt><dd>{String(sqliteDetail?.quality.qc_sweet_status ?? 'Not available')}</dd></div><div><dt>QC evidence tier</dt><dd>{String(sqliteDetail?.quality.qc_evidence_tier ?? 'Not available')}</dd></div><div><dt>Manual review</dt><dd>{compound.review.required ? 'Required' : 'Not flagged'}</dd></div><div><dt>Created at</dt><dd>{compound.createdAt ?? 'Not available'}</dd></div></dl></div></section>;
+        return <section className="sdb-data-section sdb-record-section"><DetailSectionTitle eyebrow="Structure & similarity" title="Chemical representation" note="The reviewed parent structure is primary; external structures remain linked comparisons." /><div className="sdb-structure-workbench"><div><div className="sdb-segmented" role="group" aria-label="Structure view"><button type="button" className={structureMode === '2d' ? 'active' : ''} onClick={() => setStructureMode('2d')}>2D</button><button type="button" className={structureMode === '3d' ? 'active' : ''} disabled={!viewerCid || !viewerSmiles} onClick={() => setStructureMode('3d')}><Cuboid /> 3D</button></div><div className="sdb-structure-workbench-view">{structureMode === '2d' ? <MoleculeImage compound={compound} /> : viewerCid && viewerSmiles ? <Molecule3DViewer key={compound.id} cid={viewerCid} name={compound.name} smiles={viewerSmiles} /> : null}</div></div><div className="sdb-copy-list"><CopyValue label="Isomeric SMILES" value={compound.isomericSmiles} /><CopyValue label="Canonical SMILES" value={compound.canonicalSmiles} /><CopyValue label="InChIKey" value={compound.inchiKey} /><CopyValue label="Stable ID" value={compound.id} /></div></div><RecordTable title="Aliases and source records" records={sqliteDetail?.aliases ?? []} /><RecordTable title="External identifiers" records={externalIds} /><div className="sdb-section-divider"><span>ECFP4 structural neighbors</span></div>{neighbors.length ? <div className="sdb-similar-grid">{neighbors.map((item) => <button key={item.compound.id} onClick={() => onSelect(item.compound.id)}><MoleculeImage compound={item.compound} small /><span><strong>{item.compound.name}</strong><small>{item.compound.formula ?? 'Formula not available'}</small></span><b>{Math.round(item.similarity * 100)}%</b></button>)}</div> : emptyModule('Similar compounds are not available', 'A valid structure fingerprint is required to calculate molecular neighbors.', Atom)}</section>;
+      case 'quality':
+        return <section className="sdb-data-section sdb-record-section"><DetailSectionTitle eyebrow="QC & review" title="Structure and release quality" note="Legacy R1–R4 readiness is shown here only and is not equivalent to E1–E3 provenance." /><div className="sdb-quality-summary"><div><span>Structure</span><strong>{sqliteDetail?.quality?.structure_verified || 'Unknown'}</strong></div><div><span>Stereochemistry</span><strong>{sqliteDetail?.quality?.stereochemistry_verified || 'Unknown'}</strong></div><div><span>Chemical form</span><strong>{sqliteDetail?.quality?.form_verified || 'Unknown'}</strong></div><div className="legacy"><span>Legacy readiness</span><strong>{tierCode(compound.evidence.releaseTier)}</strong></div></div>{(compound.review.required || compound.pubchem?.matchStatus === 'matched-with-discrepancy') && <div className="sdb-review-callout"><AlertTriangle /><div><strong>Manual scientific review flag</strong><p>{compound.review.note ?? 'The external structure or identifier comparison differs from the reviewed SweetMeta record.'}</p></div></div>}<RecordTable title="Quality-control fields" records={sqliteDetail?.quality ? [sqliteDetail.quality] : []} />{sqliteDetail?.evidence.conflicts.length ? <RecordTable title="Unresolved conflicts" records={sqliteDetail.evidence.conflicts} /> : emptyModule('No linked data conflicts', 'No conflict record is attached to this compound in the current release.', ShieldCheck)}{sqliteDetail?.stereoReview && <RecordTable title="Huan stereochemistry review" records={[sqliteDetail.stereoReview]} />}</section>;
+      default: {
+        const reviewed = sqliteDetail?.physicochemical;
+        const comparisons = [
+          ['Molecular weight', reviewed?.molecular_weight ?? compound.molecularWeight, compound.pubchem?.molecularWeight, 'Da', 2],
+          ['cLogP / XLogP', reviewed?.clogp, compound.pubchem?.xlogp, '', 2],
+          ['TPSA', reviewed?.tpsa, compound.pubchem?.tpsa, 'A²', 2],
+          ['Rotatable bonds', reviewed?.rotatable_bonds, compound.pubchem?.rotatableBondCount, '', 0],
+          ['H-bond acceptors', reviewed?.hba, compound.pubchem?.hBondAcceptorCount, '', 0],
+          ['H-bond donors', reviewed?.hbd, compound.pubchem?.hBondDonorCount, '', 0],
+        ] as const;
+
+        return <section className="sdb-data-section sdb-record-section">
+          <DetailSectionTitle eyebrow="Overview" title="Identity, classification, and properties" note="The fields most often needed to identify and compare this compound are kept together." />
+          {detailError && <div className="sdb-inline-notice" role="status">SQLite detail unavailable; showing the bundled release snapshot. {detailError}</div>}
+
+          <dl className="sdb-basic-grid">
+            <div><dt>Preferred name</dt><dd>{compound.name}</dd></div>
+            {(sqliteDetail?.identity?.displayId ?? compound.displayId) && (
+              <div><dt>Display ID</dt><dd>{sqliteDetail?.identity?.displayId ?? compound.displayId}</dd></div>
+            )}
+            {compound.formula && (
+              <div><dt>Molecular formula</dt><dd>{compound.formula}</dd></div>
+            )}
+            {compound.molecularWeight !== null && (
+              <div><dt>Molecular weight</dt><dd>{formatNumber(compound.molecularWeight)} Da</dd></div>
+            )}
+            {compound.formalCharge !== null && compound.formalCharge !== 0 && (
+              <div><dt>Formal charge</dt><dd>{formatNumber(compound.formalCharge, 0)}</dd></div>
+            )}
+            {compound.heavyAtomCount !== null && (
+              <div><dt>Heavy atoms</dt><dd>{formatNumber(compound.heavyAtomCount, 0)}</dd></div>
+            )}
+          </dl>
+
+          <div className="sdb-overview-sweetclass">
+            <span>SweetClass</span>
+            <div>
+              <strong>{classification?.level1 ?? compound.sweetClassLevel1 ?? 'Not available'}</strong>
+              <i>→</i>
+              <strong>{classification?.level2 ?? compound.sweetClassLevel2 ?? 'Not available'}</strong>
+            </div>
+            {compound.chemicalClass && <small>External classification: {compound.chemicalClass}</small>}
+          </div>
+
+          <div className="sdb-section-divider"><span>Physicochemical properties</span></div>
+
+          {compound.pubchem ? (
+            <>
+              <div className="sdb-property-comparison">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Property</th>
+                      <th>SweetMeta reviewed</th>
+                      <th>PubChem</th>
+                      <th>Difference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparisons.map(([label, primary, external, unit, digits]) => {
+                      const left = primary === null || primary === undefined ? null : Number(primary);
+                      const right = external === null || external === undefined ? null : Number(external);
+                      return (
+                        <tr key={label}>
+                          <th>{label}</th>
+                          <td>{left === null ? '—' : `${formatNumber(left, digits)}${unit ? ` ${unit}` : ''}`}</td>
+                          <td>{right === null ? '—' : `${formatNumber(right, digits)}${unit ? ` ${unit}` : ''}`}</td>
+                          <td>{left === null || right === null ? '—' : formatNumber(left - right, digits)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <>
+              <dl className="sdb-property-grid">
+                {reviewed?.molecular_weight !== null && reviewed?.molecular_weight !== undefined && (
+                  <div><dt>Molecular weight</dt><dd>{formatNumber(reviewed.molecular_weight, 2)} Da</dd></div>
+                )}
+                {reviewed?.clogp !== null && reviewed?.clogp !== undefined && (
+                  <div><dt>cLogP</dt><dd>{formatNumber(reviewed.clogp, 2)}</dd></div>
+                )}
+                {reviewed?.tpsa !== null && reviewed?.tpsa !== undefined && (
+                  <div><dt>TPSA</dt><dd>{formatNumber(reviewed.tpsa, 2)} A²</dd></div>
+                )}
+                {reviewed?.rotatable_bonds !== null && reviewed?.rotatable_bonds !== undefined && (
+                  <div><dt>Rotatable bonds</dt><dd>{formatNumber(reviewed.rotatable_bonds, 0)}</dd></div>
+                )}
+                {reviewed?.hba !== null && reviewed?.hba !== undefined && (
+                  <div><dt>H-bond acceptors</dt><dd>{formatNumber(reviewed.hba, 0)}</dd></div>
+                )}
+                {reviewed?.hbd !== null && reviewed?.hbd !== undefined && (
+                  <div><dt>H-bond donors</dt><dd>{formatNumber(reviewed.hbd, 0)}</dd></div>
+                )}
+              </dl>
+              <p className="sdb-inline-notice">
+                PubChem cross-validation unavailable for this compound.
+              </p>
+            </>
+          )}
+
+          <dl className="sdb-property-grid sdb-property-secondary">
+            {reviewed?.bertz_complexity !== null && reviewed?.bertz_complexity !== undefined && (
+              <div><dt>Bertz complexity</dt><dd>{formatNumber(reviewed.bertz_complexity)}</dd></div>
+            )}
+            {reviewed?.fraction_csp3 !== null && reviewed?.fraction_csp3 !== undefined && (
+              <div><dt>Fraction Csp3</dt><dd>{formatNumber(reviewed.fraction_csp3)}</dd></div>
+            )}
+            {(reviewed?.heavy_atom_count ?? compound.heavyAtomCount) !== null && (
+              <div><dt>Heavy atoms</dt><dd>{formatNumber(reviewed?.heavy_atom_count ?? compound.heavyAtomCount, 0)}</dd></div>
+            )}
+          </dl>
+
+          <div className="sdb-section-divider"><span>Identifiers and aliases</span></div>
+          <div className="sdb-copy-list sdb-basic-identifiers">
+            <CopyValue label="Stable ID" value={compound.id} />
+            <CopyValue label="InChIKey" value={compound.inchiKey} />
+          </div>
+          {aliases.length > 0 && (
+            <div className="sdb-alias-list">
+              <span>Aliases</span>
+              <div>
+                {aliases.map((alias) => (
+                  <button type="button" key={alias} title={`Copy ${alias}`} onClick={() => void navigator.clipboard?.writeText(alias)}>
+                    {alias}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="sdb-external-links">
+            {externalIds.map((item, index) => {
+              const href = externalIdUrl(item.namespace, item.external_id);
+              const content = <><span>{item.namespace}</span><strong>{item.external_id}</strong><small>{item.source_id}</small></>;
+              return href ? (
+                <a key={`${item.namespace}-${item.external_id}-${index}`} href={href} target="_blank" rel="noreferrer">
+                  {content}<ExternalLink />
+                </a>
+              ) : (
+                <div key={`${item.namespace}-${item.external_id}-${index}`}>{content}</div>
+              );
+            })}
+          </div>
+        </section>;
+      }
     }
   };
-  return <div className="sdb-page sdb-detail">
+
+  return <div className="sdb-page sdb-detail sdb-detail-redesign">
     <button className="sdb-back" onClick={onBack}><ArrowLeft size={17} /> Back to compounds</button>
-    <header className="sdb-detail-header">
-      <div className="sdb-structure-panel">
-        <div className="sdb-structure-toolbar"><span>Chemical structure</span><div role="group" aria-label="Structure view"><button className={structureMode === '2d' ? 'active' : ''} onClick={() => setStructureMode('2d')}>2D</button><button className={structureMode === '3d' ? 'active' : ''} onClick={() => setStructureMode('3d')}><Cuboid size={13} />3D</button></div></div>
-        <div className="sdb-detail-image">{structureMode === '2d' ? <MoleculeImage compound={compound} /> : viewerCid && viewerSmiles ? <Molecule3DViewer key={compound.id} cid={viewerCid} name={compound.name} smiles={viewerSmiles} /> : <div className="db-structure-message"><strong>3D conformer unavailable</strong><span>A verified PubChem structure is required for this view.</span></div>}</div>
-      </div>
-      <div className="sdb-detail-summary">
-        <div className="sdb-detail-badges"><TierBadge tier={compound.evidence.releaseTier} /><ReviewBadge compound={compound} />{compound.pubchem?.matchStatus === 'verified' ? <span className="sdb-pubchem-ok"><ShieldCheck size={13} /> PubChem verified</span> : compound.pubchem ? <span className="sdb-discrepancy"><AlertTriangle size={13} /> PubChem discrepancy</span> : null}</div>
+    <article className="sdb-detail-hero">
+      <div className="sdb-detail-identity">
+        <div className="sdb-detail-badges">{grade && <span className={`sdb-evidence-badge grade-${grade.toLowerCase()}`}>{grade} provenance</span>}<ReviewBadge compound={compound} />{compound.pubchem?.matchStatus === 'verified' ? <span className="sdb-pubchem-ok"><ShieldCheck size={13} /> PubChem verified</span> : compound.pubchem ? <span className="sdb-discrepancy"><AlertTriangle size={13} /> PubChem discrepancy</span> : null}</div>
         <h1>{compound.name}</h1><p className="sdb-mono">{compound.id}</p>
-        <dl className="sdb-core-properties">
-          <div><dt>ChEMBL ID</dt><dd>{compound.chembl ? <a href={compound.chembl.sourceUrl} target="_blank" rel="noreferrer">{compound.chembl.id}<ExternalLink size={13} /></a> : 'Not available'}</dd></div>
-          <div><dt>PubChem CID</dt><dd>{compound.pubchem?.cid && compound.pubchem.sourceUrl ? <a href={compound.pubchem.sourceUrl} target="_blank" rel="noreferrer">CID {compound.pubchem.cid}<ExternalLink size={13} /></a> : 'Not available'}</dd></div>
-          <div className="wide"><dt>SMILES</dt><dd className="sdb-mono">{compound.isomericSmiles ?? compound.canonicalSmiles ?? 'Not available'}</dd></div>
-          <div className="wide"><dt>InChIKey</dt><dd className="sdb-mono">{compound.inchiKey ?? 'Not available'}</dd></div>
-          <div><dt>Molecular formula</dt><dd>{compound.formula ?? 'Not available'}</dd></div>
-          <div><dt>Molecular weight</dt><dd>{compound.molecularWeight === null ? 'Not available' : `${formatNumber(compound.molecularWeight)} Da`}</dd></div>
-          <div><dt>Source</dt><dd>{compound.nameSource ?? 'Not available'}</dd></div>
-          <div><dt>Entity type</dt><dd>{readable(compound.entityType)}</dd></div>
+        {aliases.length > 0 && <p className="sdb-hero-aliases">Also known as {aliases.slice(0, 3).join(' · ')}{aliases.length > 3 ? ` +${aliases.length - 3}` : ''}</p>}
+        <div className="sdb-class-tags"><span>{classification?.level1 ?? compound.sweetClassLevel1 ?? 'SweetClass unavailable'}</span><span>{classification?.level2 ?? compound.sweetClassLevel2 ?? 'Subclass unavailable'}</span></div>
+        <dl className="sdb-hero-facts">
+          {compound.formula && (
+            <div><dt>Formula</dt><dd>{compound.formula}</dd></div>
+          )}
+          {compound.molecularWeight !== null && (
+            <div><dt>Molecular weight</dt><dd>{formatNumber(compound.molecularWeight)} Da</dd></div>
+          )}
+          {casNumbers.length > 0 && (
+            <div><dt>CAS</dt><dd>{casNumbers.join(', ')}</dd></div>
+          )}
+          {pubchemId && (
+            <div>
+              <dt>PubChem CID</dt>
+              <dd>
+                <a href={externalIdUrl('PubChemCID', pubchemId) ?? undefined} target="_blank" rel="noreferrer">
+                  {pubchemId} <ExternalLink />
+                </a>
+              </dd>
+            </div>
+          )}
+          {chemblId && (
+            <div>
+              <dt>ChEMBL ID</dt>
+              <dd>
+                <a href={externalIdUrl('ChEMBL', chemblId) ?? undefined} target="_blank" rel="noreferrer">
+                  {chemblId} <ExternalLink />
+                </a>
+              </dd>
+            </div>
+          )}
         </dl>
+        {(provenance?.source_collection ?? compound.sourceCollection) && (
+          <p className="sdb-hero-source">
+            <span>Source collection</span>
+            {provenance?.source_collection ?? compound.sourceCollection}
+          </p>
+        )}
       </div>
-    </header>
-    {(compound.review.required || compound.pubchem?.matchStatus === 'matched-with-discrepancy') && <div className="sdb-review-callout"><AlertTriangle /><div><strong>Manual scientific review required</strong><p>{compound.pubchem?.matchStatus === 'matched-with-discrepancy' ? 'The external identifier match exposed a source-field discrepancy. Source values were not overwritten; resolve the preferred name and structure identity before release.' : compound.review.note ?? 'No review note was supplied.'}</p></div></div>}
+      <figure className="sdb-hero-structure"><figcaption>Reviewed 2D structure</figcaption><div><MoleculeImage compound={compound} /></div></figure>
+      <div className="sdb-module-strip" role="group" aria-label="Linked data modules">{moduleItems.filter(item => item.count > 0).map((item) => <button type="button" key={item.label} className={`available ${item.warning ? 'warning' : ''}`} onClick={() => selectSection(item.section)}><span>{item.label}</span><strong>{item.count.toLocaleString()}</strong></button>)}</div>
+    </article>
     <div className="sdb-record-layout">
       <nav className="sdb-record-nav" aria-label="Compound record sections">
-        <span className="sdb-record-nav-title">Compound profile</span>
-        {DETAIL_SECTIONS.map(({ id, label, icon: Icon }) => <button key={id} type="button" className={activeSection === id ? 'active' : ''} aria-current={activeSection === id ? 'page' : undefined} onClick={() => setActiveSection(id)}><Icon /> <span>{label}</span></button>)}
+        {DETAIL_SECTIONS.map(({ id, label, icon: Icon, group }, index) => { const showGroup = index === 0 || DETAIL_SECTIONS[index - 1].group !== group; return <div className="sdb-record-nav-item" key={id}>{showGroup && <span className="sdb-record-nav-title">{group}</span>}<button type="button" className={activeSection === id ? 'active' : ''} aria-current={activeSection === id ? 'page' : undefined} onClick={() => selectSection(id)}><Icon /> <span>{label}</span></button></div>; })}
       </nav>
-      <div className="sdb-record-content" id={`record-panel-${activeSection}`} aria-live="polite">
-        {renderSection()}
-      </div>
+      <div className="sdb-record-content" id={`record-panel-${activeSection}`} aria-live="polite">{renderSection()}</div>
     </div>
   </div>;
 };
@@ -528,6 +835,7 @@ const mergeSqliteCompound = (base: DatabaseCompound, detail: SweetMetaCompoundDe
   const source = detail.compound as Record<string, unknown>;
   return {
     ...base,
+    displayId: source.display_id ? String(source.display_id) : base.displayId,
     name: String(source.preferred_name ?? base.name),
     inchiKey: String(source.parent_inchikey ?? base.inchiKey ?? ''),
     isomericSmiles: source.parent_isomeric_smiles ? String(source.parent_isomeric_smiles) : base.isomericSmiles,
@@ -559,13 +867,13 @@ const DatabaseInterface = ({ onClose }: { onClose?: () => void }) => {
   const [routeState, setRouteState] = useState(state);
   const [menuOpen, setMenuOpen] = useState(false);
   const compound = compoundId ? DATABASE_COMPOUNDS.find((item) => item.id === compoundId) ?? null : null;
-  const [sqliteDetail, setSqliteDetail] = useState<SweetMetaCompoundDetail | null>(null);
-  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailState, setDetailState] = useState<{ id: string; data: SweetMetaCompoundDetail | null; error: string | null }>({ id: '', data: null, error: null });
+  const sqliteDetail = detailState.id === compoundId ? detailState.data : null;
+  const detailError = detailState.id === compoundId ? detailState.error : null;
   useEffect(() => {
-    if (!compoundId) { setSqliteDetail(null); setDetailError(null); return; }
+    if (!compoundId) return;
     let active = true;
-    setSqliteDetail(null); setDetailError(null);
-    fetchSweetMetaCompound(compoundId).then((data) => { if (active) setSqliteDetail(data); }).catch((error: unknown) => { if (active) setDetailError(error instanceof Error ? error.message : 'SQLite detail request failed'); });
+    fetchSweetMetaCompound(compoundId).then((data) => { if (active) setDetailState({ id: compoundId, data, error: null }); }).catch((error: unknown) => { if (active) setDetailState({ id: compoundId, data: null, error: error instanceof Error ? error.message : 'SQLite detail request failed' }); });
     return () => { active = false; };
   }, [compoundId]);
   useEffect(() => { const onPop = () => { const next = initialState(); setRouteState(next); setSection(next.section); setCompoundId(next.compoundId); setQuery(next.query); setTier(next.tier); setMenuOpen(false); }; window.addEventListener('popstate', onPop); return () => window.removeEventListener('popstate', onPop); }, []);
@@ -574,8 +882,8 @@ const DatabaseInterface = ({ onClose }: { onClose?: () => void }) => {
   const search = (nextQuery: string) => { setSection('compounds'); setCompoundId(null); setQuery(nextQuery); setTier('all'); setMenuOpen(false); updateUrl('compounds', null, { query: nextQuery, tier: 'all' }); setRouteState(initialState()); resetScroll(); };
   const select = (id: string) => { setSection('compounds'); setCompoundId(id); updateUrl('compounds', id, { query, tier }); resetScroll(); };
   const back = () => { setCompoundId(null); updateUrl('compounds', null, { query, tier }); };
-  const openStatisticsResult = (target: 'compounds' | 'literature', values: Record<string, string | number | null | undefined>) => {
-    const params = new URLSearchParams({ section: target });
+  const openStatisticsResult = (values: Record<string, string | number | null | undefined>) => {
+    const params = new URLSearchParams({ section: 'compounds' });
     Object.entries(values).forEach(([key, value]) => { if (value !== null && value !== undefined && value !== '') params.set(key, String(value)); });
     window.history.pushState({ database: true }, '', `/database?${params}`);
     const next = initialState();
@@ -592,11 +900,11 @@ const DatabaseInterface = ({ onClose }: { onClose?: () => void }) => {
   return <div className="sdb-shell">
     <header className="sdb-product-header">
       <button className="sdb-product-brand" onClick={() => navigate('overview')} aria-label="SweetMeta home"><span className="sdb-brand-mark"><Database /></span><span><strong>SweetMeta</strong><small>Evidence-led sweet knowledgebase</small></span></button>
-      <nav className={menuOpen ? 'open' : ''} aria-label="SweetMeta navigation">{SECTIONS.map(({ id, label }) => <button key={id} className={section === id && !compound ? 'active' : ''} onClick={() => navigate(id)}>{label}{id === 'downloads' && <LockKeyhole className="sdb-nav-lock" />}</button>)}</nav>
+      <nav className={menuOpen ? 'open' : ''} aria-label="SweetMeta navigation">{SECTIONS.map(({ id, label }) => <button key={id} className={section === id && !compound ? 'active' : ''} onClick={() => navigate(id)}>{label}</button>)}</nav>
       <div className="sdb-header-actions"><button className="sdb-return" onClick={leaveDatabase}><ArrowLeft /> SweetSeek</button><button className="sdb-menu" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? 'Close database menu' : 'Open database menu'}>{menuOpen ? <X /> : <Menu />}</button></div>
     </header>
     <div className="sdb-mobile-context"><span>{activeLabel}</span><small>{DATABASE_METADATA.totalRecords.toLocaleString()} records</small></div>
-    <main className="sdb-main overflow-auto">{compound ? <Detail compound={sqliteDetail ? mergeSqliteCompound(compound, sqliteDetail) : compound} sqliteDetail={sqliteDetail} detailError={detailError} onBack={back} onSelect={select} /> : section === 'overview' ? <Overview onSelect={select} onSearch={search} /> : section === 'compounds' ? <CompoundIndex key={window.location.search} onSelect={select} initialQuery={query} initialTier={tier} initialDrilldown={{ domain: routeState.domain, foodGroup: routeState.foodGroup, sweetnessMinLog10: routeState.sweetnessMinLog10, sweetnessMaxLog10: routeState.sweetnessMaxLog10, qualityMetric: routeState.qualityMetric, qualityState: routeState.qualityState }} /> : section === 'literature' ? <Literature key={window.location.search} onSelect={select} initialYearFrom={routeState.literatureYearFrom} initialYearTo={routeState.literatureYearTo} initialCompoundFamily={routeState.compoundFamily} /> : section === 'statistics' ? <StatisticsDashboard onCompounds={(values) => openStatisticsResult('compounds', values)} onLiterature={(values) => openStatisticsResult('literature', values)} /> : <Downloads />}</main>
+    <main className="sdb-main overflow-auto">{compound ? <Detail key={compound.id} compound={sqliteDetail ? mergeSqliteCompound(compound, sqliteDetail) : compound} sqliteDetail={sqliteDetail} detailError={detailError} onBack={back} onSelect={select} /> : section === 'overview' ? <Overview onSelect={select} onSearch={search} onStatistics={() => navigate('statistics')} /> : section === 'compounds' ? <CompoundIndex key={window.location.search} onSelect={select} initialQuery={query} initialTier={tier} initialDrilldown={{ domain: routeState.domain, foodGroup: routeState.foodGroup, sweetnessMinLog10: routeState.sweetnessMinLog10, sweetnessMaxLog10: routeState.sweetnessMaxLog10, qualityMetric: routeState.qualityMetric, qualityState: routeState.qualityState, sweetClassL1: routeState.sweetClassL1, sweetClassL2: routeState.sweetClassL2, evidenceGrade: routeState.evidenceGrade, sourceCollection: routeState.sourceCollection, mwMin: routeState.mwMin, mwMax: routeState.mwMax, clogpMin: routeState.clogpMin, clogpMax: routeState.clogpMax, tpsaMin: routeState.tpsaMin, tpsaMax: routeState.tpsaMax }} /> : section === 'literature' ? <Literature key={window.location.search} onSelect={select} initialYearFrom={routeState.literatureYearFrom} initialYearTo={routeState.literatureYearTo} initialCompoundFamily={routeState.compoundFamily} /> : section === 'statistics' ? <StatisticsDashboard onCompounds={openStatisticsResult} onCompound={select} /> : <Downloads />}</main>
   </div>;
 };
 

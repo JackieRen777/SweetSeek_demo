@@ -96,6 +96,20 @@ export interface PubChemEnrichment {
 
 export interface DatabaseCompound {
   id: string;
+  displayId?: string | null;
+  casNumbers?: string[];
+  browsePubchemCid?: string | null;
+  chemicalClass?: string | null;
+  sourceNames?: string[];
+  reviewedSourceNames?: string[];
+  sourceCollection?: string | null;
+  sweetClassLevel1?: string | null;
+  sweetClassLevel2?: string | null;
+  evidenceGrade?: 'E1' | 'E2' | 'E3' | null;
+  reviewedProperties?: {
+    clogp: number | null; tpsa: number | null; rotatableBonds: number | null;
+    hba: number | null; hbd: number | null;
+  };
   entityType: 'small-molecule' | 'protein' | 'other';
   name: string;
   nameSource: string | null;
@@ -137,6 +151,7 @@ export interface DatabaseMetadata {
   sourceWorkbook: string;
   sourceSheet: string;
   generatedAt: string;
+  reviewDate?: string;
   totalRecords: number;
   currentEntityCoverage: Record<string, number>;
   tierCounts: Record<string, number>;

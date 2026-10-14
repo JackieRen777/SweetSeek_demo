@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { execFileSync } from 'node:child_process';
 import XLSX from 'xlsx';
 
 const root = path.resolve(import.meta.dirname, '../..');
-const defaultWorkbook = path.join(root, 'data/sweet_database_source_20260910.xlsx');
+const defaultWorkbook = path.join(root, 'data/sweetmeta_reviewed_20261005/compound_master_1296.csv');
 const workbookPath = path.resolve(process.argv[2] ?? defaultWorkbook);
 const pubchemPath = process.argv[3] ? path.resolve(process.argv[3]) : null;
 const outputDir = path.join(root, 'frontend-react/src/features/database/data');
@@ -12,6 +13,29 @@ const outputDir = path.join(root, 'frontend-react/src/features/database/data');
 const workbook = XLSX.readFile(workbookPath, { cellDates: false });
 const sheetName = workbook.SheetNames[0];
 const sourceRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null });
+const existingDatabasePath = path.join(outputDir, 'database.generated.json');
+let existingCompounds = fs.existsSync(existingDatabasePath)
+  ? JSON.parse(fs.readFileSync(existingDatabasePath, 'utf8')).compounds ?? [] : [];
+if (!existingCompounds.some((compound) => compound.pubchem?.cid)) {
+  try {
+    const repositoryPath = 'frontend-react/src/features/database/data/database.generated.json';
+    existingCompounds = JSON.parse(execFileSync('git', ['show', `HEAD:${repositoryPath}`], { cwd: root, encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 })).compounds ?? [];
+  } catch {
+    // A first build may not have a historical snapshot; reviewed core data still builds without enrichment.
+  }
+}
+const existingById = new Map(existingCompounds.map((compound) => [compound.id, compound]));
+
+const readRelatedCsv = (name) => {
+  const file = path.join(path.dirname(workbookPath), name);
+  if (!fs.existsSync(file)) return new Map();
+  const book = XLSX.readFile(file, { cellDates: false });
+  const rows = XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]], { defval: null });
+  return new Map(rows.map((row) => [String(row.compound_id), row]));
+};
+const taxonomyById = readRelatedCsv('sweetclass_taxonomy_1296.csv');
+const provenanceById = readRelatedCsv('compound_provenance_1296.csv');
+const propertiesById = readRelatedCsv('physicochemical_descriptors_1296.csv');
 
 const pubchemByKey = new Map();
 if (pubchemPath && fs.existsSync(pubchemPath)) {
@@ -38,6 +62,10 @@ const dateText = (value) => typeof value === 'number'
   : text(value);
 
 const compounds = sourceRows.map((row) => {
+  const existing = existingById.get(text(row.compound_id)) ?? {};
+  const taxonomy = taxonomyById.get(text(row.compound_id)) ?? {};
+  const provenance = provenanceById.get(text(row.compound_id)) ?? {};
+  const properties = propertiesById.get(text(row.compound_id)) ?? {};
   const inchiKey = text(row.parent_inchikey);
   const pubchem = inchiKey ? pubchemByKey.get(inchiKey) ?? null : null;
   const sourceMw = number(row.molecular_weight);
@@ -59,28 +87,38 @@ const compounds = sourceRows.map((row) => {
     id: text(row.compound_id),
     entityType: 'small-molecule',
     name: text(row.preferred_name),
-    nameSource: text(row.preferred_name_source),
+    nameSource: text(row.preferred_name_source) ?? existing.nameSource ?? 'reviewed master 2026-10-05',
     inchiKey,
-    canonicalTautomerInchiKey: text(row.canonical_tautomer_inchikey),
+    canonicalTautomerInchiKey: text(row.canonical_tautomer_inchikey) ?? existing.canonicalTautomerInchiKey ?? null,
     isomericSmiles: text(row.parent_isomeric_smiles),
     canonicalSmiles: text(row.parent_canonical_smiles),
     formula: text(row.molecular_formula),
     molecularWeight: sourceMw,
-    formalCharge: number(row.formal_charge),
-    heavyAtomCount: number(row.heavy_atom_count),
-    createdAt: text(row.created_at),
+    formalCharge: number(row.formal_charge) ?? existing.formalCharge ?? null,
+    heavyAtomCount: number(properties.heavy_atom_count) ?? existing.heavyAtomCount ?? null,
+    createdAt: text(row.created_at) ?? existing.createdAt ?? null,
+    sweetClassLevel1: text(taxonomy.sweetclass_level1),
+    sweetClassLevel2: text(taxonomy.sweetclass_level2),
+    evidenceGrade: text(provenance.evidence_short),
+    sourceCollection: text(provenance.source_collection),
+    reviewedSourceNames: text(provenance.source_names)?.split(';') ?? [],
+    reviewedProperties: {
+      clogp: number(properties.clogp), tpsa: number(properties.tpsa),
+      rotatableBonds: number(properties.rotatable_bonds), hba: number(properties.hba),
+      hbd: number(properties.hbd),
+    },
     evidence: {
-      baselineTier: text(row.baseline_evidence_readiness_tier),
-      releaseTier: text(row.release_evidence_readiness_tier),
-      baselineGap: text(row.baseline_evidence_gap_type),
-      releaseGap: text(row.release_evidence_gap_type),
-      priorityScore: number(row.baseline_priority_score),
+      baselineTier: text(row.baseline_evidence_readiness_tier) ?? existing.evidence?.baselineTier ?? null,
+      releaseTier: text(row.release_evidence_readiness_tier) ?? existing.evidence?.releaseTier ?? null,
+      baselineGap: text(row.baseline_evidence_gap_type) ?? existing.evidence?.baselineGap ?? null,
+      releaseGap: text(row.release_evidence_gap_type) ?? existing.evidence?.releaseGap ?? null,
+      priorityScore: number(row.baseline_priority_score) ?? existing.evidence?.priorityScore ?? null,
       acceptedAssertions: number(row.accepted_sweet_assertion_count) ?? 0,
     },
     review: {
-      required: Number(row.manual_review_required) === 1,
-      identityStatus: text(row.structure_identity_status),
-      note: text(row.status_note),
+      required: row.manual_review_required === null || row.manual_review_required === undefined ? Boolean(existing.review?.required) : Number(row.manual_review_required) === 1,
+      identityStatus: text(row.structure_identity_status) ?? existing.review?.identityStatus ?? null,
+      note: text(row.status_note) ?? existing.review?.note ?? null,
     },
     pubchem: pubchem ? {
       cid: number(pubchem.CID),
@@ -102,14 +140,14 @@ const compounds = sourceRows.map((row) => {
       retrievedAt: text(pubchem._retrievedAt) ?? isoDate,
       matchStatus: verified ? 'verified' : 'matched-with-discrepancy',
       validation,
-    } : null,
+    } : existing.pubchem ?? null,
     chembl: chemblId && text(row.chembl_match_status) === 'matched' ? {
       id: chemblId,
       matchStatus: 'matched',
       sourceUrl: text(row.chembl_source_url) ?? `https://www.ebi.ac.uk/chembl/explore/compound/${chemblId}`,
       retrievedAt: dateText(row.chembl_retrieved_at) ?? isoDate,
       matchMethod: 'exact_full_inchikey',
-    } : null,
+    } : existing.chembl ?? null,
   };
 });
 
@@ -126,10 +164,11 @@ const chemblMatched = compounds.filter((item) => item.chembl).length;
 
 const metadata = {
   title: 'SweetMeta',
-  version: path.basename(workbookPath, path.extname(workbookPath)),
+  version: 'SweetMeta v1.0.7 (2026-10-05 reviewed snapshot)',
   sourceWorkbook: path.basename(workbookPath),
   sourceSheet: sheetName,
   generatedAt: isoDate,
+  reviewDate: '2026-10-05',
   totalRecords: compounds.length,
   currentEntityCoverage: { 'small-molecule': compounds.length, protein: 0, other: 0 },
   tierCounts: countBy(compounds, (item) => item.evidence.releaseTier),

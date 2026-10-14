@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, request
+import hashlib
+from pathlib import Path
+
+from flask import Blueprint, jsonify, request, send_file
 
 from services.sweetmeta_db import SweetMetaDatabase
 
@@ -36,7 +39,7 @@ def create_sweetmeta_blueprint(db: SweetMetaDatabase | None = None) -> Blueprint
     @blueprint.get("/releases")
     def releases():
         metadata = database.metadata()
-        return jsonify({"success": True, "data": {"active": metadata.get("reviewRelease") or metadata.get("rescanRelease") or metadata.get("release", {}), "releaseV1": metadata.get("releaseV1", {}), "rescanRelease": metadata.get("rescanRelease", {}), "reviewRelease": metadata.get("reviewRelease", {}), "sha256": metadata.get("databaseSha256")}})
+        return jsonify({"success": True, "data": {"active": metadata.get("reviewedRelease") or metadata.get("reviewRelease") or metadata.get("rescanRelease") or metadata.get("release", {}), "releaseV1": metadata.get("releaseV1", {}), "rescanRelease": metadata.get("rescanRelease", {}), "reviewRelease": metadata.get("reviewRelease", {}), "reviewedRelease": metadata.get("reviewedRelease", {}), "sha256": metadata.get("databaseSha256")}})
 
     @blueprint.get("/compounds")
     def compounds():
@@ -52,6 +55,16 @@ def create_sweetmeta_blueprint(db: SweetMetaDatabase | None = None) -> Blueprint
             sweetness_max_log10=request.args.get("sweetnessMaxLog10", type=float),
             quality_metric=request.args.get("qualityMetric", ""),
             quality_state=request.args.get("qualityState", ""),
+            sweet_class_l1=request.args.get("sweetClassL1", ""),
+            sweet_class_l2=request.args.get("sweetClassL2", ""),
+            evidence_grade=request.args.get("evidenceGrade", ""),
+            source_collection=request.args.get("sourceCollection", ""),
+            mw_min=request.args.get("mwMin", type=float),
+            mw_max=request.args.get("mwMax", type=float),
+            clogp_min=request.args.get("clogpMin", type=float),
+            clogp_max=request.args.get("clogpMax", type=float),
+            tpsa_min=request.args.get("tpsaMin", type=float),
+            tpsa_max=request.args.get("tpsaMax", type=float),
         )
         return jsonify({"success": True, "data": data})
 
@@ -87,6 +100,7 @@ def create_sweetmeta_blueprint(db: SweetMetaDatabase | None = None) -> Blueprint
         food = data.pop("foodOccurrences", [])
         regulatory = data.pop("regulatory", [])
         receptors = data.pop("receptorActivities", [])
+        module_counts = data.pop("moduleCounts", {})
         assertions = data.pop("tasteAssertions", [])
         measurements = data.pop("measurements", [])
         conflicts = []
@@ -97,17 +111,85 @@ def create_sweetmeta_blueprint(db: SweetMetaDatabase | None = None) -> Blueprint
             conflicts = []
         result = {
             "compound": data,
+            "identity": {
+                "stableId": compound_id,
+                "displayId": data.get("display_id"),
+                "preferredName": data.get("preferred_name"),
+                "preferredNameSource": data.get("preferred_name_source"),
+                "aliases": data.get("aliases", []),
+                "externalIds": data.get("externalIds", []),
+            },
             "release": {key: data.get(key) for key in ("release_tier", "release_gap", "manual_review_required", "status_note")},
             "quality": {key: data.get(key) for key in data if key.startswith("qc_") or key in {"structure_verified", "stereochemistry_verified", "form_verified"}},
             "aliases": data.pop("aliases", []),
+            "externalIds": data.pop("externalIds", []),
+            "classification": data.pop("classification", None),
+            "provenance": data.pop("provenance", None),
+            "physicochemical": data.pop("physicochemical", None),
+            "projections": data.pop("projections", []),
+            "stereoReview": data.pop("stereoReview", None),
             "evidence": {"tasteAssertions": assertions, "measurements": measurements, "conflicts": conflicts},
             "literature": literature,
             "literatureReview": {"candidateCount": data.get("literatureCandidateCount", 0), "reviewRequiredCount": data.get("literatureReviewRequiredCount", 0)},
             "food": {"count": len(food), "items": food},
             "regulatory": {"count": len(regulatory), "items": regulatory},
             "receptors": {"count": len(receptors), "items": receptors},
+            "modules": {
+                "sweetness": module_counts.get("sweetness", len(measurements)),
+                "literature": module_counts.get("literature", len(literature)),
+                "food": module_counts.get("food", len(food)),
+                "receptors": module_counts.get("receptors", len(receptors)),
+                "regulatory": module_counts.get("regulatory", len(regulatory)),
+                "conflicts": module_counts.get("conflicts", len(conflicts)),
+            },
         }
         return jsonify({"success": True, "data": result})
+
+    @blueprint.get("/compounds/<compound_id>/projection-context")
+    def compound_projection_context(compound_id: str):
+        data = database.projection_context(compound_id)
+        if data is None:
+            return jsonify({"success": False, "error": "Compound not found in the public release"}), 404
+        return jsonify({"success": True, "data": data})
+
+    def download_files() -> dict[str, Path]:
+        root = Path(__file__).resolve().parents[1]
+        release_dir = database.path.parent
+        return {
+            "database": database.path,
+            "sources": release_dir / "SweetMeta_v1.0.7_reviewed_sources_20261005.zip",
+            "dictionary": root / "data" / "sweetmeta_reviewed_20261005" / "DATA_DICTIONARY.md",
+            "manifest": release_dir / "release_manifest_v1.0.7.json",
+        }
+
+    @blueprint.get("/downloads")
+    def downloads():
+        labels = {
+            "database": "Reviewed SQLite database", "sources": "Reviewed CSV source package",
+            "dictionary": "Data dictionary", "manifest": "Checksum manifest",
+        }
+        files = download_files()
+        items = []
+        for key, path in files.items():
+            if not path.is_file():
+                continue
+            items.append({
+                "key": key, "label": labels[key], "filename": path.name,
+                "bytes": path.stat().st_size,
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                "url": f"/api/sweetmeta/downloads/{key}",
+            })
+        return jsonify({"success": True, "data": {
+            "version": "v1.0.7", "reviewDate": "2026-10-05", "recordCount": 1296,
+            "items": items,
+        }})
+
+    @blueprint.get("/downloads/<key>")
+    def download(key: str):
+        path = download_files().get(key)
+        if path is None or not path.is_file():
+            return jsonify({"success": False, "error": "Download not found"}), 404
+        return send_file(path, as_attachment=True, download_name=path.name)
 
     @blueprint.get("/literature/<record_id>")
     def literature_detail(record_id: str):

@@ -1,6 +1,9 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
+import { supabase } from './lib/supabase';
+import { Auth } from './features/auth/Auth';
 import Background from './components/layout/Background';
 import Navbar from './components/layout/Navbar';
 import Hero from './features/landing/HeroSection';
@@ -8,12 +11,12 @@ import QA from './features/qa/QASection';
 import SweetTasteEquationSection from './features/equation/SweetTasteEquationSection';
 import Database from './features/database/DatabaseSection';
 import SweetPredictionSection from './features/prediction/SweetPredictionSection';
-// import ErrorBoundary from './components/ui/ErrorBoundary';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Slider from './components/layout/Slider';
 import { useThresholdScroll } from './utils/thresholdScroll';
 import { featureFromPath, REVERSE_PATH_MAP, type FeatureType } from './routing';
 import { MD_BUILDER_ENABLED } from './featureFlags';
+import { lazy, Suspense } from 'react';
 
 // Lazy load feature components
 const ChatInterface = lazy(() => import('./features/qa/components/ChatInterface'));
@@ -31,6 +34,9 @@ const AmberMDBuilder = MD_BUILDER_ENABLED
 const SCREEN_COUNT = 5;
 
 function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeFeature, setActiveFeature] = useState<FeatureType>(() => {
     const feature = featureFromPath(window.location.pathname);
     if (feature === 'md-builder' && window.location.pathname.toLowerCase().replace(/\/$/, '') === '/docking') {
@@ -39,7 +45,7 @@ function App() {
     return feature;
   });
   const controls = useAnimation();
-  
+
   // Use custom threshold scroll hook
   const { activeScreen, navigateTo } = useThresholdScroll({
     enabled: !activeFeature,
@@ -48,6 +54,22 @@ function App() {
     thresholdVelocity: 1.2,
     animationDuration: 600
   });
+
+  // Check authentication status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // --- URL Routing Logic ---
 
@@ -71,7 +93,7 @@ function App() {
     const handlePopState = () => {
        setActiveFeature(featureFromPath(window.location.pathname));
     };
-    
+
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
@@ -86,7 +108,15 @@ function App() {
     });
   }, [activeScreen, controls]);
 
+  // Features that require authentication
+  const authRequiredFeatures: FeatureType[] = ['qa', 'dual-protein', 'encapsulation', 'proteoglycan', 'ml-predict'];
+
   const handleOpenFeature = (feature: FeatureType) => {
+    // Check if feature requires authentication
+    if (authRequiredFeatures.includes(feature) && !session) {
+      setShowAuthModal(true);
+      return;
+    }
     setActiveFeature(feature);
   };
 
@@ -98,36 +128,61 @@ function App() {
           navigateTo(0);
           return;
       }
-      
-      // If clicking other links, check if they map to features
-      if (index === 1) setActiveFeature('qa');
-      else if (index === 2) setActiveFeature('equation');
-      else if (index === 3) setActiveFeature('database');
-      else if (index === 4) { setActiveFeature('references'); return; }
-      else if (index === 5) { setActiveFeature('dual-protein'); return; }
-      else if (index === 6) { setActiveFeature('ml-predict'); return; }
-      else if (index === 7) { setActiveFeature('encapsulation'); return; }
-      else if (index === 8 && MD_BUILDER_ENABLED) { setActiveFeature('md-builder'); return; }
-      else if (index === 9) { setActiveFeature('proteoglycan'); return; }
-      else if (index === 10 && MD_BUILDER_ENABLED) { setActiveFeature('md-builder'); return; }
+
+      // Map index to feature and check authentication
+      let targetFeature: FeatureType = null;
+      if (index === 1) targetFeature = 'qa';
+      else if (index === 2) targetFeature = 'equation';
+      else if (index === 3) targetFeature = 'database';
+      else if (index === 4) targetFeature = 'references';
+      else if (index === 5) targetFeature = 'dual-protein';
+      else if (index === 6) targetFeature = 'ml-predict';
+      else if (index === 7) targetFeature = 'encapsulation';
+      else if (index === 8 && MD_BUILDER_ENABLED) targetFeature = 'md-builder';
+      else if (index === 9) targetFeature = 'proteoglycan';
+      else if (index === 10 && MD_BUILDER_ENABLED) targetFeature = 'md-builder';
+
+      // Check if feature requires authentication
+      if (targetFeature && authRequiredFeatures.includes(targetFeature) && !session) {
+        setShowAuthModal(true);
+        return;
+      }
+
+      setActiveFeature(targetFeature);
 
       // Also scroll to that section in the background
       navigateTo(index);
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="text-slate-400">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary name="AppRoot">
       <div className="relative w-screen h-screen overflow-hidden text-slate-800">
-        
+
         <Background />
-        
+
         {activeFeature !== 'database' && (
           <Navbar
               activeScreen={activeScreen}
               onNavigate={handleNavigate}
               activeFeature={activeFeature}
               mdBuilderEnabled={MD_BUILDER_ENABLED}
+              onSignInClick={!session ? () => setShowAuthModal(true) : undefined}
+              session={session}
           />
+        )}
+
+        {/* Auth Modal */}
+        {showAuthModal && !session && (
+          <Auth onClose={() => setShowAuthModal(false)} />
         )}
 
         {/* Vertical Slider Indicator */}
@@ -201,15 +256,6 @@ function App() {
               <SweetPredictionSection onTryNow={() => handleOpenFeature('ml-predict')} />
             </ErrorBoundary>
           </div>
-
-          {/* Section 5: References (REMOVED from slider) */}
-          {/* 
-          <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
-            <ErrorBoundary name="ReferencesSection">
-              <References onOpenList={() => handleOpenFeature('references')} />
-            </ErrorBoundary>
-          </div> 
-          */}
         </motion.div>
 
         {/* Feature Modal Overlay */}

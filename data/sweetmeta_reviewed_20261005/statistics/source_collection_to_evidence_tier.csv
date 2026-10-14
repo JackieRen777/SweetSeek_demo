@@ -1,0 +1,13 @@
+source_collection,evidence_short,molecule_count
+Existing multi-source release,E1,589
+Existing multi-source release,E2,21
+Existing multi-source release,E3,0
+ChemTastesDB curated entries,E1,0
+ChemTastesDB curated entries,E2,14
+ChemTastesDB curated entries,E3,280
+ChemTastesDB + PubChem registry,E1,0
+ChemTastesDB + PubChem registry,E2,26
+ChemTastesDB + PubChem registry,E3,358
+Direct evidence / other curated,E1,2
+Direct evidence / other curated,E2,0
+Direct evidence / other curated,E3,6

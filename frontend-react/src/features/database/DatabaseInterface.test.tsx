@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DatabaseInterface from './DatabaseInterface';
 
@@ -13,9 +13,28 @@ const literatureFixture = {
   ],
 };
 
+const reviewedStatisticsFixture = {
+  release: { version: 'v1.0.7', databaseFile: 'SweetDatabase_v1.0.7.sqlite', sha256: 'abc', generatedAt: '2026-10-08T00:00:00Z', reviewDate: '2026-10-05', publicCompounds: 1296 },
+  kpis: [], readiness: [{ key: 'R1', label: 'R1 high readiness', count: 189, percent: 14.58 }],
+  literatureTimeline: [{ yearFrom: 2020, yearTo: 2024, family: 'sugars-polyols', records: 20 }],
+  sweetnessDistribution: [], domainCoverage: [{ key: 'literature', label: 'Accepted literature', records: 180, compounds: 38, percent: 2.93, denominator: 1296 }],
+  foodGroups: [], qualityProfile: [{ key: 'structure', label: 'Structure identity', verified: 499, attention: 1, unknown: 796, denominator: 1296 }],
+  composition: { level1: [{ key: 'Peptide and amino-acid sweeteners', label: 'Peptide and amino-acid sweeteners', count: 502, percent: 38.73 }], level2: [{ parent: 'Peptide and amino-acid sweeteners', key: 'Amino acids', label: 'Amino acids', count: 100, parentTotal: 502, percentWithinParent: 19.92, percentOverall: 7.72 }] },
+  chemicalSpace: [{ id: 'CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N', method: 'umap', x: 7.2, y: 3.4, name: 'Sucrose', formula: 'C12H22O11', molecularWeight: 342.3, sweetClassLevel1: 'Peptide and amino-acid sweeteners', sweetClassLevel2: 'Amino acids', evidenceGrade: 'E1', sourceCollection: 'Reviewed', sourceNames: 'SweetMeta', releaseTier: 'R1_high_readiness', fingerprint: 'ECFP4', metric: 'Jaccard', randomSeed: 1 }, { id: 'CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N', method: 'pca', x: 1.2, y: -0.4, name: 'Sucrose', formula: 'C12H22O11', molecularWeight: 342.3, sweetClassLevel1: 'Peptide and amino-acid sweeteners', sweetClassLevel2: 'Amino acids', evidenceGrade: 'E1', sourceCollection: 'Reviewed', sourceNames: 'SweetMeta', releaseTier: 'R1_high_readiness', fingerprint: 'ECFP4', metric: 'PCA', randomSeed: 1 }],
+  evidenceCoverage: { sourceToGrade: [{ source: 'Reviewed', target: 'E1', count: 1296 }], gradeToFamily: [{ source: 'E1', target: 'Peptide and amino-acid sweeteners', count: 1296 }], paths: [{ source: 'Reviewed', grade: 'E1', family: 'Peptide and amino-acid sweeteners', count: 1296 }], familyGrades: [{ family: 'Peptide and amino-acid sweeteners', grade: 'E1', count: 1296, total: 1296, percent: 100 }], modules: [] },
+  properties: [{ key: 'molecularWeight', label: 'Molecular weight', unit: 'Da', axisPrecision: 0, groups: [{ family: 'Peptide and amino-acid sweeteners', n: 1, min: 342.3, q1: 342.3, median: 342.3, q3: 342.3, max: 342.3, density: [{ value: 342.3, density: 1 }] }] }],
+  featureCoverageComparison: [{ resource: 'SweetDatabase (this work)', entryScope: '1,296 compounds', snapshot: 'v1.0', features: { Structure: 1 } }],
+  benchmark: { splits: [{ split: 'test', negative: 180, positive: 182, total: 362 }], models: [{ model: 'XGB', displayModel: 'ECFP4 + XGBoost', split: 'test', seed: '20260825', n: 362, threshold: .4, rocAuc: .92, prAuc: .91, balancedAccuracy: .84, mcc: .68, brier: .11 }] },
+};
+
 beforeEach(() => {
   window.history.replaceState({}, '', '/database');
-  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => literatureFixture })));
+  vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes('/api/sweetmeta/statistics')) return { ok: true, json: async () => ({ success: true, data: reviewedStatisticsFixture }) };
+    if (url.includes('/api/sweetmeta/downloads')) return { ok: true, json: async () => ({ success: true, data: { version: 'v1.0.7', reviewDate: '2026-10-05', recordCount: 1296, items: [{ key: 'database', label: 'Reviewed SQLite database', filename: 'SweetDatabase.sqlite', bytes: 1000, sha256: 'a'.repeat(64), url: '/api/sweetmeta/downloads/database' }] } }) };
+    return { ok: true, json: async () => literatureFixture };
+  }));
 });
 afterEach(() => cleanup());
 
@@ -41,40 +60,24 @@ describe('Database portal workflows', { timeout: 15_000 }, () => {
     expect(window.location.search).toContain('section=compounds');
   });
 
-  it('keeps molecule assets outside the database route directory', () => {
+  it('shows five automatically rotating Statistics visuals without carousel chrome', async () => {
     render(<DatabaseInterface />);
-    const moleculeNames = ['Sucralose', 'Aspartame', 'Stevioside', 'Thiophenesaccharin'];
-    const sources = moleculeNames.map((name) =>
-      screen.getByRole('img', { name: `${name} structure` }).getAttribute('src'),
-    );
-    expect(sources.every((source) => source?.startsWith('/database-assets/'))).toBe(true);
+    expect(screen.getByRole('img', { name: 'SweetClass Composition' })).toBeTruthy();
+    expect(screen.queryByText('structures cross-checked')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Next visualization' })).toBeNull();
+    expect(document.querySelectorAll('.sdb-hero-stat-plot img')).toHaveLength(5);
+    fireEvent.click(screen.getByRole('button', { name: 'Open SweetClass Composition in Statistics' }));
+    expect(await screen.findByRole('heading', { name: 'SweetMeta Data Statistics' })).toBeTruthy();
+    expect(window.location.search).toContain('section=statistics');
   });
 
-  it('shows the complete ECFP4 UMAP map and molecular hover details', () => {
+  it('keeps the full UMAP/PCA explorer out of the homepage', () => {
     render(<DatabaseInterface />);
-    expect(screen.getByRole('heading', { name: 'ECFP4 Molecular Similarity Landscape' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: '2D' }).getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByRole('button', { name: '3D' }).getAttribute('aria-pressed')).toBe('false');
-    expect(screen.getByRole('img', { name: 'ECFP4 UMAP structural similarity map' })).toBeTruthy();
-    expect(screen.getByText('1,296 molecules mapped')).toBeTruthy();
-    expect(screen.queryByRole('group', { name: 'Color by' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Evidence tiers' })).toBeNull();
-    expect(screen.getByText('C1')).toBeTruthy();
-    expect(screen.getByText('572 molecules')).toBeTruthy();
-
-    const point = document.querySelector('.sdb-dot');
-    expect(point).toBeTruthy();
-    if (!point) throw new Error('Expected at least one chemical-space point');
-    fireEvent.mouseEnter(point);
-    expect(screen.getByText('Molecular formula')).toBeTruthy();
-    expect(screen.getByText('Molecular weight')).toBeTruthy();
-    expect(screen.getByText('Structural cluster')).toBeTruthy();
-    expect(screen.getByText('Evidence tier')).toBeTruthy();
-    fireEvent.mouseLeave(point);
-    expect(screen.queryByText('Molecular formula')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Reviewed ECFP4 Molecular Space' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Projection method' })).toBeNull();
   });
 
-  it('passes the homepage query into Browse without exposing unsupported filters', () => {
+  it('passes the homepage query into Browse and presents the compact compound catalog', () => {
     render(<DatabaseInterface />);
     expect(screen.queryByRole('combobox', { name: 'Entity type' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Homepage evidence tier' })).toBeNull();
@@ -82,10 +85,37 @@ describe('Database portal workflows', { timeout: 15_000 }, () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search database' }));
     expect(screen.getByRole('heading', { name: 'Browse the current release' })).toBeTruthy();
     expect(screen.getByRole('textbox', { name: 'Search compounds' })).toHaveProperty('value', 'Thiophenesaccharin');
-    expect(screen.getByRole('combobox', { name: 'Evidence tier' })).toHaveProperty('value', 'all');
+    expect(screen.queryByRole('combobox', { name: 'Evidence tier' })).toBeNull();
+    for (const heading of ['ID', 'Name', 'Formula', 'SweetClass', 'Evidence grade', 'MW', 'Source']) {
+      expect(screen.getByRole('columnheader', { name: heading })).toBeTruthy();
+    }
+    expect(screen.queryByText(/^R[1-4]$/, { selector: 'tbody .sdb-tier' })).toBeNull();
+    expect(screen.queryByRole('columnheader', { name: 'Assertions' })).toBeNull();
+    expect(document.querySelector('.sdb-display-id')?.textContent).toMatch(/^\d{6}$/);
     expect(screen.getByText('1', { selector: '.sdb-result-meta strong' })).toBeTruthy();
     expect(window.location.search).toContain('q=Thiophenesaccharin');
     expect(window.location.search).not.toContain('tier=');
+  });
+
+  it('keeps reviewed Browse filters compact and reveals advanced controls on demand', () => {
+    window.history.replaceState({}, '', '/database?section=compounds');
+    render(<DatabaseInterface />);
+    expect(screen.getByRole('combobox', { name: 'SweetClass family' })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Evidence grade' })).toBeTruthy();
+    expect(screen.queryByRole('combobox', { name: 'SweetClass subclass' })).toBeNull();
+
+    const moreFilters = screen.getByRole('button', { name: /More filters/i });
+    expect(moreFilters.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(moreFilters);
+    expect(moreFilters.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('spinbutton', { name: 'MW minimum' })).toBeTruthy();
+    expect(screen.getByRole('spinbutton', { name: 'cLogP maximum' })).toBeTruthy();
+
+    const subclass = screen.getByRole('combobox', { name: 'SweetClass subclass' });
+    expect(subclass).toHaveProperty('disabled', true);
+    fireEvent.change(screen.getByRole('combobox', { name: 'SweetClass family' }), { target: { value: 'Peptide and amino-acid sweeteners' } });
+    expect(subclass).toHaveProperty('disabled', false);
+    expect(screen.getByRole('option', { name: 'Peptide sweeteners' })).toBeTruthy();
   });
 
   it.each([
@@ -111,23 +141,40 @@ describe('Database portal workflows', { timeout: 15_000 }, () => {
     expect(screen.getByRole('heading', { name: 'SweetMeta' })).toBeTruthy();
   });
 
-  it('searches the 1,296-record release and opens a compound detail', () => {
+  it('opens the identity-first compound detail and navigates its reviewed sections', () => {
     window.history.replaceState({}, '', '/database?section=compounds');
     render(<DatabaseInterface />);
     fireEvent.change(screen.getByRole('textbox', { name: 'Search compounds' }), { target: { value: 'Beryllium chloride' } });
     expect(screen.getByText('1', { selector: '.sdb-result-meta strong' })).toBeTruthy();
     fireEvent.click(screen.getByText('Beryllium chloride'));
     expect(screen.getByRole('heading', { name: 'Beryllium chloride' })).toBeTruthy();
-    expect(screen.getByText(/external identifier match exposed a source-field discrepancy/i)).toBeTruthy();
-    expect(screen.getByRole('group', { name: 'Structure view' })).toBeTruthy();
-    expect(screen.getByRole('navigation', { name: 'Compound record sections' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Overview' }).getAttribute('aria-current')).toBe('page');
-    expect(screen.getByRole('heading', { name: 'Evidence and identity status' })).toBeTruthy();
+    const recordNav = screen.getByRole('navigation', { name: 'Compound record sections' });
+    expect(screen.getByRole('group', { name: 'Linked data modules' })).toBeTruthy();
+    for (const section of ['Overview', 'Sweetness & evidence', 'Chemical space', 'Literature', 'Linked records', 'Structure & similarity', 'QC & review']) {
+      expect(within(recordNav).getByRole('button', { name: section })).toBeTruthy();
+    }
+    expect(within(recordNav).getByRole('button', { name: 'Overview' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('heading', { name: 'Identity, classification, and properties' })).toBeTruthy();
+    expect(within(recordNav).queryByRole('button', { name: 'SweetClass' })).toBeNull();
+    expect(within(recordNav).queryByRole('button', { name: 'Provenance' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'ECFP4 structural neighbors' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Similar Compounds' }));
-    expect(screen.getByRole('button', { name: 'Similar Compounds' }).getAttribute('aria-current')).toBe('page');
-    expect(screen.getByRole('heading', { name: 'ECFP4 structural neighbors' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Evidence and identity status' })).toBeNull();
+    fireEvent.click(within(recordNav).getByRole('button', { name: 'QC & review' }));
+    expect(screen.getByText('Manual scientific review flag')).toBeTruthy();
+    expect(screen.getByText('Legacy readiness')).toBeTruthy();
+    expect(new URLSearchParams(window.location.search).get('panel')).toBe('quality');
+    fireEvent.click(within(recordNav).getByRole('button', { name: 'Structure & similarity' }));
+    expect(within(recordNav).getByRole('button', { name: 'Structure & similarity' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByText('ECFP4 structural neighbors')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Identity, classification, and properties' })).toBeNull();
+    expect(new URLSearchParams(window.location.search).get('panel')).toBe('structure');
+  });
+
+  it('restores the selected detail panel from the URL', () => {
+    window.history.replaceState({}, '', '/database?section=compounds&compound=CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N&panel=classification');
+    render(<DatabaseInterface />);
+    expect(within(screen.getByRole('navigation', { name: 'Compound record sections' })).getByRole('button', { name: 'Overview' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('heading', { name: 'Identity, classification, and properties' })).toBeTruthy();
+    expect(new URLSearchParams(window.location.search).get('panel')).toBe('basic');
   });
 
   it('links a unique exact InChIKey match to ChEMBL', () => {
@@ -154,23 +201,24 @@ describe('Database portal workflows', { timeout: 15_000 }, () => {
   it('shows core literature on a compound detail without changing R1-R4', async () => {
     window.history.replaceState({}, '', '/database?section=compounds&compound=CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N');
     render(<DatabaseInterface />);
-    fireEvent.click(screen.getByRole('button', { name: 'Literature & Evidence' }));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Compound record sections' })).getByRole('button', { name: 'Literature' }));
     expect((await screen.findByRole('tab', { name: /Core evidence/ })).getAttribute('aria-selected')).toBe('true');
     expect(await screen.findByText('Sucrose and aspartame sensory response')).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: /Background mentions/ }));
     expect(screen.getByText('Background-only mentions are held in the manual review queue and are not published as formal evidence.')).toBeTruthy();
   });
 
-  it('keeps every public download action disabled', () => {
+  it('offers the allowlisted reviewed release downloads', async () => {
     window.history.replaceState({}, '', '/database?section=downloads');
     render(<DatabaseInterface />);
-    const restricted = screen.getAllByRole('button', { name: /Restricted/i });
-    expect(restricted).toHaveLength(3);
-    expect(restricted.every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
+    const download = await screen.findByRole('link', { name: /Download/i });
+    expect(download.getAttribute('href')).toBe('/api/sweetmeta/downloads/database');
+    expect(screen.getByText(/SHA-256/)).toBeTruthy();
   });
 
   it('loads SQLite statistics and drills into the public release', async () => {
     const statisticsFixture = {
+      ...reviewedStatisticsFixture,
       release: { version: 'v1.0.6', databaseFile: 'SweetDatabase_v1.0.6.sqlite', sha256: 'abc', generatedAt: '2026-09-21T00:00:00Z', publicCompounds: 1296 },
       kpis: [
         { key: 'compounds', label: 'Public compounds', value: 1296, detail: 'Formally released compound records' },
@@ -202,10 +250,17 @@ describe('Database portal workflows', { timeout: 15_000 }, () => {
     window.history.replaceState({}, '', '/database?section=statistics');
     render(<DatabaseInterface />);
     expect(await screen.findByRole('heading', { name: 'SweetMeta Data Statistics' })).toBeTruthy();
-    expect(screen.getByText('An evidence landscape of sweet compounds, tracing molecular collection, curation, validation, and cross-domain data coverage.')).toBeTruthy();
-    expect(screen.getByText('Candidate and needs-review literature links are excluded.', { exact: false })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'R1 · 189' }));
-    expect(await screen.findByRole('heading', { name: 'Browse the current release' })).toBeTruthy();
-    expect(new URLSearchParams(window.location.search).get('tier')).toBe('R1');
+    expect(screen.queryByText('Reviewed snapshot · 2026-10-05')).toBeNull();
+    expect(screen.queryByText('Interactive views calculated from the reviewed v1.0.7 source tables.')).toBeNull();
+    expect(screen.queryByRole('tab')).toBeNull();
+    for (const section of ['SweetClass Composition', 'Chemical Space', 'Evidence Provenance', 'Physicochemical Landscape', 'Coverage', 'Benchmark']) {
+      expect(screen.getByRole('heading', { name: section })).toBeTruthy();
+    }
+    expect(screen.queryByRole('heading', { name: 'R1–R4 operational status' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Publication timeline' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Leading food groups' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Property distributions by SweetClass family' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'UMAP molecular space by SweetClass family' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'PCA molecular space by SweetClass family' })).toBeTruthy();
   });
 });
