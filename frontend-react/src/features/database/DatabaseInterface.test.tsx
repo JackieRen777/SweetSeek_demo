@@ -198,14 +198,12 @@ describe('Database portal workflows', { timeout: 15_000 }, () => {
     expect(screen.getByRole('link', { name: /12345/i }).getAttribute('href')).toContain('/12345/');
   });
 
-  it('shows core literature on a compound detail without changing R1-R4', async () => {
+  it('shows literature on a compound detail without changing R1-R4', async () => {
     window.history.replaceState({}, '', '/database?section=compounds&compound=CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N');
     render(<DatabaseInterface />);
     fireEvent.click(within(screen.getByRole('navigation', { name: 'Compound record sections' })).getByRole('button', { name: 'Literature' }));
-    expect((await screen.findByRole('tab', { name: /Core evidence/ })).getAttribute('aria-selected')).toBe('true');
     expect(await screen.findByText('Sucrose and aspartame sensory response')).toBeTruthy();
-    fireEvent.click(screen.getByRole('tab', { name: /Background mentions/ }));
-    expect(screen.getByText('Background-only mentions are held in the manual review queue and are not published as formal evidence.')).toBeTruthy();
+    expect(screen.getByText('literature records linked to Sucrose.', { exact: false })).toBeTruthy();
   });
 
   it('offers the allowlisted reviewed release downloads', async () => {

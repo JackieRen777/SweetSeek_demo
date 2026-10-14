@@ -130,6 +130,8 @@ def test_statistics_endpoint_returns_503_when_database_is_missing(tmp_path):
 
 
 def test_reviewed_release_filters_detail_and_statistics():
+    if not CURRENT_DB_PATH.is_file():
+        pytest.skip("current SweetMeta release is not available")
     current = SweetMetaDatabase(CURRENT_DB_PATH)
     stats = current.statistics()
     assert len(stats["composition"]["level1"]) == 7
@@ -191,6 +193,8 @@ def test_compound_detail_api_exposes_identity_modules_and_family_projection_cont
 
 
 def test_reviewed_downloads_are_allowlisted():
+    if not CURRENT_DB_PATH.is_file():
+        pytest.skip("current SweetMeta release is not available")
     app = Flask(__name__)
     app.register_blueprint(create_sweetmeta_blueprint(SweetMetaDatabase(CURRENT_DB_PATH)))
     client = app.test_client()
@@ -203,6 +207,8 @@ def test_reviewed_downloads_are_allowlisted():
 
 
 def test_representative_reviewed_records():
+    if not CURRENT_DB_PATH.is_file():
+        pytest.skip("current SweetMeta release is not available")
     current = SweetMetaDatabase(CURRENT_DB_PATH)
     ordinary = current.compound("CMP_CZMRCDWAGMRECN-RDBDAFJKSA-N")
     assert ordinary and ordinary["classification"] and ordinary["physicochemical"]
