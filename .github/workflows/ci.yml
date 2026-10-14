@@ -139,7 +139,15 @@ jobs:
           # Execute deployment script on server (trim whitespace from secrets)
           DEPLOY_USER=$(echo "$DEPLOY_SSH_USER" | tr -d '[:space:]')
           DEPLOY_HOST=$(echo "$DEPLOY_SSH_HOST" | tr -d '[:space:]')
+
+          # Upload deploy script to server
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            scripts/maintenance/deploy/deploy_ecs_oneclick.sh \
+            scripts/maintenance/deploy/deploy_from_git.sh \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/"
+
+          # Execute deployment script (as root, from /tmp to avoid git state issues)
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "cd /www/wwwroot/FCN_SweetSeek && bash scripts/maintenance/deploy/deploy_ecs_oneclick.sh --commit ${GITHUB_SHA}"
+            "sudo bash /tmp/deploy_ecs_oneclick.sh --commit ${GITHUB_SHA}"
 
           echo "✅ Deployment completed for commit ${GITHUB_SHA}"
