@@ -1,0 +1,86 @@
+name: Clear Observation Lock
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'check'
+        type: choice
+        options:
+          - check
+          - mark-passed
+          - force-clear
+
+jobs:
+  clear-lock:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_SSH_HOST" >> ~/.ssh/known_hosts
+
+          DEPLOY_USER=$(echo "$DEPLOY_SSH_USER" | tr -d '[:space:]')
+          DEPLOY_HOST=$(echo "$DEPLOY_SSH_HOST" | tr -d '[:space:]')
+
+          # Upload clear script
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            scripts/maintenance/deploy/clear_observation_lock.sh \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/clear_lock.sh"
+
+      - name: Execute action
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+        run: |
+          DEPLOY_USER=$(echo "$DEPLOY_SSH_USER" | tr -d '[:space:]')
+          DEPLOY_HOST=$(echo "$DEPLOY_SSH_HOST" | tr -d '[:space:]')
+
+          case "${{ github.event.inputs.action }}" in
+            check)
+              echo "Checking observation lock status..."
+              ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" \
+                "sudo bash /tmp/clear_lock.sh || true"
+              ;;
+            mark-passed)
+              echo "Marking observation as PASSED..."
+              ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" \
+                "BASE=/www/sweetseek && \
+                 previous=\$(cat \$BASE/state/active-release 2>/dev/null || echo none) && \
+                 if [[ \$previous != none ]]; then \
+                   sudo mkdir -p \$BASE/shared/reports/\$previous && \
+                   sudo touch \$BASE/shared/reports/\$previous/PASSED && \
+                   echo '✅ Marked as PASSED'; \
+                 else \
+                   echo 'No active release found'; \
+                 fi"
+              ;;
+            force-clear)
+              echo "Force clearing observation lock..."
+              ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" \
+                "BASE=/www/sweetseek && \
+                 previous=\$(cat \$BASE/state/active-release 2>/dev/null || echo none) && \
+                 if [[ \$previous != none ]]; then \
+                   unit=sweetseek-observe-\${previous:0:12} && \
+                   sudo systemctl stop \$unit 2>/dev/null || true && \
+                   sudo rm -f \$BASE/state/active-release && \
+                   echo '✅ Observation lock cleared'; \
+                 else \
+                   echo 'No active release found'; \
+                 fi"
+              ;;
+          esac
