@@ -86,6 +86,17 @@ def test_ci_publishes_the_verified_python311_lock():
     assert "pip freeze --all > requirements-resolved-py311-linux.txt" not in workflow
 
 
+def test_observation_lock_workflow_uploads_script_and_always_clears_lock():
+    workflow = (ROOT / ".github" / "workflows" / "clear-observation-lock.yml").read_text(
+        encoding="utf-8"
+    )
+    clear_script = DEPLOY / "clear_observation_lock.sh"
+    assert clear_script.is_file()
+    assert "scripts/maintenance/deploy/clear_observation_lock.sh" in workflow
+    assert "{ sudo systemctl stop \\$unit 2>/dev/null || true; }" in workflow
+    assert "sudo rm -f \\$BASE/state/active-release" in workflow
+
+
 def test_git_rollback_survives_deployment_unit_exit_and_supports_legacy_health():
     rollback = (DEPLOY / "rollback_git_release.sh").read_text(encoding="utf-8")
     assert "systemd-run" in rollback

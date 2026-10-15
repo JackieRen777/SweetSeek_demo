@@ -76,7 +76,7 @@ jobs:
                  previous=\$(cat \$BASE/state/active-release 2>/dev/null || echo none) && \
                  if [[ \$previous != none ]]; then \
                    unit=sweetseek-observe-\${previous:0:12} && \
-                   sudo systemctl stop \$unit 2>/dev/null || true && \
+                   { sudo systemctl stop \$unit 2>/dev/null || true; } && \
                    sudo rm -f \$BASE/state/active-release && \
                    echo '✅ Observation lock cleared'; \
                  else \
