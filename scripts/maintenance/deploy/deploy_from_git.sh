@@ -32,6 +32,8 @@ STATE="$BASE/state/git-deploy/$COMMIT"
 FRONT="$LEGACY/frontend-react/dist"
 REPORT="$BASE/shared/reports/$COMMIT"
 CANARY_UNIT="sweetseek-git-canary.service"
+SWEETMETA_ARCHIVE="SweetDatabase_v1.0.7_20261005.sqlite.xz"
+SWEETMETA_DATABASE="SweetDatabase_v1.0.7_20261005.sqlite"
 activated=false
 
 preflight() {
@@ -162,7 +164,7 @@ git --git-dir="$REPO" merge-base --is-ancestor "$COMMIT" refs/remotes/origin/mai
 
 tag="deploy-$COMMIT"
 mkdir -p "$INCOMING"
-for asset in "sweetseek-frontend-$COMMIT.tar.gz" requirements-resolved-py311-linux.txt SHA256SUMS manifest.json; do
+for asset in "sweetseek-frontend-$COMMIT.tar.gz" requirements-resolved-py311-linux.txt "$SWEETMETA_ARCHIVE" SHA256SUMS manifest.json; do
   curl -fL --retry 3 --retry-delay 3 \
     "$ASSET_BASE/$tag/$asset" -o "$INCOMING/$asset"
 done
@@ -174,6 +176,9 @@ assert payload["commit"] == sys.argv[2], payload
 assert payload["md_builder_enabled"] is True, payload
 assert payload["docking_enabled"] is False, payload
 assert payload["citation_style"] == "GB/T 7714-2015", payload
+assert payload["sweetmeta_version"] == "v1.0.7", payload
+assert payload["sweetmeta_database_archive"] == "SweetDatabase_v1.0.7_20261005.sqlite.xz", payload
+assert len(payload["sweetmeta_database_sha256"]) == 64, payload
 PY
 
 if [[ ! -d "$RELEASE/.git" && ! -f "$RELEASE/.git" ]]; then
@@ -184,6 +189,12 @@ fi
 rm -rf "$RELEASE/frontend-react/dist"
 mkdir -p "$RELEASE/frontend-react/dist"
 tar -xzf "$INCOMING/sweetseek-frontend-$COMMIT.tar.gz" -C "$RELEASE/frontend-react/dist"
+sweetmeta_sha="$(python3.11 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sweetmeta_database_sha256"])' "$INCOMING/manifest.json")"
+mkdir -p "$RELEASE/outputs/sweetmeta-reviewed-v107"
+python3.11 "$RELEASE/scripts/verify_sweetmeta_release.py" \
+  --archive "$INCOMING/$SWEETMETA_ARCHIVE" \
+  --expected-sha256 "$sweetmeta_sha" \
+  --output "$RELEASE/outputs/sweetmeta-reviewed-v107/$SWEETMETA_DATABASE"
 
 requirements_hash="$(sha256sum "$INCOMING/requirements-resolved-py311-linux.txt" | awk '{print $1}')"
 VENV="$BASE/venvs/web-${requirements_hash}-py311"
@@ -285,6 +296,7 @@ EMBED_BATCH_SIZE=8
 EMBED_NUM_THREADS=1
 EMBED_DISABLE_TORCH_DYNAMO=true
 LOG_DIR=$BASE/shared/logs
+SWEETMETA_DB_PATH=$RELEASE/outputs/sweetmeta-reviewed-v107/$SWEETMETA_DATABASE
 RAG_EAGER_INIT=false
 RAG_ALLOW_AUTO_BUILD=false
 STRUCTURE_TOOLS_ENABLED=false

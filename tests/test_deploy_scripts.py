@@ -86,6 +86,18 @@ def test_ci_publishes_the_verified_python311_lock():
     assert "pip freeze --all > requirements-resolved-py311-linux.txt" not in workflow
 
 
+def test_ci_and_deployer_ship_the_reviewed_sweetmeta_database():
+    workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    deploy = (DEPLOY / "deploy_from_git.sh").read_text(encoding="utf-8")
+    archive = ROOT / "data" / "sweetmeta_reviewed_20261005" / "SweetDatabase_v1.0.7_20261005.sqlite.xz"
+    assert archive.is_file() and archive.stat().st_size > 0
+    assert "python scripts/verify_sweetmeta_release.py" in workflow
+    assert '"sweetmeta_version":"v1.0.7"' in workflow
+    assert 'SWEETMETA_ARCHIVE="SweetDatabase_v1.0.7_20261005.sqlite.xz"' in deploy
+    assert 'SWEETMETA_DB_PATH=$RELEASE/outputs/sweetmeta-reviewed-v107/$SWEETMETA_DATABASE' in deploy
+    assert '"sweetmeta_database_sha256"' in deploy
+
+
 def test_observation_lock_workflow_uploads_script_and_always_clears_lock():
     workflow = (ROOT / ".github" / "workflows" / "clear-observation-lock.yml").read_text(
         encoding="utf-8"
