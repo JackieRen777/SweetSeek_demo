@@ -105,6 +105,9 @@ def test_ci_deployment_survives_long_running_ssh_disconnects():
     assert "--background" in workflow
     assert "deployment.status" in workflow
     assert "ServerAliveInterval=30" in workflow
+    assert "active-release" in workflow
+    assert "Waiting for observation" in workflow
+    assert "timeout-minutes: 420" in workflow
 
 
 def test_ci_and_deployer_ship_the_reviewed_sweetmeta_database():

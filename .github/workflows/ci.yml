@@ -130,6 +130,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [publish-release]
     runs-on: ubuntu-latest
+    timeout-minutes: 420
     steps:
       - uses: actions/checkout@v4
       - name: Deploy to production server
@@ -149,9 +150,34 @@ jobs:
           # Trim whitespace from secrets
           DEPLOY_USER=$(echo "$DEPLOY_SSH_USER" | tr -d '[:space:]')
           DEPLOY_HOST=$(echo "$DEPLOY_SSH_HOST" | tr -d '[:space:]')
+          SSH_OPTIONS=(-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=20)
+
+          # Serialize production releases behind the prior release's observation gate.
+          for attempt in $(seq 1 180); do
+            if ! OBSERVATION=$(ssh "${SSH_OPTIONS[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" '
+              active=$(sudo cat /www/sweetseek/state/active-release 2>/dev/null || true)
+              if [[ -z "$active" || -f "/www/sweetseek/shared/reports/$active/PASSED" ]]; then
+                echo ready
+              elif [[ -f "/www/sweetseek/shared/reports/$active/FAILED" ]]; then
+                echo "failed:$active"
+              else
+                echo "waiting:$active"
+              fi
+            '); then
+              echo "Observation check ${attempt} could not connect; retrying"
+              sleep 60
+              continue
+            fi
+            case "$OBSERVATION" in
+              ready) break ;;
+              failed:*) echo "Previous release observation failed: ${OBSERVATION#failed:}"; exit 1 ;;
+              waiting:*) echo "Waiting for observation of ${OBSERVATION#waiting:} (${attempt}/180)" ;;
+            esac
+            [[ "$attempt" -lt 180 ]] || { echo "Timed out waiting for prior observation"; exit 1; }
+            sleep 60
+          done
 
           # Upload deployment script via SSH (avoids server firewall/network issues)
-          SSH_OPTIONS=(-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=20)
           scp "${SSH_OPTIONS[@]}" \
             scripts/maintenance/deploy/deploy_from_git.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy-${GITHUB_SHA}.sh"
