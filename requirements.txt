@@ -58,7 +58,7 @@ python-Levenshtein>=0.23.0
 
 # 化学计算库
 rdkit>=2023.9.5
-scikit-learn>=1.7,<2
+scikit-learn==1.7.2
 xgboost-cpu>=3.0,<4; sys_platform == "linux" and platform_machine == "x86_64"
 xgboost>=3.0,<4; sys_platform != "linux" or platform_machine != "x86_64"
 shap>=0.46,<1

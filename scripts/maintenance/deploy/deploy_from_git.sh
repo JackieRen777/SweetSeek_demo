@@ -383,6 +383,22 @@ wait_domain dual_protein /api/dual-protein/prewarm
 wait_domain encapsulation /api/encapsulation/prewarm
 wait_domain proteoglycan /api/proteoglycan/prewarm
 curl -fsS http://127.0.0.1:5002/api/health >/dev/null
+verify_prediction() {
+  local base_url="$1"
+  curl -fsS --max-time 120 -X POST "$base_url/api/ml/predict" \
+    -H 'Content-Type: application/json' -d '{"smiles":"CC(O)C(=O)O"}' | \
+    "$VENV/bin/python" -c '
+import json, sys
+payload = json.load(sys.stdin)
+assert payload.get("success") is True, payload
+result = payload.get("result", payload)
+assert result.get("status") == "ok", result
+assert {"random_forest", "xgboost"}.issubset(result.get("models_used", [])), result
+assert len(result.get("shap_top5") or []) == 5, result
+assert result.get("regression") is not None, result
+'
+}
+verify_prediction http://127.0.0.1:5002
 "$VENV/bin/python" "$RELEASE/scripts/verify_rag_runtime.py" --base-url http://127.0.0.1:5002 \
   --questions-per-domain 1 ${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable} \
   --output "$REPORT/canary-rag.json" >/dev/null
@@ -450,6 +466,7 @@ wait_production_domain dual_protein /api/dual-protein/prewarm
 wait_production_domain encapsulation /api/encapsulation/prewarm
 wait_production_domain proteoglycan /api/proteoglycan/prewarm
 curl -fsS http://127.0.0.1:5001/api/health >/dev/null
+verify_prediction http://127.0.0.1:5001
 "$VENV/bin/python" "$RELEASE/scripts/verify_rag_runtime.py" --questions-per-domain 1 \
   ${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable} \
   --output "$REPORT/activation-rag.json" >/dev/null

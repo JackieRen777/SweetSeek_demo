@@ -27,3 +27,12 @@ def test_valid_model_payload_is_loaded(tmp_path):
         pickle.dump({"model": expected}, f)
 
     assert SweetnessPredictor._load_model(model_path) == expected
+
+
+def test_committed_prediction_artifacts_run_with_locked_runtime():
+    result = SweetnessPredictor().predict("CC(O)C(=O)O")
+
+    assert result["status"] == "ok"
+    assert {"random_forest", "xgboost"}.issubset(result["models_used"])
+    assert len(result["shap_top5"]) == 5
+    assert result["regression"] is not None

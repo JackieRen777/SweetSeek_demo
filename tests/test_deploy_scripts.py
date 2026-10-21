@@ -35,6 +35,9 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "verify_citation_catalogs.py" in deploy
     assert "citation catalog manifest checksum mismatch" in deploy
     assert "verify_md_builder_runtime.py" in deploy
+    assert "verify_prediction http://127.0.0.1:5002" in deploy
+    assert "verify_prediction http://127.0.0.1:5001" in deploy
+    assert '{"random_forest", "xgboost"}.issubset' in deploy
     assert "data/citations/sweetness.json" in deploy
     assert "previous release observation has not passed" in deploy
     assert "--preflight-only" in deploy
@@ -86,6 +89,15 @@ def test_ci_publishes_the_verified_python311_lock():
     assert f"diff -u {lock_name} -" in workflow
     assert f"cp {lock_name} requirements-resolved-py311-linux.txt" in workflow
     assert "pip freeze --all > requirements-resolved-py311-linux.txt" not in workflow
+
+
+def test_prediction_runtime_matches_serialized_sklearn_version():
+    requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8")
+    production_lock = (ROOT / "requirements-production-py311-linux.txt").read_text(
+        encoding="utf-8"
+    )
+    assert "scikit-learn==1.7.2" in requirements.splitlines()
+    assert "scikit-learn==1.7.2" in production_lock.splitlines()
 
 
 def test_ci_deployment_survives_long_running_ssh_disconnects():
