@@ -42,37 +42,6 @@ interface PredictionData {
   status: string;
 }
 
-const createLocalPreview = (smiles: string): PredictionData => {
-  const complexity = Math.min(1, Math.max(0, (smiles.length % 28) / 28));
-  const sweetProb = Math.min(0.96, Math.max(0.38, 0.52 + complexity * 0.38));
-  const logSw = Math.log10(1 + sweetProb * 180);
-  return {
-    status: 'ok',
-    smiles,
-    smiles_canonical: smiles,
-    is_sweet_pred: sweetProb >= 0.5 ? 1 : 0,
-    sweet_prob: sweetProb,
-    properties: {
-      mw: 180 + smiles.length * 4.2,
-      logp: -0.4 + complexity * 2.1,
-      tpsa: 42 + complexity * 55,
-      heavy_atoms: Math.max(3, smiles.replace(/[^A-Za-z]/g, '').length),
-      hba: 2,
-      hbd: 1,
-      rot_bonds: 2,
-      aromatic_rings: 0,
-    },
-    shap_top5: [
-      { feature: 'MolWt', shap: 0.18 },
-      { feature: 'TPSA', shap: 0.12 },
-      { feature: 'HBD', shap: 0.08 },
-      { feature: 'LogP', shap: -0.05 },
-      { feature: 'RotBonds', shap: 0.03 },
-    ],
-    regression: { log_sw: logSw, relative_sweetness: 10 ** logSw, model_r2: 0.679 },
-  };
-};
-
 export default function MLPredictInterface({ onClose }: { onClose?: () => void }) {
   const [view, setView] = useState<View>('landing');
   const [inputMode, setInputMode] = useState<InputMode>('smiles');
@@ -92,17 +61,16 @@ export default function MLPredictInterface({ onClose }: { onClose?: () => void }
         body: JSON.stringify({ smiles }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
-      if (!data.success) {
-        setError(data.error || 'Prediction failed');
+      if (!response.ok || !data?.success) {
+        setError(data?.error || `Prediction service failed (${response.status})`);
         return;
       }
 
       setPrediction(data.result);
     } catch (err) {
-      setPrediction(createLocalPreview(smiles));
-      console.warn('Prediction API unavailable; showing local preview estimate.', err);
+      setError(err instanceof Error ? err.message : 'Prediction service is unavailable');
     } finally {
       setLoading(false);
     }

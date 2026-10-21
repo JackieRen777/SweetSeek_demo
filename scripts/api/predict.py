@@ -53,10 +53,8 @@ class SweetnessPredictor:
 
     def __init__(self):
         """Load models, preprocessor, and feature names. SHAP explainer is loaded lazily."""
-        with open(MODEL_DIR / "rf.pkl", "rb") as f:
-            self.rf_model = pickle.load(f)["model"]
-        with open(MODEL_DIR / "xgb.pkl", "rb") as f:
-            self.xgb_model = pickle.load(f)["model"]
+        self.rf_model = self._load_model(MODEL_DIR / "rf.pkl", required=True)
+        self.xgb_model = self._load_model(MODEL_DIR / "xgb.pkl")
         with open(FEAT_DIR / "preprocessor.pkl", "rb") as f:
             self.preprocessor = pickle.load(f)
         self.feature_names = json.loads((FEAT_DIR / "feature_names.json").read_text(encoding="utf-8"))
@@ -72,19 +70,39 @@ class SweetnessPredictor:
         # has caused SIGSEGV crashes on macOS ARM64 (multithreading conflict).
         self._shap_explainer = None
 
+    @staticmethod
+    def _load_model(path: Path, *, required: bool = False):
+        """Load a persisted estimator, allowing optional ensemble members to be absent."""
+        try:
+            if not path.is_file() or path.stat().st_size == 0:
+                raise FileNotFoundError(f"model artifact is missing or empty: {path}")
+            with path.open("rb") as f:
+                payload = pickle.load(f)
+            return payload["model"]
+        except Exception as exc:
+            if required:
+                raise RuntimeError(f"Required prediction model could not be loaded: {path}") from exc
+            print(
+                f"[SweetnessPredictor] optional model unavailable ({path.name}): {exc}; "
+                "continuing with the remaining model(s)",
+                file=sys.stderr,
+            )
+            return None
+
     def _load_regression_models(self):
         """Lazy-load regression models."""
         if self._rf_reg is not None:
             return True
+        self._rf_reg = self._load_model(REG_DIR / "rf_reg.pkl")
+        self._xgb_reg = self._load_model(REG_DIR / "xgb_reg.pkl")
+        if self._rf_reg is None and self._xgb_reg is None:
+            return False
         try:
-            with open(REG_DIR / "rf_reg.pkl", "rb") as f:
-                self._rf_reg = pickle.load(f)["model"]
-            with open(REG_DIR / "xgb_reg.pkl", "rb") as f:
-                self._xgb_reg = pickle.load(f)["model"]
             with open(REG_DIR / "preprocessor.pkl", "rb") as f:
                 self._reg_preprocessor = pickle.load(f)
             return True
-        except FileNotFoundError:
+        except (FileNotFoundError, EOFError, pickle.UnpicklingError) as exc:
+            print(f"[SweetnessPredictor] regression preprocessor unavailable: {exc}", file=sys.stderr)
             return False
 
     @property
@@ -154,9 +172,12 @@ class SweetnessPredictor:
         X = self.preprocessor.transform(X_raw.reshape(1, -1)).astype(np.float32)
 
         # Step 4: ensemble prediction
-        proba_rf = self.rf_model.predict_proba(X)[0, 1]
-        proba_xgb = self.xgb_model.predict_proba(X)[0, 1]
-        proba_ens = (proba_rf + proba_xgb) / 2.0
+        probabilities = [float(self.rf_model.predict_proba(X)[0, 1])]
+        models_used = ["random_forest"]
+        if self.xgb_model is not None:
+            probabilities.append(float(self.xgb_model.predict_proba(X)[0, 1]))
+            models_used.append("xgboost")
+        proba_ens = float(np.mean(probabilities))
         is_sweet = int(proba_ens >= THRESHOLD)
 
         # Step 5: SHAP explanation (RF only) — best effort
@@ -200,9 +221,12 @@ class SweetnessPredictor:
         if self._load_regression_models():
             try:
                 X_reg = self._reg_preprocessor.transform(X_raw.reshape(1, -1)).astype(np.float32)
-                pred_rf_reg = self._rf_reg.predict(X_reg)[0]
-                pred_xgb_reg = self._xgb_reg.predict(X_reg)[0]
-                log_sw = float((pred_rf_reg + pred_xgb_reg) / 2.0)
+                reg_predictions = []
+                if self._rf_reg is not None:
+                    reg_predictions.append(float(self._rf_reg.predict(X_reg)[0]))
+                if self._xgb_reg is not None:
+                    reg_predictions.append(float(self._xgb_reg.predict(X_reg)[0]))
+                log_sw = float(np.mean(reg_predictions))
                 relative_sweetness = round(10 ** log_sw, 1)
                 regression = {
                     "log_sw": round(log_sw, 3),
@@ -220,6 +244,7 @@ class SweetnessPredictor:
             "shap_top5": shap_top5,
             "properties": properties,
             "regression": regression,
+            "models_used": models_used,
             "status": "ok",
         }
 

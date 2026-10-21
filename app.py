@@ -1289,6 +1289,12 @@ def api_ml_predict():
     # 支持单个或批量
     if isinstance(smiles_input, str):
         result = predictor.predict(smiles_input)
+        if result.get('status') != 'ok':
+            return jsonify({
+                'success': False,
+                'error': '无法解析或计算该 SMILES，请检查分子结构格式',
+                'status': result.get('status')
+            }), 422
         return jsonify({
             'success': True,
             'result': result
