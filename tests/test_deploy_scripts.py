@@ -43,6 +43,8 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "http://127.0.0.1:5001/api/live" in deploy
     assert "http://127.0.0.1:5001/api/health" in deploy
     assert "--background" in deploy
+    assert 'printf "success\\n" >"$4/deployment.status"' in deploy
+    assert 'printf "failed:%s\\n" "$rc" >"$4/deployment.status"' in deploy
     assert "CPUQuota=120%" in deploy
     assert "MemoryMax=2600M" in deploy
     assert "MemoryHigh=1600M" in deploy
@@ -84,6 +86,13 @@ def test_ci_publishes_the_verified_python311_lock():
     assert f"diff -u {lock_name} -" in workflow
     assert f"cp {lock_name} requirements-resolved-py311-linux.txt" in workflow
     assert "pip freeze --all > requirements-resolved-py311-linux.txt" not in workflow
+
+
+def test_ci_deployment_survives_long_running_ssh_disconnects():
+    workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "--background" in workflow
+    assert "deployment.status" in workflow
+    assert "ServerAliveInterval=30" in workflow
 
 
 def test_ci_and_deployer_ship_the_reviewed_sweetmeta_database():

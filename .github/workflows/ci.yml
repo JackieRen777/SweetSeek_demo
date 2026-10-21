@@ -151,13 +151,47 @@ jobs:
           DEPLOY_HOST=$(echo "$DEPLOY_SSH_HOST" | tr -d '[:space:]')
 
           # Upload deployment script via SSH (avoids server firewall/network issues)
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+          SSH_OPTIONS=(-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=20)
+          scp "${SSH_OPTIONS[@]}" \
             scripts/maintenance/deploy/deploy_from_git.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy-${GITHUB_SHA}.sh"
 
-          # Execute deployment script on server
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          # Start deployment as a transient systemd unit so it survives SSH disconnects.
+          ssh "${SSH_OPTIONS[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "chmod 700 '/tmp/deploy-${GITHUB_SHA}.sh' && \
-             sudo bash '/tmp/deploy-${GITHUB_SHA}.sh' --commit ${GITHUB_SHA}"
+             sudo bash '/tmp/deploy-${GITHUB_SHA}.sh' --commit ${GITHUB_SHA} --background"
 
-          echo "✅ Deployment completed for commit ${GITHUB_SHA}"
+          # Poll with short SSH sessions. A clean environment build can take over an hour
+          # on the production host's package mirror.
+          REPORT="/www/sweetseek/shared/reports/${GITHUB_SHA}"
+          for attempt in $(seq 1 360); do
+            if ! STATUS=$(ssh "${SSH_OPTIONS[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+              "sudo cat '${REPORT}/deployment.status' 2>/dev/null || true"); then
+              echo "Status check ${attempt} could not connect; retrying"
+              sleep 30
+              continue
+            fi
+            case "$STATUS" in
+              success)
+                echo "Deployment completed for commit ${GITHUB_SHA}"
+                exit 0
+                ;;
+              failed:*)
+                echo "Deployment failed with status ${STATUS}"
+                ssh "${SSH_OPTIONS[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+                  "sudo tail -n 200 '${REPORT}/deployment.log' 2>/dev/null || true" || true
+                exit 1
+                ;;
+            esac
+            if (( attempt % 4 == 0 )); then
+              echo "Deployment is still running (${attempt}/360 checks)"
+              ssh "${SSH_OPTIONS[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+                "sudo tail -n 20 '${REPORT}/deployment.log' 2>/dev/null || true" || true
+            fi
+            sleep 30
+          done
+
+          echo "Deployment timed out after 3 hours"
+          ssh "${SSH_OPTIONS[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "sudo tail -n 200 '${REPORT}/deployment.log' 2>/dev/null || true" || true
+          exit 1

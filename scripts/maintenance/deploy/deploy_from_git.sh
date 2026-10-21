@@ -140,11 +140,22 @@ echo "$preflight_json"
 if [[ "$MODE" == background ]]; then
   runner="$BASE/incoming/deploy-$COMMIT.sh"
   unit="sweetseek-deploy-${COMMIT:0:12}"
-  mkdir -p "$BASE/incoming"
+  mkdir -p "$BASE/incoming" "$REPORT"
   install -m 0755 "$0" "$runner"
+  rm -f "$REPORT/deployment.status" "$REPORT/deployment.log"
   systemd-run --unit="$unit" --collect \
     --property=CPUQuota=120% --property=MemoryMax=2600M --property=Nice=10 \
-    /bin/bash "$runner" --commit "$COMMIT" --index-release "$INDEX_RELEASE"
+    /bin/bash -c '
+      set +e
+      /bin/bash "$1" --commit "$2" --index-release "$3" >"$4/deployment.log" 2>&1
+      rc=$?
+      if [[ "$rc" -eq 0 ]]; then
+        printf "success\n" >"$4/deployment.status"
+      else
+        printf "failed:%s\n" "$rc" >"$4/deployment.status"
+      fi
+      exit "$rc"
+    ' bash "$runner" "$COMMIT" "$INDEX_RELEASE" "$REPORT"
   echo "DEPLOYMENT_STARTED unit=$unit report=$REPORT"
   exit 0
 fi
