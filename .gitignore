@@ -82,12 +82,19 @@ output/
 outputs/
 results/
 temp/
-evaluation/reports/*.json
-evaluation/contexts/*.json
+# Raw experiment runs may contain large model responses. Keep the directory
+# structure in Git while retaining raw run artifacts locally.
+Experiment/runs/*
+!Experiment/runs/.gitkeep
+!Experiment/runs/contexts/
+Experiment/runs/contexts/*
+!Experiment/runs/contexts/.gitkeep
 
 # Local dependency links and exported office documents
 node_modules
 docs/*.docx
+~$*.docx
+~$*.xlsx
 
 # 测试文件
 .pytest_cache/

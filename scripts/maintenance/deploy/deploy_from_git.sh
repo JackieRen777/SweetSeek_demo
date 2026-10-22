@@ -8,19 +8,22 @@ LEGACY="${SWEETSEEK_LEGACY_ROOT:-/www/wwwroot/FCN_SweetSeek}"
 INDEX_RELEASE="${SWEETSEEK_INDEX_RELEASE:-20260818T054655Z-011d7fc2df7c-gate1}"
 COMMIT=""
 MODE="deploy"
+SOURCE_MODE="git"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --commit) COMMIT="${2:-}"; shift 2 ;;
     --index-release) INDEX_RELEASE="${2:-}"; shift 2 ;;
+    --source-mode) SOURCE_MODE="${2:-}"; shift 2 ;;
     --preflight-only) MODE="preflight"; shift ;;
     --background) MODE="background"; shift ;;
-    *) echo "usage: $0 --commit FULL_SHA [--index-release ID] [--preflight-only|--background]" >&2; exit 2 ;;
+    *) echo "usage: $0 --commit FULL_SHA [--index-release ID] [--source-mode git|local] [--preflight-only|--background]" >&2; exit 2 ;;
   esac
 done
 
 [[ "$(id -u)" -eq 0 ]] || { echo "deployment requires root" >&2; exit 1; }
 [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "--commit must be a full 40-character SHA" >&2; exit 2; }
+[[ "$SOURCE_MODE" == git || "$SOURCE_MODE" == local ]] || { echo "--source-mode must be git or local" >&2; exit 2; }
 for command in git curl sha256sum python3.11 systemctl systemd-run; do
   command -v "$command" >/dev/null || { echo "missing command: $command" >&2; exit 1; }
 done
@@ -34,6 +37,7 @@ REPORT="$BASE/shared/reports/$COMMIT"
 CANARY_UNIT="sweetseek-git-canary.service"
 SWEETMETA_ARCHIVE="SweetDatabase_v1.0.7_20261005.sqlite.xz"
 SWEETMETA_DATABASE="SweetDatabase_v1.0.7_20261005.sqlite"
+SOURCE_ARCHIVE="sweetseek-source-$COMMIT.tar.gz"
 activated=false
 
 preflight() {
@@ -94,15 +98,25 @@ PY
     }
   fi
 
-  remote_head="$(git ls-remote "$REPOSITORY_URL" refs/heads/main | awk '{print $1}')"
-  [[ "$remote_head" == "$COMMIT" ]] || {
-    echo "preflight: commit is not the current origin/main head" >&2
-    return 1
-  }
-  curl -fsIL --max-time 20 "$ASSET_BASE/deploy-$COMMIT/manifest.json" >/dev/null || {
-    echo "preflight: CI deployment assets are not published" >&2
-    return 1
-  }
+  if [[ "$SOURCE_MODE" == git ]]; then
+    remote_head="$(git ls-remote "$REPOSITORY_URL" refs/heads/main | awk '{print $1}')"
+    [[ "$remote_head" == "$COMMIT" ]] || {
+      echo "preflight: commit is not the current origin/main head" >&2
+      return 1
+    }
+    curl -fsIL --max-time 20 "$ASSET_BASE/deploy-$COMMIT/manifest.json" >/dev/null || {
+      echo "preflight: CI deployment assets are not published" >&2
+      return 1
+    }
+  else
+    for asset in "$SOURCE_ARCHIVE" "sweetseek-frontend-$COMMIT.tar.gz" \
+      requirements-resolved-py311-linux.txt "$SWEETMETA_ARCHIVE" SHA256SUMS manifest.json; do
+      [[ -s "$INCOMING/$asset" ]] || {
+        echo "preflight: missing local deployment asset: $asset" >&2
+        return 1
+      }
+    done
+  fi
 
   for domain in sweetness dual_protein encapsulation proteoglycan; do
     target="$BASE/indexes/$domain/releases/$INDEX_RELEASE"
@@ -147,7 +161,7 @@ if [[ "$MODE" == background ]]; then
     --property=CPUQuota=120% --property=MemoryMax=2600M --property=Nice=10 \
     /bin/bash -c '
       set +e
-      /bin/bash "$1" --commit "$2" --index-release "$3" >"$4/deployment.log" 2>&1
+      /bin/bash "$1" --commit "$2" --index-release "$3" --source-mode "$5" >"$4/deployment.log" 2>&1
       rc=$?
       if [[ "$rc" -eq 0 ]]; then
         printf "success\n" >"$4/deployment.status"
@@ -155,7 +169,7 @@ if [[ "$MODE" == background ]]; then
         printf "failed:%s\n" "$rc" >"$4/deployment.status"
       fi
       exit "$rc"
-    ' bash "$runner" "$COMMIT" "$INDEX_RELEASE" "$REPORT"
+    ' bash "$runner" "$COMMIT" "$INDEX_RELEASE" "$REPORT" "$SOURCE_MODE"
   echo "DEPLOYMENT_STARTED unit=$unit report=$REPORT"
   exit 0
 fi
@@ -166,19 +180,20 @@ mkdir -p "$BASE" "$BASE/releases" "$BASE/incoming" "$BASE/venvs" \
 mkdir -p "$STATE"
 printf '%s\n' "$preflight_json" > "$REPORT/preflight.json"
 
-if [[ ! -d "$REPO" ]]; then
-  git clone --bare "$REPOSITORY_URL" "$REPO"
-  git --git-dir="$REPO" config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
-fi
-git --git-dir="$REPO" fetch --prune origin
-git --git-dir="$REPO" merge-base --is-ancestor "$COMMIT" refs/remotes/origin/main
-
 tag="deploy-$COMMIT"
 mkdir -p "$INCOMING"
-for asset in "sweetseek-frontend-$COMMIT.tar.gz" requirements-resolved-py311-linux.txt "$SWEETMETA_ARCHIVE" SHA256SUMS manifest.json; do
-  curl -fL --retry 3 --retry-delay 3 \
-    "$ASSET_BASE/$tag/$asset" -o "$INCOMING/$asset"
-done
+if [[ "$SOURCE_MODE" == git ]]; then
+  if [[ ! -d "$REPO" ]]; then
+    git clone --bare "$REPOSITORY_URL" "$REPO"
+    git --git-dir="$REPO" config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+  fi
+  git --git-dir="$REPO" fetch --prune origin
+  git --git-dir="$REPO" merge-base --is-ancestor "$COMMIT" refs/remotes/origin/main
+  for asset in "sweetseek-frontend-$COMMIT.tar.gz" requirements-resolved-py311-linux.txt "$SWEETMETA_ARCHIVE" SHA256SUMS manifest.json; do
+    curl -fL --retry 3 --retry-delay 3 \
+      "$ASSET_BASE/$tag/$asset" -o "$INCOMING/$asset"
+  done
+fi
 (cd "$INCOMING" && sha256sum -c SHA256SUMS)
 python3.11 - "$INCOMING/manifest.json" "$COMMIT" <<'PY'
 import json, sys
@@ -192,11 +207,18 @@ assert payload["sweetmeta_database_archive"] == "SweetDatabase_v1.0.7_20261005.s
 assert len(payload["sweetmeta_database_sha256"]) == 64, payload
 PY
 
-if [[ ! -d "$RELEASE/.git" && ! -f "$RELEASE/.git" ]]; then
-  [[ ! -e "$RELEASE" ]] || { echo "non-git release path already exists: $RELEASE" >&2; exit 1; }
-  git --git-dir="$REPO" worktree add --detach "$RELEASE" "$COMMIT"
+if [[ "$SOURCE_MODE" == git ]]; then
+  if [[ ! -d "$RELEASE/.git" && ! -f "$RELEASE/.git" ]]; then
+    [[ ! -e "$RELEASE" ]] || { echo "non-git release path already exists: $RELEASE" >&2; exit 1; }
+    git --git-dir="$REPO" worktree add --detach "$RELEASE" "$COMMIT"
+  fi
+  [[ "$(git -C "$RELEASE" rev-parse HEAD)" == "$COMMIT" ]]
+else
+  [[ ! -e "$RELEASE" ]] || { echo "release path already exists: $RELEASE" >&2; exit 1; }
+  mkdir -p "$RELEASE"
+  tar -xzf "$INCOMING/$SOURCE_ARCHIVE" -C "$RELEASE"
+  printf '%s\n' "$COMMIT" > "$RELEASE/.sweetseek-release-commit"
 fi
-[[ "$(git -C "$RELEASE" rev-parse HEAD)" == "$COMMIT" ]]
 rm -rf "$RELEASE/frontend-react/dist"
 mkdir -p "$RELEASE/frontend-react/dist"
 tar -xzf "$INCOMING/sweetseek-frontend-$COMMIT.tar.gz" -C "$RELEASE/frontend-react/dist"
@@ -398,7 +420,32 @@ assert len(result.get("shap_top5") or []) == 5, result
 assert result.get("regression") is not None, result
 '
 }
+verify_sweetmeta() {
+  local base_url="$1"
+  curl -fsS --max-time 30 "$base_url/api/sweetmeta/health" | \
+    "$VENV/bin/python" -c 'import json,sys; payload=json.load(sys.stdin); assert payload.get("ok") is True, payload'
+  curl -fsS --max-time 60 "$base_url/api/sweetmeta/compounds?page=1&pageSize=5&evidenceGrade=E1" | \
+    "$VENV/bin/python" -c '
+import json, sys
+payload = json.load(sys.stdin)
+data = payload.get("data") or {}
+items = data.get("items") or []
+assert payload.get("success") is True and data.get("total", 0) > 0 and items, payload
+assert all(item.get("sweetClassLevel1") and item.get("evidenceGrade") for item in items), items
+'
+  curl -fsS --max-time 120 "$base_url/api/sweetmeta/statistics" | \
+    "$VENV/bin/python" -c '
+import json, sys
+payload = json.load(sys.stdin)
+data = payload.get("data") or {}
+assert payload.get("success") is True, payload
+assert data.get("release", {}).get("version") == "v1.0.7", data.get("release")
+assert len(data.get("composition", {}).get("level1", [])) == 7, data.get("composition")
+assert data.get("evidenceCoverage", {}).get("sourceToGrade"), data.get("evidenceCoverage")
+'
+}
 verify_prediction http://127.0.0.1:5002
+verify_sweetmeta http://127.0.0.1:5002
 "$VENV/bin/python" "$RELEASE/scripts/verify_rag_runtime.py" --base-url http://127.0.0.1:5002 \
   --questions-per-domain 1 ${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable} \
   --output "$REPORT/canary-rag.json" >/dev/null
@@ -467,6 +514,7 @@ wait_production_domain encapsulation /api/encapsulation/prewarm
 wait_production_domain proteoglycan /api/proteoglycan/prewarm
 curl -fsS http://127.0.0.1:5001/api/health >/dev/null
 verify_prediction http://127.0.0.1:5001
+verify_sweetmeta http://127.0.0.1:5001
 "$VENV/bin/python" "$RELEASE/scripts/verify_rag_runtime.py" --questions-per-domain 1 \
   ${SWEETSEEK_ALLOW_LLM_UNAVAILABLE:+--allow-llm-unavailable} \
   --output "$REPORT/activation-rag.json" >/dev/null

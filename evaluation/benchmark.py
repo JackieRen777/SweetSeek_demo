@@ -16,11 +16,13 @@ from evaluation.metrics import compute_metrics
 BASE_URL = os.getenv("SWEETSEEK_BASE_URL", "http://127.0.0.1:5001")
 
 
-def load_questions(mode: str) -> List[Dict[str, Any]]:
-    base = Path(__file__).parent / "questions"
-    filename = "sweet_questions.json" if mode == "sweet" else "dual_protein_questions.json"
-    with open(base / filename, "r", encoding="utf-8") as f:
-        return json.load(f)
+def load_questions(path: str) -> List[Dict[str, Any]]:
+    with open(path, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    questions = payload.get("questions") if isinstance(payload, dict) else payload
+    if not isinstance(questions, list):
+        raise ValueError("question file must be a list or contain a questions array")
+    return questions
 
 
 def run_question(question_spec: Dict[str, Any], mode: str) -> Dict[str, Any]:
@@ -35,8 +37,8 @@ def run_question(question_spec: Dict[str, Any], mode: str) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "answer": "", "references": []}
 
 
-def run_benchmark(mode: str, output_dir: str = None) -> Dict[str, Any]:
-    questions = load_questions(mode)
+def run_benchmark(mode: str, questions_path: str, output_dir: str = None) -> Dict[str, Any]:
+    questions = load_questions(questions_path)
     print(f"[评测] 模式: {mode}, 问题数: {len(questions)}")
     print(f"[评测] 目标: {BASE_URL}")
     print("-" * 60)
@@ -166,24 +168,20 @@ def compare_with_baseline(current_report: Dict[str, Any], baseline_path: str) ->
 def main():
     parser = argparse.ArgumentParser(description="SweetSeek RAG 评测基准")
     parser.add_argument("--mode", choices=["sweet", "dual"], default="sweet")
-    parser.add_argument("--output", default="evaluation/reports/")
+    parser.add_argument("--questions", required=True, help="显式指定经审核的题库 JSON")
+    parser.add_argument("--output", default="Experiment/runs/")
     parser.add_argument("--url", default=None, help="覆盖 API 地址")
-    parser.add_argument("--compare", default=None, help="与基线文件对比（如 evaluation/baselines/sweet_v1.0.json）")
+    parser.add_argument("--compare", default=None, help="与显式指定的基线报告对比")
     args = parser.parse_args()
 
     global BASE_URL
     if args.url:
         BASE_URL = args.url
 
-    report = run_benchmark(args.mode, args.output)
+    report = run_benchmark(args.mode, args.questions, args.output)
 
     if args.compare:
         compare_with_baseline(report, args.compare)
-    else:
-        # 自动查找默认基线
-        default_baseline = f"evaluation/baselines/{args.mode}_v1.0.json"
-        if os.path.exists(default_baseline):
-            compare_with_baseline(report, default_baseline)
 
 
 if __name__ == "__main__":

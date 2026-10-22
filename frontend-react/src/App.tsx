@@ -6,6 +6,7 @@ import { supabase } from './lib/supabase';
 import { Auth } from './features/auth/Auth';
 import Background from './components/layout/Background';
 import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
 import Hero from './features/landing/HeroSection';
 import QA from './features/qa/QASection';
 import SweetTasteEquationSection from './features/equation/SweetTasteEquationSection';
@@ -46,7 +47,6 @@ function App() {
   });
   const controls = useAnimation();
 
-  // Use custom threshold scroll hook
   const { activeScreen, navigateTo } = useThresholdScroll({
     enabled: !activeFeature,
     sectionCount: SCREEN_COUNT,
@@ -100,7 +100,6 @@ function App() {
 
   // -------------------------
 
-  // Sync animation with active screen
   useEffect(() => {
     controls.start({
       y: `-${activeScreen * 100}vh`,
@@ -220,7 +219,7 @@ function App() {
           aria-hidden={Boolean(activeFeature)}
           initial={{ y: 0 }}
           animate={controls}
-          style={{ touchAction: "none" }} // Disable default browser scrolling
+          style={{ touchAction: "none" }}
         >
           {/* Section 1: Hero */}
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
@@ -251,10 +250,11 @@ function App() {
           </div>
 
           {/* Section 5: Sweetness Prediction */}
-          <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
+          <div className="w-full h-[100vh] pt-[120px] pb-[var(--footer-height)] overflow-hidden relative">
             <ErrorBoundary name="SweetPredictionSection">
               <SweetPredictionSection onTryNow={() => handleOpenFeature('ml-predict')} />
             </ErrorBoundary>
+            <Footer />
           </div>
         </motion.div>
 

@@ -74,6 +74,21 @@ def test_git_release_has_canary_rollback_and_observation():
     assert "sustained_swap_growth" in recorder
 
 
+def test_local_release_reuses_the_verified_server_deployer():
+    local = (DEPLOY / "deploy_from_local.sh").read_text(encoding="utf-8")
+    server = (DEPLOY / "deploy_from_git.sh").read_text(encoding="utf-8")
+    assert "git archive" in local
+    assert "working tree is not clean" in local
+    assert "git push" not in local
+    assert "--source-mode local --background" in local
+    assert "sweetseek-source-$commit.tar.gz" in local
+    assert 'SOURCE_MODE="git"' in server
+    assert '[[ "$SOURCE_MODE" == git || "$SOURCE_MODE" == local ]]' in server
+    assert "verify_sweetmeta http://127.0.0.1:5002" in server
+    assert "verify_sweetmeta http://127.0.0.1:5001" in server
+    assert "/api/sweetmeta/statistics" in server
+
+
 def test_production_service_matches_low_memory_server_budget():
     service = (DEPLOY / "systemd" / "sweetseek.service").read_text(encoding="utf-8")
     assert "MemoryHigh=1900M" in service

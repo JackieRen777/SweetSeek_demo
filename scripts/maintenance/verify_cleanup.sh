@@ -9,6 +9,7 @@ required=(
   app.py persistent_storage.py metadata_storage.py knowledge_paths.py
   frontend-react/package.json SweetSeek_paper_database
   scripts/maintenance/deploy/deploy_ecs_oneclick.sh
+  scripts/maintenance/deploy/deploy_from_local.sh
 )
 for path in "${required[@]}"; do
   [[ -e "${path}" ]] || { echo "Missing required asset: ${path}"; exit 1; }
@@ -56,10 +57,7 @@ venv/bin/python -m pytest -q
 venv/bin/python - <<'PY'
 from evaluation.gold import annotation_summary, load_gold_set
 
-summary = annotation_summary(load_gold_set("evaluation/questions/sweet_gold_v1.json"))
-expected = {"fact": 15, "summary": 15, "comparison": 10, "mechanism": 10, "unanswerable": 10}
-if summary["total"] != 60 or summary["by_type"] != expected:
-    raise SystemExit(f"RAG evaluation set distribution changed: {summary}")
+summary = annotation_summary(load_gold_set("Experiment/benchmark/sweet_benchmark_v2.json"))
 print(f"RAG evaluation questions: {summary['total']} ({summary['approved']} approved)")
 PY
 (

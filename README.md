@@ -71,7 +71,7 @@ cd frontend-react && npm test -- --run && npm run build
 
 ## RAG 评测
 
-第一阶段使用甜味域 60 题候选集。检索评测不调用回答模型，也不会创建或重建索引：
+评测使用独立审核的 SweetSeek-Bench v2。实验协议、题库、标注、运行数据、结果和图表统一保存在 `Experiment/`；当前题库从空白状态重新建设。检索评测不调用回答模型，也不会创建或重建索引：
 
 ```bash
 venv/bin/python -m evaluation.rag_benchmark --mode retrieval --limit 5

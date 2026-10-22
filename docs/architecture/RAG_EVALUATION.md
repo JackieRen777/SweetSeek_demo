@@ -2,7 +2,7 @@
 
 ## 目标
 
-甜味域使用 60 题候选集建立可重复的检索、生成和端到端基准。`candidate` 题目只用于准备标注；只有经过领域审核并改为 `approved` 的题目参与正式聚合指标与发布门禁。
+甜味域使用从空白状态重新建设的 SweetSeek-Bench v2 建立可重复的检索、生成和端到端基准。`candidate` 题目只用于准备标注；只有经过领域审核并改为 `approved` 的题目参与正式聚合指标与发布门禁。
 
 ## 标注流程
 
@@ -11,19 +11,19 @@
    ```bash
    venv/bin/python -m evaluation.rag_benchmark \
      --mode retrieval \
-     --context-output evaluation/contexts/sweet_v1.json
+     --context-output Experiment/runs/contexts/sweet_v2.json
    ```
 
 2. 从最新报告生成审核包：
 
    ```bash
    venv/bin/python -m evaluation.prepare_annotations \
-     evaluation/reports/<retrieval-report>.json \
-     evaluation/contexts/sweet_review.json
+     Experiment/runs/<retrieval-report>.json \
+     Experiment/annotations/sweet_review.json
    ```
 
 3. 领域审核人确认相关论文、证据原文、答案要点、禁止臆测项和拒答预期。
-4. 将确认结果写回 `evaluation/questions/sweet_gold_v1.json`，把相应题目的 `annotation_status` 改为 `approved`。
+4. 将确认结果写回 `Experiment/benchmark/sweet_benchmark_v2.json`，把相应题目的 `annotation_status` 改为 `approved`。
 5. 提交黄金标注；不要提交运行报告、上下文快照或包含完整模型回答的审核包。
 
 稳定文档 ID 来自规范化论文路径，稳定 chunk ID 优先使用索引 node ID。论文移动或重新分块后必须重新核对标签。
@@ -37,7 +37,7 @@ venv/bin/python -m evaluation.rag_benchmark --mode retrieval
 # 使用冻结上下文测试生成；默认重复三次
 venv/bin/python -m evaluation.rag_benchmark \
   --mode generation \
-  --contexts evaluation/contexts/sweet_v1.json \
+  --contexts Experiment/runs/contexts/sweet_v2.json \
   --judge
 
 # 完整问答；默认重复三次

@@ -38,7 +38,7 @@ from evaluation.scoring import evaluate_release_gates, trend_score
 from knowledge_paths import get_domain_paths
 
 
-DEFAULT_GOLD = ROOT / "evaluation" / "questions" / "sweet_gold_v1.json"
+DEFAULT_GOLD = ROOT / "Experiment" / "benchmark" / "sweet_benchmark_v2.json"
 
 
 def load_chat_service():
@@ -317,7 +317,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--questions", default=str(DEFAULT_GOLD))
     parser.add_argument("--contexts", help="Frozen retrieval context JSON, required for generation mode")
     parser.add_argument("--context-output", help="Write contexts from a retrieval run")
-    parser.add_argument("--output", default=str(ROOT / "evaluation" / "reports"))
+    parser.add_argument("--output", default=str(ROOT / "Experiment" / "runs"))
     parser.add_argument("--baseline")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--repetitions", type=int)

@@ -1,0 +1,8 @@
+{
+  "schema_version": "2.0",
+  "benchmark_id": "sweetseek-bench-v2",
+  "domain": "sweetness",
+  "status": "draft",
+  "description": "Fresh SweetSeek benchmark. Add only independently authored and domain-reviewed sweetness questions.",
+  "questions": []
+}
