@@ -18,20 +18,20 @@ from evaluation.prepare_annotations import build_review_packet
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_fresh_sweet_benchmark_starts_empty():
+def test_frozen_sweet_benchmark_contains_first_approved_batch():
     questions = load_gold_set(ROOT / "Experiment" / "benchmark" / "sweet_benchmark_v2.json")
     summary = annotation_summary(questions)
     assert summary == {
-        "total": 0,
-        "approved": 0,
+        "total": 20,
+        "approved": 20,
         "candidate": 0,
-        "approval_rate": 0.0,
+        "approval_rate": 1.0,
         "by_type": {
-            "comparison": 0,
-            "fact": 0,
-            "mechanism": 0,
-            "summary": 0,
-            "unanswerable": 0,
+            "comparison": 4,
+            "fact": 4,
+            "mechanism": 4,
+            "summary": 4,
+            "unanswerable": 4,
         },
     }
 

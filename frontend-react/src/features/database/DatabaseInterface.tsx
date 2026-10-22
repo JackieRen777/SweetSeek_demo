@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   AlertTriangle, ArrowLeft, ArrowUpDown, Atom, BarChart3, Beaker, BookOpen, Check, ChevronDown,
   ChevronLeft, ChevronRight, CircleHelp, Cuboid, Database, Download, ExternalLink,
@@ -859,7 +859,7 @@ const mergeSqliteCompound = (base: DatabaseCompound, detail: SweetMetaCompoundDe
   };
 };
 
-const DatabaseInterface = ({ onClose }: { onClose?: () => void }) => {
+const DatabaseInterface = ({ onClose, footer }: { onClose?: () => void; footer?: ReactNode }) => {
   const state = initialState();
   const [section, setSection] = useState<DatabaseSection>(state.section);
   const [compoundId, setCompoundId] = useState<string | null>(state.compoundId);
@@ -905,7 +905,10 @@ const DatabaseInterface = ({ onClose }: { onClose?: () => void }) => {
       <div className="sdb-header-actions"><button className="sdb-return" onClick={leaveDatabase}><ArrowLeft /> SweetSeek</button><button className="sdb-menu" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? 'Close database menu' : 'Open database menu'}>{menuOpen ? <X /> : <Menu />}</button></div>
     </header>
     <div className="sdb-mobile-context"><span>{activeLabel}</span><small>{DATABASE_METADATA.totalRecords.toLocaleString()} records</small></div>
-    <main className="sdb-main overflow-auto">{compound ? <Detail key={compound.id} compound={sqliteDetail ? mergeSqliteCompound(compound, sqliteDetail) : compound} sqliteDetail={sqliteDetail} detailError={detailError} onBack={back} onSelect={select} /> : section === 'overview' ? <Overview onSelect={select} onSearch={search} onStatistics={() => navigate('statistics')} /> : section === 'compounds' ? <CompoundIndex key={window.location.search} onSelect={select} initialQuery={query} initialTier={tier} initialDrilldown={{ domain: routeState.domain, foodGroup: routeState.foodGroup, sweetnessMinLog10: routeState.sweetnessMinLog10, sweetnessMaxLog10: routeState.sweetnessMaxLog10, qualityMetric: routeState.qualityMetric, qualityState: routeState.qualityState, sweetClassL1: routeState.sweetClassL1, sweetClassL2: routeState.sweetClassL2, evidenceGrade: routeState.evidenceGrade, sourceCollection: routeState.sourceCollection, mwMin: routeState.mwMin, mwMax: routeState.mwMax, clogpMin: routeState.clogpMin, clogpMax: routeState.clogpMax, tpsaMin: routeState.tpsaMin, tpsaMax: routeState.tpsaMax }} /> : section === 'literature' ? <Literature key={window.location.search} onSelect={select} initialYearFrom={routeState.literatureYearFrom} initialYearTo={routeState.literatureYearTo} initialCompoundFamily={routeState.compoundFamily} /> : section === 'statistics' ? <StatisticsDashboard onCompounds={openStatisticsResult} onCompound={select} /> : <Downloads />}</main>
+    <main className="sdb-main overflow-auto">
+      {compound ? <Detail key={compound.id} compound={sqliteDetail ? mergeSqliteCompound(compound, sqliteDetail) : compound} sqliteDetail={sqliteDetail} detailError={detailError} onBack={back} onSelect={select} /> : section === 'overview' ? <Overview onSelect={select} onSearch={search} onStatistics={() => navigate('statistics')} /> : section === 'compounds' ? <CompoundIndex key={window.location.search} onSelect={select} initialQuery={query} initialTier={tier} initialDrilldown={{ domain: routeState.domain, foodGroup: routeState.foodGroup, sweetnessMinLog10: routeState.sweetnessMinLog10, sweetnessMaxLog10: routeState.sweetnessMaxLog10, qualityMetric: routeState.qualityMetric, qualityState: routeState.qualityState, sweetClassL1: routeState.sweetClassL1, sweetClassL2: routeState.sweetClassL2, evidenceGrade: routeState.evidenceGrade, sourceCollection: routeState.sourceCollection, mwMin: routeState.mwMin, mwMax: routeState.mwMax, clogpMin: routeState.clogpMin, clogpMax: routeState.clogpMax, tpsaMin: routeState.tpsaMin, tpsaMax: routeState.tpsaMax }} /> : section === 'literature' ? <Literature key={window.location.search} onSelect={select} initialYearFrom={routeState.literatureYearFrom} initialYearTo={routeState.literatureYearTo} initialCompoundFamily={routeState.compoundFamily} /> : section === 'statistics' ? <StatisticsDashboard onCompounds={openStatisticsResult} onCompound={select} /> : <Downloads />}
+      {footer}
+    </main>
   </div>;
 };
 

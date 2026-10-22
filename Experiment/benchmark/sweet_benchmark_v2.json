@@ -2,7 +2,1504 @@
   "schema_version": "2.0",
   "benchmark_id": "sweetseek-bench-v2",
   "domain": "sweetness",
-  "status": "draft",
-  "description": "Fresh SweetSeek benchmark. Add only independently authored and domain-reviewed sweetness questions.",
-  "questions": []
+  "language": "zh-CN",
+  "status": "frozen",
+  "frozen_at": "2026-10-22",
+  "description": "Human-reviewed first frozen batch of the SweetSeek sweetness-domain golden benchmark. Question text is blinded to author names and publication years.",
+  "scope_exclusions": [
+    "dual_protein",
+    "encapsulation",
+    "protein_polysaccharide",
+    "docking",
+    "molecular_dynamics"
+  ],
+  "leakage_policy": "Do not run evaluated systems on these questions or use them for prompt, retrieval, or model tuning before the registered evaluation.",
+  "source_review_workbook_sha256": "30f4a8f8c4c0d2e0015e16f18fe0d8ef342c5d1ea83a26a332f098e88c00ddc6",
+  "archived_review_workbook_sha256": "82fcb4121af6c93b4d913e0fe00e2dbe6e99e6f455a4605f3498641592946573",
+  "counts": {
+    "total": 20,
+    "approved": 20,
+    "answerable": 16,
+    "unanswerable": 4,
+    "evidence_rows": 25,
+    "by_difficulty": {
+      "easy": 7,
+      "medium": 5,
+      "hard": 8
+    },
+    "by_type": {
+      "fact": 4,
+      "comparison": 4,
+      "mechanism": 4,
+      "summary": 4,
+      "unanswerable": 4
+    }
+  },
+  "questions": [
+    {
+      "id": "A01",
+      "question": "在以5%蔗糖溶液为参照、采用2-AFC并经描述性分析验证的实验中，赤藓糖醇的相对甜度是多少？",
+      "type": "fact",
+      "theme": "甜味化合物与理化性质",
+      "difficulty": "easy",
+      "difficulty_level": "A",
+      "annotation_status": "approved",
+      "gold_answer": "0.63。该数值只适用于论文所述的5%蔗糖参照和测定方法。",
+      "answer_points": [
+        {
+          "id": "A01-A1",
+          "text": "0.63",
+          "aliases": []
+        },
+        {
+          "id": "A01-A2",
+          "text": "说明5%蔗糖参照/该实验条件",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得回答成无条件、跨浓度通用常数",
+        "不得写成0.53而不说明那是2-AFC估计值。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "a6c771237496d5192ed94aa2",
+          "relevance": 3,
+          "title": "Relative sweetness and sensory characteristics of bulk and intense sweeteners",
+          "doi": "10.1007/s10068-012-0115-0",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Gwak 等 - 2012 - Relative sweetness and sensory characteristics of bulk and intense sweeteners.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E001",
+          "document_id": "a6c771237496d5192ed94aa2",
+          "quote": "The relative sweetness of the novel sweeteners such as tagatose, erythritol, stevia, and rebaudioside A 97 were shown to be 0.85, 0.63, 64.1, and 227, respectively.",
+          "pdf_page": "1",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "A02",
+      "question": "人类经典甜味受体由哪两个亚基组成，它在结构上属于哪一类受体及哪种二聚体？",
+      "type": "fact",
+      "theme": "甜味受体与分子机制",
+      "difficulty": "easy",
+      "difficulty_level": "A",
+      "annotation_status": "approved",
+      "gold_answer": "由T1R2和T1R3两个亚基组成，属于C类G蛋白偶联受体（class C GPCR），形成非共价连接的异二聚体。",
+      "answer_points": [
+        {
+          "id": "A02-A1",
+          "text": "T1R2",
+          "aliases": []
+        },
+        {
+          "id": "A02-A2",
+          "text": "T1R3",
+          "aliases": []
+        },
+        {
+          "id": "A02-A3",
+          "text": "C类GPCR",
+          "aliases": []
+        },
+        {
+          "id": "A02-A4",
+          "text": "非共价异二聚体",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得称为同源二聚体",
+        "不得把T1R1写成甜味受体亚基。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "0f5cec8ea328a410b8c0bd3d",
+          "relevance": 3,
+          "title": "Current Progress in Understanding the Structure and Function of Sweet Taste Receptor",
+          "doi": "10.1007/s12031-020-01642-4",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Yang 等 - 2021 - Current Progress in Understanding the Structure and Function of Sweet Taste Receptor.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E002",
+          "document_id": "0f5cec8ea328a410b8c0bd3d",
+          "quote": "The sweet taste receptors (taste receptor type 1 members 2 and 3, T1R2/T1R3) of humans and mice were identified by three independent research groups in 2001.",
+          "pdf_page": "1",
+          "section": "Introduction",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E003.1",
+          "document_id": "0f5cec8ea328a410b8c0bd3d",
+          "quote": "Sequence and structure analyses indicate that the sweet taste receptor belongs to the family C GPCRs, which are characterized by a large extracellular domain.",
+          "pdf_page": "2",
+          "section": "Receptor",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E003.2",
+          "document_id": "0f5cec8ea328a410b8c0bd3d",
+          "quote": "Distinct from other family C GPCRs, most of which are homodimers",
+          "pdf_page": "2",
+          "section": "Receptor",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E003.3",
+          "document_id": "0f5cec8ea328a410b8c0bd3d",
+          "quote": "the sweet taste receptor is a heterodimer composed of two noncovalent-linked protomers.",
+          "pdf_page": "2",
+          "section": "Receptor",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "A03",
+      "question": "在水溶液时间强度实验中，哪种甜味剂的甜味感知时间最长，报告值是多少？",
+      "type": "fact",
+      "theme": "感官评价与味觉相互作用",
+      "difficulty": "easy",
+      "difficulty_level": "A",
+      "annotation_status": "approved",
+      "gold_answer": "甜菊糖相关样品（stevia）的甜味感知时间最长，为13秒。",
+      "answer_points": [
+        {
+          "id": "A03-A1",
+          "text": "stevia/甜菊糖相关样品",
+          "aliases": []
+        },
+        {
+          "id": "A03-A2",
+          "text": "13秒",
+          "aliases": []
+        },
+        {
+          "id": "A03-A3",
+          "text": "水溶液条件",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得把13秒推广到所有食品基质或所有浓度。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "81d36821351f558a50f95c31",
+          "relevance": 3,
+          "title": "Sensory temporality of sweeteners in aqueous solution and in yogurt",
+          "doi": "10.1007/s11694-023-02257-0",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Medel-Marabolí 等 - 2024 - Sensory temporality of sweeteners in aqueous solution and in yogurt.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E004",
+          "document_id": "81d36821351f558a50f95c31",
+          "quote": "Stevia was the sweetener with the longest perception time (13 s) of sweetness intensity in aqueous solution, together with greater dominance, temporal acceptability, and one of the most preferred along with aspartame by consumers.",
+          "pdf_page": "1",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "A04",
+      "question": "在以5%蔗糖溶液为参照并经描述性分析验证的实验中，阿斯巴甜与三氯蔗糖的相对甜度分别是多少，哪一个更高？",
+      "type": "comparison",
+      "theme": "甜味化合物与理化性质",
+      "difficulty": "easy",
+      "difficulty_level": "A",
+      "annotation_status": "approved",
+      "gold_answer": "阿斯巴甜为166.7，三氯蔗糖为555.6；在该实验条件下三氯蔗糖更高。",
+      "answer_points": [
+        {
+          "id": "A04-A1",
+          "text": "阿斯巴甜166.7",
+          "aliases": []
+        },
+        {
+          "id": "A04-A2",
+          "text": "三氯蔗糖555.6",
+          "aliases": []
+        },
+        {
+          "id": "A04-A3",
+          "text": "三氯蔗糖更高",
+          "aliases": []
+        },
+        {
+          "id": "A04-A4",
+          "text": "限定实验条件",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得把数值作为不受浓度和方法影响的固定常数。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "a6c771237496d5192ed94aa2",
+          "relevance": 3,
+          "title": "Relative sweetness and sensory characteristics of bulk and intense sweeteners",
+          "doi": "10.1007/s10068-012-0115-0",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Gwak 等 - 2012 - Relative sweetness and sensory characteristics of bulk and intense sweeteners.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E005.1",
+          "document_id": "a6c771237496d5192ed94aa2",
+          "quote": "Erythritol 0.63",
+          "pdf_page": "4",
+          "section": "Table 1",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E005.2",
+          "document_id": "a6c771237496d5192ed94aa2",
+          "quote": "Aspartame 166.7",
+          "pdf_page": "4",
+          "section": "Table 1",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E005.3",
+          "document_id": "a6c771237496d5192ed94aa2",
+          "quote": "Sucralose 555.6",
+          "pdf_page": "4",
+          "section": "Table 1",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E005.4",
+          "document_id": "a6c771237496d5192ed94aa2",
+          "quote": "Stevia 64.1",
+          "pdf_page": "4",
+          "section": "Table 1",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E005.5",
+          "document_id": "a6c771237496d5192ed94aa2",
+          "quote": "RA97 227.3.",
+          "pdf_page": "4",
+          "section": "Table 1",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "A05",
+      "question": "2035年全球三氯蔗糖的精确产量将是多少吨？请给出个位数精度。",
+      "type": "unanswerable",
+      "theme": "加工、稳定性与配方",
+      "difficulty": "easy",
+      "difficulty_level": "A",
+      "annotation_status": "approved",
+      "gold_answer": "应拒绝给出精确数值：本地甜味知识库中的学术论文不能确定未来全球产量，更不能支持个位数精度预测。可说明需要权威市场预测、统计口径和不确定区间。",
+      "answer_points": [
+        {
+          "id": "A05-A1",
+          "text": "明确不可由现有证据回答",
+          "aliases": []
+        },
+        {
+          "id": "A05-A2",
+          "text": "拒绝编造精确数值",
+          "aliases": []
+        },
+        {
+          "id": "A05-A3",
+          "text": "指出所需外部数据和不确定性",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "禁止虚构市场数据、机构报告或精确吨数。"
+      ],
+      "should_refuse": true,
+      "expected_documents": [],
+      "evidence_spans": [],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "A06",
+      "question": "请从知识库中选出一种对每个人终身摄入都绝对安全、没有任何不良反应的甜味剂。",
+      "type": "unanswerable",
+      "theme": "代谢、营养与安全",
+      "difficulty": "easy",
+      "difficulty_level": "A",
+      "annotation_status": "approved",
+      "gold_answer": "应拒绝作出绝对安全保证。安全性结论受剂量、暴露时长、个体差异、人群和终点影响；知识库中的有限研究不能证明“每个人、终身、零风险”。",
+      "answer_points": [
+        {
+          "id": "A06-A1",
+          "text": "拒绝绝对保证",
+          "aliases": []
+        },
+        {
+          "id": "A06-A2",
+          "text": "说明剂量/时长/人群边界",
+          "aliases": []
+        },
+        {
+          "id": "A06-A3",
+          "text": "可建议依据监管ADI和个体医学情况评估",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "禁止把单项短期试验外推为终身绝对安全",
+        "禁止医疗保证。"
+      ],
+      "should_refuse": true,
+      "expected_documents": [],
+      "evidence_spans": [],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "A07",
+      "question": "请给出某商业零糖饮料尚未公开的完整配方、各成分精确比例和专有工艺参数。",
+      "type": "unanswerable",
+      "theme": "加工、稳定性与配方",
+      "difficulty": "easy",
+      "difficulty_level": "A",
+      "annotation_status": "approved",
+      "gold_answer": "应拒绝编造未公开的专有信息。知识库只能回答公开文献记载的成分或方法；若无可靠公开来源，应明确未知，并可讨论一般配方设计原则。",
+      "answer_points": [
+        {
+          "id": "A07-A1",
+          "text": "识别未公开专有信息",
+          "aliases": []
+        },
+        {
+          "id": "A07-A2",
+          "text": "拒绝编造",
+          "aliases": []
+        },
+        {
+          "id": "A07-A3",
+          "text": "区分公开证据与未知",
+          "aliases": []
+        },
+        {
+          "id": "A07-A4",
+          "text": "可提供一般原则但不得冒充真实配方",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "禁止虚构品牌内部配方、比例、专利外工艺或所谓内部来源。"
+      ],
+      "should_refuse": true,
+      "expected_documents": [],
+      "evidence_spans": [],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "B01",
+      "question": "在一项12周随机临床试验中，约333.3 mg三氯蔗糖每日3次与安慰剂相比，对哪些糖代谢指标未观察到显著组间差异？请同时说明受试者范围。",
+      "type": "fact",
+      "theme": "代谢、营养与安全",
+      "difficulty": "medium",
+      "difficulty_level": "B",
+      "annotation_status": "approved",
+      "gold_answer": "在47名血糖正常的男性志愿者中，空腹血糖、胰岛素、C肽和HbA1c相对基线的变化均未见三氯蔗糖组与安慰剂组之间的统计学显著差异。",
+      "answer_points": [
+        {
+          "id": "B01-A1",
+          "text": "47名",
+          "aliases": []
+        },
+        {
+          "id": "B01-A2",
+          "text": "血糖正常男性",
+          "aliases": []
+        },
+        {
+          "id": "B01-A3",
+          "text": "12周且约333.3 mg每日3次",
+          "aliases": []
+        },
+        {
+          "id": "B01-A4",
+          "text": "空腹血糖",
+          "aliases": []
+        },
+        {
+          "id": "B01-A5",
+          "text": "胰岛素",
+          "aliases": []
+        },
+        {
+          "id": "B01-A6",
+          "text": "C肽",
+          "aliases": []
+        },
+        {
+          "id": "B01-A7",
+          "text": "HbA1c",
+          "aliases": []
+        },
+        {
+          "id": "B01-A8",
+          "text": "无显著组间差异",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得外推为所有人终身摄入绝对安全",
+        "不得省略人群、剂量或时长。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "6c176a4feb1cb5ef64143b26",
+          "relevance": 3,
+          "title": "A 12-week randomized clinical trial investigating the potential for sucralose to affect glucose homeostasis",
+          "doi": "10.1016/j.yrtph.2017.05.011",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Grotz 等 - 2017 - A 12-week randomized clinical trial investigating the potential for sucralose to affect glucose home.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E006.1",
+          "document_id": "6c176a4feb1cb5ef64143b26",
+          "quote": "Normoglycemic male volunteers (47) consumed ~333.3 mg encapsulated sucralose or placebo 3x/day at mealtimes.",
+          "pdf_page": "4",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E006.2",
+          "document_id": "6c176a4feb1cb5ef64143b26",
+          "quote": "No statistically significant differences between sucralose and placebo groups in change from baseline for fasting glucose, insulin, C-peptide and HbA1c.",
+          "pdf_page": "4",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "B02",
+      "question": "在一项Reb A、Reb D和Reb M的消费者感官研究中，Reb A与Reb D、Reb M在苦味及与蔗糖相似性方面有何差异？",
+      "type": "comparison",
+      "theme": "感官评价与味觉相互作用",
+      "difficulty": "medium",
+      "difficulty_level": "B",
+      "annotation_status": "approved",
+      "gold_answer": "Reb A的口腔内苦味评分约3.5/15，且5秒后仍持续；它更接近金属味、苦味和化学味。Reb D和Reb M的苦味更低，彼此相似，并且比Reb A更接近蔗糖。",
+      "answer_points": [
+        {
+          "id": "B02-A1",
+          "text": "Reb A苦味约3.5/15",
+          "aliases": []
+        },
+        {
+          "id": "B02-A2",
+          "text": "5秒后持续",
+          "aliases": []
+        },
+        {
+          "id": "B02-A3",
+          "text": "金属/苦/化学关联",
+          "aliases": []
+        },
+        {
+          "id": "B02-A4",
+          "text": "Reb D/M彼此相似且更接近蔗糖",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得声称Reb D或Reb M在所有条件下与蔗糖完全相同。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "888583c7c1b00c4db854aa26",
+          "relevance": 3,
+          "title": "Consumer-Based Sensory Characterization of Steviol Glycosides (Rebaudioside A, D, and M)",
+          "doi": "10.3390/foods9081026",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Tao和Cho - 2020 - Consumer-Based Sensory Characterization of Steviol Glycosides (Rebaudioside A, D, and M).pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E007",
+          "document_id": "888583c7c1b00c4db854aa26",
+          "quote": "The participants rated the in-mouth bitterness of sucrose, Reb D, and Reb M around 1, while the rating of Reb A was at 3.5 on a 15-cm line scale. The bitterness of Reb A persisted after 5 s (intensity = 3.5).",
+          "pdf_page": "6",
+          "section": "Results",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E008",
+          "document_id": "888583c7c1b00c4db854aa26",
+          "quote": "Honey and vanilla were associated with sucrose. Reb A was close to metallic, bitter, and chemical. Reb D and M were similar to each other and were closer to sucrose as compared to Reb A.",
+          "pdf_page": "7",
+          "section": "Results",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "B03",
+      "question": "在一项同时比较水溶液和酸奶中甜味剂时间特征的感官研究中，甜菊糖在水溶液中的时间特征，与塔格糖在酸奶中的表现分别是什么？",
+      "type": "comparison",
+      "theme": "加工、稳定性与配方",
+      "difficulty": "medium",
+      "difficulty_level": "B",
+      "annotation_status": "approved",
+      "gold_answer": "在水溶液中，甜菊糖的时间曲线区别于其他甜味剂，甜味残留更持久；在酸奶中，塔格糖的TDS曲线最接近蔗糖。两者结论来自不同基质和方法，不能直接视为同一指标上的优劣排名。",
+      "answer_points": [
+        {
+          "id": "B03-A1",
+          "text": "甜菊糖水溶液甜味更持久",
+          "aliases": []
+        },
+        {
+          "id": "B03-A2",
+          "text": "塔格糖酸奶TDS最接近蔗糖",
+          "aliases": []
+        },
+        {
+          "id": "B03-A3",
+          "text": "指出基质/方法不同",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得把水溶液结论直接外推到酸奶",
+        "不得将“最接近”解释为所有感官属性完全一致。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "81d36821351f558a50f95c31",
+          "relevance": 3,
+          "title": "Sensory temporality of sweeteners in aqueous solution and in yogurt",
+          "doi": "10.1007/s11694-023-02257-0",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Medel-Marabolí 等 - 2024 - Sensory temporality of sweeteners in aqueous solution and in yogurt.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E009",
+          "document_id": "81d36821351f558a50f95c31",
+          "quote": "The evaluation of the panelists using the TI method in aqueous solutions revealed that the temporal profile of stevia is different from the other sweeteners, with a greater persistence of sweetness in the mouth. The evaluation of the sweeteners in yogurt by consumers using TDS and temporal acceptability method showed that tagatose was the sweetener most similar to sucrose in terms of TDS curves.",
+          "pdf_page": "1",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "B04",
+      "question": "在桃味和葡萄味豆乳饮料中，为达到与三氯蔗糖相同的甜度，Reb A用量关系如何？替换后感官结果怎样？",
+      "type": "comparison",
+      "theme": "加工、稳定性与配方",
+      "difficulty": "medium",
+      "difficulty_level": "B",
+      "annotation_status": "approved",
+      "gold_answer": "该研究中Reb A的理想用量约为三氯蔗糖的3倍；两种配方的受评理化和感官特征未见显著差异，作者据此认为高纯度Reb A可在这两种特定豆乳产品中替代三氯蔗糖。",
+      "answer_points": [
+        {
+          "id": "B04-A1",
+          "text": "Reb A约3倍",
+          "aliases": []
+        },
+        {
+          "id": "B04-A2",
+          "text": "桃味/葡萄味豆乳",
+          "aliases": []
+        },
+        {
+          "id": "B04-A3",
+          "text": "受评理化和感官特征无显著差异",
+          "aliases": []
+        },
+        {
+          "id": "B04-A4",
+          "text": "限定在该产品与条件",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得推广到所有食品",
+        "不得把统计学无显著差异写成绝对等同。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "d10e41b880170e1276f302c9",
+          "relevance": 3,
+          "title": "Substituting sucralose with rebaudioside A in soy foods: equivalent sweetness, physicochemical analysis, microbiological assessment and acceptance test",
+          "doi": "10.1590/fst.30119",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nalesso-Leão 等 - 2020 - Substituting sucralose with rebaudioside A in soy foods equivalent sweetness, physicochemical analy.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E010",
+          "document_id": "d10e41b880170e1276f302c9",
+          "quote": "Through sensory analysis established that the ideal quantity of rebaudioside A to substitute sucralose in foods with peach soy and grape soy would be 3 times the quantity of sucralose. The results revealed no signifcant differences for the physicochemical and sensorial characteristics (p < 0.05) between the two formulations.",
+          "pdf_page": "1",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E011",
+          "document_id": "d10e41b880170e1276f302c9",
+          "quote": "It is concluded that high purity (97%) RebA produced at the Pilot’s NEPRON using selected varieties is able to substitute sucralose in foods with soy peaches and grapes commercialized and patented by Cocamar (brand Purity) maintaining the same levels of quality for the assessed sensory parameters.",
+          "pdf_page": "4",
+          "section": "Conclusion",
+          "relationship": "限制条件"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "B05",
+      "question": "仅凭一个人准备食用的甜味剂名称，精确预测其餐后120分钟每个时间点的血糖值。",
+      "type": "unanswerable",
+      "theme": "代谢、营养与安全",
+      "difficulty": "medium",
+      "difficulty_level": "B",
+      "annotation_status": "approved",
+      "gold_answer": "应拒绝预测。个体血糖轨迹还需要剂量、共同进食、基础代谢状态、药物、测量方案等信息，并需要经过验证的个体模型或实际监测；甜味剂名称本身不足以生成精确数值。",
+      "answer_points": [
+        {
+          "id": "B05-A1",
+          "text": "明确输入不足",
+          "aliases": []
+        },
+        {
+          "id": "B05-A2",
+          "text": "拒绝编造时间序列",
+          "aliases": []
+        },
+        {
+          "id": "B05-A3",
+          "text": "列出关键缺失变量",
+          "aliases": []
+        },
+        {
+          "id": "B05-A4",
+          "text": "建议监测/合适模型",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "禁止伪造逐时间点血糖",
+        "禁止将群体均值冒充个体预测。"
+      ],
+      "should_refuse": true,
+      "expected_documents": [],
+      "evidence_spans": [],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "C01",
+      "question": "根据人T1R2 Venus flytrap module（VFTM）的同源建模与突变实验，阿斯巴甜如何与该结构域结合？请概括主要相互作用及水分子的作用。",
+      "type": "mechanism",
+      "theme": "甜味受体与分子机制",
+      "difficulty": "hard",
+      "difficulty_level": "C",
+      "annotation_status": "approved",
+      "gold_answer": "模型与突变实验支持阿斯巴甜位于人T1R2的VFTM结合口袋，涉及盐桥/带电相互作用、氢键和疏水相互作用；两个水分子可能在配体与结合口袋的羰基之间起桥接作用。",
+      "answer_points": [
+        {
+          "id": "C01-A1",
+          "text": "T1R2的VFTM",
+          "aliases": []
+        },
+        {
+          "id": "C01-A2",
+          "text": "盐桥或带电相互作用",
+          "aliases": []
+        },
+        {
+          "id": "C01-A3",
+          "text": "氢键",
+          "aliases": []
+        },
+        {
+          "id": "C01-A4",
+          "text": "疏水相互作用",
+          "aliases": []
+        },
+        {
+          "id": "C01-A5",
+          "text": "两个水分子桥接",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得写成已解析的人全长受体晶体结构",
+        "应保留“模型/预测/可能”的证据层级。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "d4c9bc705ad24f3287b8840a",
+          "relevance": 3,
+          "title": "Characterization of the Binding Site of Aspartame in the Human Sweet Taste Receptor",
+          "doi": "10.1093/chemse/bjv045",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Maillet 等 - 2015 - Characterization of the Binding Site of Aspartame in the Human Sweet Taste Receptor.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E012.1",
+          "document_id": "d4c9bc705ad24f3287b8840a",
+          "quote": "The phenyl and methyl groups of the ligand are in hydrophobic regions of the receptor toward S165, Y215, and P277. Interestingly, 2 water molecules, which may be important for ligand binding, provide a link between the ligand and 2 carbonyl groups in the binding pocket.",
+          "pdf_page": "4",
+          "section": "Results",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E012.2",
+          "document_id": "d4c9bc705ad24f3287b8840a",
+          "quote": "The hydrogen bonds and hydrophobic interactions between aspartame and the receptor identified by LIGPLOT program are listed in Tables 1 and 2.",
+          "pdf_page": "4",
+          "section": "Results",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "C02",
+      "question": "甜配体结合经典甜味受体后，从受体到ATP释放的主要信号事件顺序是什么？",
+      "type": "mechanism",
+      "theme": "甜味受体与分子机制",
+      "difficulty": "hard",
+      "difficulty_level": "C",
+      "annotation_status": "approved",
+      "gold_answer": "甜配体结合引起T1R2/T1R3构象变化并激活偶联G蛋白，继而激活PLCβ2；其产物IP3促使胞内Ca2+释放，随后门控TRPM5并导致膜去极化，最终打开CALHM1通道释放ATP。",
+      "answer_points": [
+        {
+          "id": "C02-A1",
+          "text": "配体结合/构象变化",
+          "aliases": []
+        },
+        {
+          "id": "C02-A2",
+          "text": "G蛋白",
+          "aliases": []
+        },
+        {
+          "id": "C02-A3",
+          "text": "PLCβ2",
+          "aliases": []
+        },
+        {
+          "id": "C02-A4",
+          "text": "IP3与胞内Ca2+释放",
+          "aliases": []
+        },
+        {
+          "id": "C02-A5",
+          "text": "TRPM5",
+          "aliases": []
+        },
+        {
+          "id": "C02-A6",
+          "text": "去极化",
+          "aliases": []
+        },
+        {
+          "id": "C02-A7",
+          "text": "CALHM1释放ATP",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得把综述中的概括写成唯一、无例外的全部甜味信号机制。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "0f5cec8ea328a410b8c0bd3d",
+          "relevance": 3,
+          "title": "Current Progress in Understanding the Structure and Function of Sweet Taste Receptor",
+          "doi": "10.1007/s12031-020-01642-4",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Yang 等 - 2021 - Current Progress in Understanding the Structure and Function of Sweet Taste Receptor.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E013.1",
+          "document_id": "0f5cec8ea328a410b8c0bd3d",
+          "quote": "Upon sweet ligand binding, the sweet taste receptor undergoes a conformational change and its coupled G protein is activated, which then motivates the phospholipase C-β2. The catalyzed product of this enzyme, IP3 (inositol triphosphate), acts on the IP3 receptor to release Ca2+ from intracellular stores, which subsequently gates the TRPM5 channel on the membrane",
+          "pdf_page": "1",
+          "section": "Introduction / signaling overview",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E013.2",
+          "document_id": "0f5cec8ea328a410b8c0bd3d",
+          "quote": "This depolarization induces the opening of the CALMH 1 channel to release ATP.",
+          "pdf_page": "1",
+          "section": "Introduction / signaling overview",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "C03",
+      "question": "在一项使用lactisole阻断人体肠道T1R2/T1R3的研究中，葡萄糖刺激与混合液体餐刺激的激素结果有何不同？这说明什么？",
+      "type": "mechanism",
+      "theme": "代谢、营养与安全",
+      "difficulty": "hard",
+      "difficulty_level": "C",
+      "annotation_status": "approved",
+      "gold_answer": "在葡萄糖刺激条件下，lactisole显著降低GLP-1和PYY而未降低CCK；但对混合液体餐刺激的参数没有影响。作者因此认为T1R2/T1R3参与葡萄糖依赖的饱腹肽分泌，但该受体本身不足以解释混合餐引起的肽分泌。",
+      "answer_points": [
+        {
+          "id": "C03-A1",
+          "text": "GLP-1下降",
+          "aliases": []
+        },
+        {
+          "id": "C03-A2",
+          "text": "PYY下降",
+          "aliases": []
+        },
+        {
+          "id": "C03-A3",
+          "text": "CCK未下降",
+          "aliases": []
+        },
+        {
+          "id": "C03-A4",
+          "text": "混合液体餐无影响",
+          "aliases": []
+        },
+        {
+          "id": "C03-A5",
+          "text": "参与但非唯一机制",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得把参与解释为唯一因果通路",
+        "不得把葡萄糖条件结果外推为所有营养刺激。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "7667cd651886ae13b37c78c1",
+          "relevance": 3,
+          "title": "The role of the gut sweet taste receptor in regulating GLP-1, PYY, and CCK release in humans",
+          "doi": "10.1152/ajpendo.00077.2011",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Gerspach 等 - 2011 - The role of the gut sweet taste receptor in regulating GLP-1, PYY, and CCK release in humans.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E014.1",
+          "document_id": "7667cd651886ae13b37c78c1",
+          "quote": "The results were that 1) lactisole induced a significant reduction in GLP-1 and PYY but not CCK secretion in both the intragastric and the intraduodenal glucose-stimulated parts (P ≤ 0.05)",
+          "pdf_page": "1",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E014.2",
+          "document_id": "7667cd651886ae13b37c78c1",
+          "quote": "and 3) lactisole had no effect on liquid meal-stimulated parameters. We conclude that T1R2/T1R3 is involved in glucose-dependent secretion of satiation peptides. However, the results of the liquid meal-stimulated parts show that the receptor alone is not responsible for peptide secretion.",
+          "pdf_page": "1",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "C04",
+      "question": "为什么评价二元甜味剂协同作用时，isobole方法比假定线性加和更稳妥？交互指数I如何解释？",
+      "type": "mechanism",
+      "theme": "感官评价与味觉相互作用",
+      "difficulty": "hard",
+      "difficulty_level": "C",
+      "annotation_status": "approved",
+      "gold_answer": "甜味剂的剂量-反应关系可能是非线性的，简单线性加和或自混合假设可能把非线性本身误判为协同。Isobole方法把各单体的剂量-反应函数纳入零交互基线；I<1表示协同，I>1表示拮抗/抑制，I约等于1表示无交互。",
+      "answer_points": [
+        {
+          "id": "C04-A1",
+          "text": "剂量-反应非线性",
+          "aliases": []
+        },
+        {
+          "id": "C04-A2",
+          "text": "线性假设可能误判",
+          "aliases": []
+        },
+        {
+          "id": "C04-A3",
+          "text": "isobole纳入单体曲线",
+          "aliases": []
+        },
+        {
+          "id": "C04-A4",
+          "text": "I<1协同",
+          "aliases": []
+        },
+        {
+          "id": "C04-A5",
+          "text": "I>1拮抗",
+          "aliases": []
+        },
+        {
+          "id": "C04-A6",
+          "text": "I约1无交互",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得仅凭混合物更甜就宣布协同",
+        "不得忽略实验对0.9<I<1.1的零交互操作区间。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "8f7cd2c35b16e0eb2e7b9f9b",
+          "relevance": 3,
+          "title": "Evaluation of Sweetener Synergy in Humans by Isobole Analyses",
+          "doi": "10.1093/chemse/bjz056",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Reyes 等 - 2019 - Evaluation of Sweetener Synergy in Humans by Isobole Analyses.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E015",
+          "document_id": "8f7cd2c35b16e0eb2e7b9f9b",
+          "quote": "An index of interaction, I, less than 1 indicates synergy, more than 1 indicates antagonism, and around 1 indicates zero-interaction. Power functions were used to calculate I-values for each sweet mixture.",
+          "pdf_page": "8",
+          "section": "Methods / Equation 1",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E016",
+          "document_id": "8f7cd2c35b16e0eb2e7b9f9b",
+          "quote": "Self-mixture models can potentially lead to erroneous conclusions: that is, what appears to be synergy or superadditivity instead reflects a straightforward, albeit nonlinear, psychophysical function for that specific stimulus.",
+          "pdf_page": "6",
+          "section": "Methods",
+          "relationship": "限制条件"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "C05",
+      "question": "综合特定蔗糖参照条件下的相对甜度实验和牛奶/咖啡基质研究，为什么不应把某种甜味剂的相对甜度当作跨浓度、跨基质的通用常数？",
+      "type": "summary",
+      "theme": "甜味化合物与理化性质",
+      "difficulty": "hard",
+      "difficulty_level": "C",
+      "annotation_status": "approved",
+      "gold_answer": "相对甜度取决于参照蔗糖浓度、测定方法、甜味剂自身浓度及食品基质。Gwak等在特定5%蔗糖参照下得到一组数值；Choi与Chung明确指出，假定甜味效价在宽浓度范围内恒定会造成对协同作用的不同甚至错误解释。因此报告数值时必须同时给出浓度、参照、方法和基质。",
+      "answer_points": [
+        {
+          "id": "C05-A1",
+          "text": "参照浓度影响",
+          "aliases": []
+        },
+        {
+          "id": "C05-A2",
+          "text": "测定方法影响",
+          "aliases": []
+        },
+        {
+          "id": "C05-A3",
+          "text": "浓度依赖",
+          "aliases": []
+        },
+        {
+          "id": "C05-A4",
+          "text": "食品基质影响",
+          "aliases": []
+        },
+        {
+          "id": "C05-A5",
+          "text": "报告条件边界",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得提供脱离条件的唯一“真实相对甜度”",
+        "不得把不同论文数值差异直接判为谁错。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "a6c771237496d5192ed94aa2",
+          "relevance": 3,
+          "title": "Relative sweetness and sensory characteristics of bulk and intense sweeteners",
+          "doi": "10.1007/s10068-012-0115-0",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Gwak 等 - 2012 - Relative sweetness and sensory characteristics of bulk and intense sweeteners.pdf"
+        },
+        {
+          "document_id": "d629a70d0faaf1c4707e2688",
+          "relevance": 2,
+          "title": "Sweetness potency and sweetness synergism of sweeteners in milk and coffee systems",
+          "doi": "10.1016/j.foodres.2015.04.044",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Choi和Chung - 2015 - Sweetness potency and sweetness synergism of sweeteners in milk and coffee systems.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E017",
+          "document_id": "a6c771237496d5192ed94aa2",
+          "quote": "was determined using a 2-alternative forced choice method with 5% sucrose solution and the results were validated using descriptive analysis.",
+          "pdf_page": "1",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E018",
+          "document_id": "d629a70d0faaf1c4707e2688",
+          "quote": "Different interpretations of synergism can result if one assumes that the sweetness potency of a sweetener is identical throughout a wide range of concentrations, which was not the case in the present study, and uses this ‘universal’ sweetness potency value for the sweetness synergism experiment.",
+          "pdf_page": "8",
+          "section": "Discussion",
+          "relationship": "限制条件"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "C06",
+      "question": "综合人体isobole分析与牛奶和咖啡体系的二元甜味剂研究，应如何解释‘某两种甜味剂具有协同作用’这一说法？",
+      "type": "summary",
+      "theme": "感官评价与味觉相互作用",
+      "difficulty": "hard",
+      "difficulty_level": "C",
+      "annotation_status": "approved",
+      "gold_answer": "协同不是某一对甜味剂脱离条件后的固有标签。Reyes等用考虑非线性剂量-反应的isobole方法，在人群实验中观察到若干组合的协同；Choi与Chung在牛奶和咖啡体系、并考虑浓度依赖甜味效价后，二元组合未观察到协同而表现为加和或抑制。结论必须绑定组合比例、浓度、基质、方法和终点。",
+      "answer_points": [
+        {
+          "id": "C06-A1",
+          "text": "协同依赖方法",
+          "aliases": []
+        },
+        {
+          "id": "C06-A2",
+          "text": "依赖浓度/比例",
+          "aliases": []
+        },
+        {
+          "id": "C06-A3",
+          "text": "依赖基质",
+          "aliases": []
+        },
+        {
+          "id": "C06-A4",
+          "text": "Reyes观察到部分协同",
+          "aliases": []
+        },
+        {
+          "id": "C06-A5",
+          "text": "Choi在牛奶/咖啡未观察到协同",
+          "aliases": []
+        },
+        {
+          "id": "C06-A6",
+          "text": "不可无条件泛化",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得把单篇结果推广到所有基质",
+        "不得忽略相反或限制性证据。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "8f7cd2c35b16e0eb2e7b9f9b",
+          "relevance": 3,
+          "title": "Evaluation of Sweetener Synergy in Humans by Isobole Analyses",
+          "doi": "10.1093/chemse/bjz056",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Reyes 等 - 2019 - Evaluation of Sweetener Synergy in Humans by Isobole Analyses.pdf"
+        },
+        {
+          "document_id": "d629a70d0faaf1c4707e2688",
+          "relevance": 2,
+          "title": "Sweetness potency and sweetness synergism of sweeteners in milk and coffee systems",
+          "doi": "10.1016/j.foodres.2015.04.044",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Choi和Chung - 2015 - Sweetness potency and sweetness synergism of sweeteners in milk and coffee systems.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E019.1",
+          "document_id": "8f7cd2c35b16e0eb2e7b9f9b",
+          "quote": "I-values calculated for the various aspartame/AceK pairs tested here ranged from 0.49 to 0.60, confirming previous reports of synergy.",
+          "pdf_page": "10",
+          "section": "Results",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E019.2",
+          "document_id": "8f7cd2c35b16e0eb2e7b9f9b",
+          "quote": "Conversely, I-values of 1 for the saccharin/AceK pairs for the high and medium concentrations",
+          "pdf_page": "10",
+          "section": "Results",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E019.3",
+          "document_id": "8f7cd2c35b16e0eb2e7b9f9b",
+          "quote": "indicate zero-interaction.",
+          "pdf_page": "10",
+          "section": "Results",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E020.1",
+          "document_id": "d629a70d0faaf1c4707e2688",
+          "quote": "Synergisms between binary sweetener combinations were not observed in either milk or coffee systems.",
+          "pdf_page": "7-8",
+          "section": "Discussion / Conclusion",
+          "relationship": "冲突证据"
+        },
+        {
+          "evidence_id": "E020.2",
+          "document_id": "d629a70d0faaf1c4707e2688",
+          "quote": "In the present study, additivity or suppression instead of synergism between sweetener mixtures was observed in both milk and coffee systems when the concentration dependent nature of sweetness potency was considered.",
+          "pdf_page": "7-8",
+          "section": "Discussion / Conclusion",
+          "relationship": "冲突证据"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "C07",
+      "question": "若要在桃味或葡萄味豆乳饮料中用高纯度Reb A替代三氯蔗糖，现有证据支持怎样的起始配方策略和验证步骤？",
+      "type": "summary",
+      "theme": "加工、稳定性与配方",
+      "difficulty": "hard",
+      "difficulty_level": "C",
+      "annotation_status": "approved",
+      "gold_answer": "可将Reb A约为原三氯蔗糖用量的3倍作为该两种豆乳基质中的实验起点，再进行等甜度感官确认，并复核理化性质与消费者接受度。该比例来自特定产品，不应直接移植到其他食品；同时应关注Reb A可能具有的持续苦味及金属/化学味。",
+      "answer_points": [
+        {
+          "id": "C07-A1",
+          "text": "3倍作为起点",
+          "aliases": []
+        },
+        {
+          "id": "C07-A2",
+          "text": "等甜度验证",
+          "aliases": []
+        },
+        {
+          "id": "C07-A3",
+          "text": "理化复核",
+          "aliases": []
+        },
+        {
+          "id": "C07-A4",
+          "text": "接受度复核",
+          "aliases": []
+        },
+        {
+          "id": "C07-A5",
+          "text": "限定桃/葡萄豆乳",
+          "aliases": []
+        },
+        {
+          "id": "C07-A6",
+          "text": "关注Reb A后苦味/异味",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得称为通用配方",
+        "不得省略再次感官验证",
+        "不得承诺完全无风味风险。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "d10e41b880170e1276f302c9",
+          "relevance": 3,
+          "title": "Substituting sucralose with rebaudioside A in soy foods: equivalent sweetness, physicochemical analysis, microbiological assessment and acceptance test",
+          "doi": "10.1590/fst.30119",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nalesso-Leão 等 - 2020 - Substituting sucralose with rebaudioside A in soy foods equivalent sweetness, physicochemical analy.pdf"
+        },
+        {
+          "document_id": "888583c7c1b00c4db854aa26",
+          "relevance": 2,
+          "title": "Consumer-Based Sensory Characterization of Steviol Glycosides (Rebaudioside A, D, and M)",
+          "doi": "10.3390/foods9081026",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Tao和Cho - 2020 - Consumer-Based Sensory Characterization of Steviol Glycosides (Rebaudioside A, D, and M).pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E021.1",
+          "document_id": "d10e41b880170e1276f302c9",
+          "quote": "According to Table 1, it was observed that sucralose had the highest sweetness potency; however, an amount of RebA only three times was necessary to promote the same sweetness.",
+          "pdf_page": "3",
+          "section": "Results and discussion",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E021.2",
+          "document_id": "d10e41b880170e1276f302c9",
+          "quote": "There were no significant differences promoted by the sweetness sweeteners, indicating that RebA can be used as a substitute for sucralose in the product without loss of sensory attributes.",
+          "pdf_page": "3",
+          "section": "Results and discussion",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E022.1",
+          "document_id": "888583c7c1b00c4db854aa26",
+          "quote": "The bitterness of Reb A persisted after 5 s (intensity = 3.5).",
+          "pdf_page": "6-7",
+          "section": "Results",
+          "relationship": "限制条件"
+        },
+        {
+          "evidence_id": "E022.2",
+          "document_id": "888583c7c1b00c4db854aa26",
+          "quote": "Reb A was close to metallic, bitter, and chemical.",
+          "pdf_page": "6-7",
+          "section": "Results",
+          "relationship": "限制条件"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    },
+    {
+      "id": "C08",
+      "question": "综合强力甜味剂综述、肠道甜味受体人体试验和12周三氯蔗糖随机试验，应如何谨慎概括强力甜味剂、肠道受体与代谢结局的人体证据？",
+      "type": "summary",
+      "theme": "代谢、营养与安全",
+      "difficulty": "hard",
+      "difficulty_level": "C",
+      "annotation_status": "approved",
+      "gold_answer": "人体证据并不支持简单的一刀切结论。Gerspach等提示肠道T1R2/T1R3参与葡萄糖刺激的GLP-1/PYY分泌，但不单独解释混合餐反应；Turner等指出强力甜味剂对胃肠激素的人体试验结果相互冲突，细胞和小鼠结果尚未在人群中可靠复现；Grotz等则在特定47名血糖正常男性、特定剂量和12周条件下未见若干糖代谢指标显著差异。应按化合物、人群、剂量、时长和终点分别判断。",
+      "answer_points": [
+        {
+          "id": "C08-A1",
+          "text": "人体证据冲突/有限",
+          "aliases": []
+        },
+        {
+          "id": "C08-A2",
+          "text": "受体参与但非唯一",
+          "aliases": []
+        },
+        {
+          "id": "C08-A3",
+          "text": "动物/细胞不可直接外推",
+          "aliases": []
+        },
+        {
+          "id": "C08-A4",
+          "text": "Grotz特定试验阴性结果",
+          "aliases": []
+        },
+        {
+          "id": "C08-A5",
+          "text": "按人群剂量时长终点限定",
+          "aliases": []
+        }
+      ],
+      "forbidden_claims": [
+        "不得得出所有强力甜味剂必然有害或绝对安全",
+        "不得把相关性写成因果。"
+      ],
+      "should_refuse": false,
+      "expected_documents": [
+        {
+          "document_id": "fe78dd76c22a829435983a8f",
+          "relevance": 2,
+          "title": "Intense Sweeteners, Taste Receptors and the Gut Microbiome: A Metabolic Health Perspective",
+          "doi": "10.3390/ijerph17114094",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Turner 等 - 2020 - Intense Sweeteners, Taste Receptors and the Gut Microbiome A Metabolic Health Perspective.pdf"
+        },
+        {
+          "document_id": "7667cd651886ae13b37c78c1",
+          "relevance": 3,
+          "title": "The role of the gut sweet taste receptor in regulating GLP-1, PYY, and CCK release in humans",
+          "doi": "10.1152/ajpendo.00077.2011",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Gerspach 等 - 2011 - The role of the gut sweet taste receptor in regulating GLP-1, PYY, and CCK release in humans.pdf"
+        },
+        {
+          "document_id": "6c176a4feb1cb5ef64143b26",
+          "relevance": 2,
+          "title": "A 12-week randomized clinical trial investigating the potential for sucralose to affect glucose homeostasis",
+          "doi": "10.1016/j.yrtph.2017.05.011",
+          "pdf_path": "SweetSeek_paper_database/sweetness/papers/Grotz 等 - 2017 - A 12-week randomized clinical trial investigating the potential for sucralose to affect glucose home.pdf"
+        }
+      ],
+      "evidence_spans": [
+        {
+          "evidence_id": "E023.1",
+          "document_id": "fe78dd76c22a829435983a8f",
+          "quote": "Overall, there is conflicting evidence from human trials regarding the effects of IS on the secretion of gastrointestinal hormones and the potential involvement of extra-oral taste receptors.",
+          "pdf_page": "8",
+          "section": "Review: gastrointestinal hormones",
+          "relationship": "限制条件"
+        },
+        {
+          "evidence_id": "E023.2",
+          "document_id": "fe78dd76c22a829435983a8f",
+          "quote": "So far, this idea has been demonstrated in cell and mouse models, but not reliably replicated in human studies.",
+          "pdf_page": "8",
+          "section": "Review: gastrointestinal hormones",
+          "relationship": "限制条件"
+        },
+        {
+          "evidence_id": "E024",
+          "document_id": "7667cd651886ae13b37c78c1",
+          "quote": "We conclude that T1R2/T1R3 is involved in glucose-dependent secretion of satiation peptides. However, the results of the liquid meal-stimulated parts show that the receptor alone is not responsible for peptide secretion.",
+          "pdf_page": "1",
+          "section": "Abstract",
+          "relationship": "直接支持"
+        },
+        {
+          "evidence_id": "E025.1",
+          "document_id": "6c176a4feb1cb5ef64143b26",
+          "quote": "Normoglycemic male volunteers (47) consumed ~333.3 mg encapsulated sucralose or placebo 3x/day at mealtimes.",
+          "pdf_page": "4",
+          "section": "Abstract",
+          "relationship": "补充支持"
+        },
+        {
+          "evidence_id": "E025.2",
+          "document_id": "6c176a4feb1cb5ef64143b26",
+          "quote": "No statistically significant differences between sucralose and placebo groups in change from baseline for fasting glucose, insulin, C-peptide and HbA1c.",
+          "pdf_page": "4",
+          "section": "Abstract",
+          "relationship": "补充支持"
+        }
+      ],
+      "review": {
+        "reviewer_count": 1,
+        "review_method": "single_researcher_human_review",
+        "approved_on": "2026-10-22",
+        "source_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx"
+      }
+    }
+  ]
 }

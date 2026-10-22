@@ -1,0 +1,14 @@
+{
+  "benchmark_id": "sweetseek-bench-v2",
+  "status": "frozen",
+  "frozen_at": "2026-10-22",
+  "benchmark_file": "Experiment/benchmark/sweet_benchmark_v2.json",
+  "benchmark_sha256": "56296f160c3e6fc5b4120db553a0c4695b655d97029b10984120a9ddedd1857c",
+  "review_workbook": "Experiment/annotations/SweetSeek_首批20题审核表.xlsx",
+  "review_workbook_sha256": "82fcb4121af6c93b4d913e0fe00e2dbe6e99e6f455a4605f3498641592946573",
+  "original_review_workbook_sha256": "30f4a8f8c4c0d2e0015e16f18fe0d8ef342c5d1ea83a26a332f098e88c00ddc6",
+  "question_count": 20,
+  "evidence_row_count": 25,
+  "reviewer_count": 1,
+  "note": "Any change to the frozen benchmark requires a new benchmark version and a new freeze manifest."
+}

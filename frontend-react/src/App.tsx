@@ -16,7 +16,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import Slider from './components/layout/Slider';
 import { useThresholdScroll } from './utils/thresholdScroll';
 import { featureFromPath, REVERSE_PATH_MAP, type FeatureType } from './routing';
-import { MD_BUILDER_ENABLED } from './featureFlags';
+import { AUTH_REQUIRED, MD_BUILDER_ENABLED } from './featureFlags';
 import { lazy, Suspense } from 'react';
 
 // Lazy load feature components
@@ -36,7 +36,7 @@ const SCREEN_COUNT = 5;
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(AUTH_REQUIRED);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeFeature, setActiveFeature] = useState<FeatureType>(() => {
     const feature = featureFromPath(window.location.pathname);
@@ -57,6 +57,8 @@ function App() {
 
   // Check authentication status
   useEffect(() => {
+    if (!AUTH_REQUIRED) return;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
@@ -112,7 +114,7 @@ function App() {
 
   const handleOpenFeature = (feature: FeatureType) => {
     // Check if feature requires authentication
-    if (authRequiredFeatures.includes(feature) && !session) {
+    if (AUTH_REQUIRED && authRequiredFeatures.includes(feature) && !session) {
       setShowAuthModal(true);
       return;
     }
@@ -142,7 +144,7 @@ function App() {
       else if (index === 10 && MD_BUILDER_ENABLED) targetFeature = 'md-builder';
 
       // Check if feature requires authentication
-      if (targetFeature && authRequiredFeatures.includes(targetFeature) && !session) {
+      if (AUTH_REQUIRED && targetFeature && authRequiredFeatures.includes(targetFeature) && !session) {
         setShowAuthModal(true);
         return;
       }
@@ -174,13 +176,13 @@ function App() {
               onNavigate={handleNavigate}
               activeFeature={activeFeature}
               mdBuilderEnabled={MD_BUILDER_ENABLED}
-              onSignInClick={!session ? () => setShowAuthModal(true) : undefined}
-              session={session}
+              onSignInClick={AUTH_REQUIRED && !session ? () => setShowAuthModal(true) : undefined}
+              session={AUTH_REQUIRED ? session : null}
           />
         )}
 
         {/* Auth Modal */}
-        {showAuthModal && !session && (
+        {AUTH_REQUIRED && showAuthModal && !session && (
           <Auth onClose={() => setShowAuthModal(false)} />
         )}
 
@@ -266,17 +268,17 @@ function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className={`fixed inset-0 z-[100] ${
+              className={`fixed inset-0 z-[100] overflow-y-auto ${
                 activeFeature === 'ml-predict'
                   ? 'bg-white'
                   : 'bg-white/95 backdrop-blur-xl'
               }`}
             >
-              <div className={`w-full h-full overflow-hidden relative flex flex-col ${activeFeature === 'database' ? 'pt-0' : 'pt-[120px]'}`}>
+              <div className={`w-full h-full shrink-0 overflow-hidden relative flex flex-col ${activeFeature === 'database' ? 'pt-0' : 'pt-[120px]'}`}>
                 {activeFeature === 'ml-predict' || activeFeature === 'database' ? (
                   <div className="flex-1 w-full overflow-hidden">
                     <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading...</div>}>
-                      {activeFeature === 'ml-predict' ? <MLPredictSection onClose={() => setActiveFeature(null)} /> : <DatabaseInterface onClose={() => setActiveFeature(null)} />}
+                      {activeFeature === 'ml-predict' ? <MLPredictSection onClose={() => setActiveFeature(null)} /> : <DatabaseInterface onClose={() => setActiveFeature(null)} footer={<Footer placement="flow" tone="muted" />} />}
                     </Suspense>
                   </div>
                 ) : (
@@ -295,6 +297,7 @@ function App() {
                   </div>
                 )}
               </div>
+              {activeFeature !== 'database' && <Footer placement="flow" />}
             </motion.div>
           )}
         </AnimatePresence>

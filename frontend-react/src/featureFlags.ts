@@ -1,5 +1,9 @@
 const LEGACY_STRUCTURE_TOOLS_ENABLED = import.meta.env.VITE_STRUCTURE_TOOLS_ENABLED === 'true';
 
+// Public testing is the default. Set VITE_AUTH_REQUIRED=true to restore the
+// Supabase sign-in gate without changing the application code.
+export const AUTH_REQUIRED = import.meta.env.VITE_AUTH_REQUIRED === 'true';
+
 export const REFERENCES_NAV_ENABLED =
   import.meta.env.VITE_REFERENCES_NAV_ENABLED === 'true';
 

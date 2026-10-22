@@ -56,6 +56,9 @@ cd frontend-react
 npm run dev
 ```
 
+前端默认处于公开测试模式，不要求登录。需要恢复登录限制时，在启动前端的环境中设置
+`VITE_AUTH_REQUIRED=true` 并重新构建或重启 Vite。
+
 ## 测试与清理验证
 
 ```bash

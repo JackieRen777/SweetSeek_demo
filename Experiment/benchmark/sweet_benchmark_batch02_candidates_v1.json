@@ -1,0 +1,3257 @@
+{
+  "batch_id": "sweetseek-batch02-candidates-v1",
+  "created_on": "2026-10-22",
+  "status": "candidate",
+  "domain": "sweetness",
+  "authoring_protocol": "Experiment/protocols/sweet_benchmark_authoring_scoring_v1.md",
+  "counts": {
+    "questions": 20,
+    "answerable": 16,
+    "unanswerable": 4,
+    "difficulty": {
+      "A": 5,
+      "B": 8,
+      "C": 7
+    },
+    "evidence_rows": 51,
+    "scoring_points": 69,
+    "papers": 11
+  },
+  "review": {
+    "method": "AI-assisted drafting; human review pending",
+    "reviewer_count": 0
+  },
+  "question_access": "No evaluated model/system queried. Local PDF evidence only; KB retrieval text not verified.",
+  "questions": [
+    {
+      "id": "A08",
+      "type": "事实型",
+      "theme": "甜度测量与差异阈限",
+      "difficulty_level": "A",
+      "question": "甜味测量中的差异阈限（JND）和韦伯分数（WF）分别表示什么？请说明二者的关系，并与“刚能察觉甜味的最低浓度”区分。",
+      "gold_answer": "JND是在给定参照刺激浓度下刚能辨别的浓度差；WF=JND/参照浓度，是无量纲的相对差异阈限。它们测量刺激间的辨别，不能直接等同于从无刺激中检出甜味的检测阈限。",
+      "difficulty_rationale": "定位定义与公式，属于基础测量概念。",
+      "reasoning_chain": "定义JND；建立WF比值；区分检测与差异辨别。",
+      "critical_errors": [
+        "把WF写成参照浓度/JND",
+        "把JND定义为刚能检测甜味的绝对浓度"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.4,
+          "text": "JND是给定参照浓度下刚能辨别的刺激浓度差。",
+          "full_credit": "JND是给定参照浓度下刚能辨别的刺激浓度差。",
+          "partial_credit": "指出最小可辨差异，但未说明参照刺激。",
+          "source_keys": [
+            "R1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A08-P01",
+          "evidence_ids": [
+            "B02-E001"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "WF=JND/参照浓度；分子分母浓度单位一致，WF无量纲。",
+          "full_credit": "WF=JND/参照浓度；分子分母浓度单位一致，WF无量纲。",
+          "partial_credit": "比值正确，但未交代单位或无量纲。",
+          "source_keys": [
+            "R1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A08-P02",
+          "evidence_ids": [
+            "B02-E001"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "检测阈限是相对空白检出刺激，不能与上述差异阈限混同。",
+          "full_credit": "检测阈限是相对空白检出刺激，不能与上述差异阈限混同。",
+          "partial_credit": "知道二者不同，但没有解释区别。",
+          "source_keys": [
+            "R1",
+            "P1"
+          ],
+          "relationship": "定义对照与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A08-P03",
+          "evidence_ids": [
+            "B02-E001",
+            "B02-E002"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E001",
+        "B02-E002"
+      ]
+    },
+    {
+      "id": "A09",
+      "type": "事实型",
+      "theme": "甜味修饰蛋白",
+      "difficulty_level": "A",
+      "question": "Neoculin天然存在于哪种植物的果实中？它除了自身具有甜味，还具有哪一种味觉修饰作用？",
+      "gold_answer": "Neoculin来自Curculigo latifolia的果实，自身具有甜味，并能使后续酸性刺激产生甜味体验。这里描述的是知觉改变，不是把酸化学转化成糖。",
+      "difficulty_rationale": "一份文献可直接定位来源与基本作用。",
+      "reasoning_chain": "定位植物来源与味觉修饰定义。",
+      "critical_errors": [
+        "称酸被化学转化为糖",
+        "把来源写成神秘果Synsepalum dulcificum"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.5,
+          "text": "来源为Curculigo latifolia的果实，接受准确拉丁学名或无歧义中文名。",
+          "full_credit": "来源为Curculigo latifolia的果实，接受准确拉丁学名或无歧义中文名。",
+          "partial_credit": "只说植物果实，未给出物种。",
+          "source_keys": [
+            "N1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A09-P01",
+          "evidence_ids": [
+            "B02-E003"
+          ]
+        },
+        {
+          "weight": 0.5,
+          "text": "自身有甜味，还能使酸性刺激在处理后被感知为甜味；不声称生成糖。",
+          "full_credit": "自身有甜味，还能使酸性刺激在处理后被感知为甜味；不声称生成糖。",
+          "partial_credit": "只提自身甜味或只提酸变甜的知觉作用之一。",
+          "source_keys": [
+            "N1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A09-P02",
+          "evidence_ids": [
+            "B02-E003"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E003"
+      ]
+    },
+    {
+      "id": "A10",
+      "type": "事实型",
+      "theme": "甜味抑制与风味",
+      "difficulty_level": "A",
+      "question": "Gymnema sylvestre与神秘果对甜味的作用方向有什么区别？Gymnema sylvestre能否抑制神秘果诱导的甜味？",
+      "gold_answer": "神秘果可使酸性食品产生额外甜味；Gymnema sylvestre降低甜食的甜味，也能降低神秘果诱导的甜味。该结果是感官作用，不能解释为食物中的糖被去除。",
+      "difficulty_rationale": "单篇感官实验摘要直接回答作用方向。",
+      "reasoning_chain": "对照作用方向，再定位组合处理结果。",
+      "critical_errors": [
+        "说Gymnema使神秘果诱导甜味增强",
+        "说Gymnema已把食品中的糖化学去除"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.5,
+          "text": "神秘果使酸性食品产生甜味，Gymnema降低甜味，方向不同。",
+          "full_credit": "神秘果使酸性食品产生甜味，Gymnema降低甜味，方向不同。",
+          "partial_credit": "只准确描述其中一种作用方向。",
+          "source_keys": [
+            "U1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A10-P01",
+          "evidence_ids": [
+            "B02-E004"
+          ]
+        },
+        {
+          "weight": 0.5,
+          "text": "Gymnema也降低神秘果诱导的甜味，结论限定为感官感知。",
+          "full_credit": "Gymnema也降低神秘果诱导的甜味，结论限定为感官感知。",
+          "partial_credit": "只回答能够抑制，未区分知觉与含糖量。",
+          "source_keys": [
+            "U1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A10-P02",
+          "evidence_ids": [
+            "B02-E004"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E004"
+      ]
+    },
+    {
+      "id": "A11",
+      "type": "事实型",
+      "theme": "糖基化甜菊糖苷",
+      "difficulty_level": "A",
+      "question": "针对以5%蔗糖水溶液为参照、采用二选一强迫选择法测定糖基化Reb A（G-reb A），并进一步比较其与阿洛酮糖、麦芽糖醇混合物的感官研究：G-reb A的相对甜度是多少，与未糖基化Reb A相比更高还是更低？",
+      "gold_answer": "该研究所测G-reb A相对甜度为155，低于未糖基化Reb A。155对应指定样品、5%蔗糖水溶液与2-AFC方案，不是所有糖基化Reb A制品的通用常数。",
+      "difficulty_rationale": "条件明确的一项数值定位及方向比较。",
+      "reasoning_chain": "定位数值并保留测量条件。",
+      "critical_errors": [
+        "说糖基化后相对甜度必然更高",
+        "把155宣称为所有产品或基质的固定常数"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.6,
+          "text": "给出该条件下相对甜度155（接受约155倍，基于研究浓度比定义）。",
+          "full_credit": "给出该条件下相对甜度155（接受约155倍，基于研究浓度比定义）。",
+          "partial_credit": "只准确给出数量级但没有155，不接受错误精确值。",
+          "source_keys": [
+            "J1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A11-P01",
+          "evidence_ids": [
+            "B02-E005"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "低于未糖基化Reb A，且限定为题设试验而非所有制品。",
+          "full_credit": "低于未糖基化Reb A，且限定为题设试验而非所有制品。",
+          "partial_credit": "方向正确，但未限定研究条件。",
+          "source_keys": [
+            "J1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A11-P02",
+          "evidence_ids": [
+            "B02-E005"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "题干用研究特征定位原始数值，不要求模型猜测未指明论文。",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E005"
+      ]
+    },
+    {
+      "id": "A12",
+      "type": "不可回答/证据边界型",
+      "theme": "甜味剂信息不足",
+      "difficulty_level": "A",
+      "question": "一袋仅标注“天然甜味剂”的白色粉末，没有成分、纯度或感官测量结果。请仅根据这个标签给出其相对蔗糖甜度的唯一精确倍数。",
+      "gold_answer": "不能给出唯一精确倍数。标签不足以确定物质、纯度与测量条件。需先明确成分和纯度，再规定蔗糖参照、基质与方法进行等甜度测定；不得编造数值。",
+      "difficulty_rationale": "直接识别缺失输入，无需跨文献复杂推理。",
+      "reasoning_chain": "检查身份和测量条件是否足够。",
+      "critical_errors": [
+        "给出无依据的唯一精确甜度倍数"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.4,
+          "text": "明确说明仅凭标签无法确定唯一精确相对甜度。",
+          "full_credit": "明确说明仅凭标签无法确定唯一精确相对甜度。",
+          "partial_credit": "表达不确定，却没有明确否定唯一数值。",
+          "source_keys": [
+            "J1",
+            "J3"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A12-P01",
+          "evidence_ids": [
+            "B02-E006",
+            "B02-E007"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "指出身份/成分及纯度未给出，且缺少测量参照或条件。",
+          "full_credit": "指出身份/成分及纯度未给出，且缺少测量参照或条件。",
+          "partial_credit": "只指出成分或测量条件中的一类缺失。",
+          "source_keys": [
+            "J1",
+            "J3"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A12-P02",
+          "evidence_ids": [
+            "B02-E006",
+            "B02-E007"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "提出先核实成分，再在明确参照和方法下测定；不编造数值。",
+          "full_credit": "提出先核实成分，再在明确参照和方法下测定；不编造数值。",
+          "partial_credit": "只建议检测，未说明需明确参照或方法。",
+          "source_keys": [
+            "J3"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "A12-P03",
+          "evidence_ids": [
+            "B02-E007"
+          ]
+        }
+      ],
+      "should_refuse": true,
+      "review_note": "不可回答原因来自题设信息缺失，不声称整个知识库或科学界无数据。",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E006",
+        "B02-E007"
+      ]
+    },
+    {
+      "id": "B06",
+      "type": "比较型",
+      "theme": "温度与甜味辨别",
+      "difficulty_level": "B",
+      "question": "在比较蔗糖水溶液冷、室温和热条件下差异阈限的实验中，名义参照浓度2 g/100 g与5 g/100 g的温度结果是否相同？“热时更甜”是否与“热时更难分辨浓度差”矛盾？",
+      "gold_answer": "并不相同：2 g/100 g组的回归斜率无显著温度差异，相应JND/WF相近；5 g/100 g组在约56°C热条件下斜率较低、JND/WF较高，辨别敏感性降低。超阈甜味强度与浓度差辨别是不同测量终点，因此更甜与更难辨差并不必然矛盾。",
+      "difficulty_rationale": "关联两种参照浓度的结果，解释两个感官终点。",
+      "reasoning_chain": "提取2%与5%结果；区分强度与差异敏感性；判断是否矛盾。",
+      "critical_errors": [
+        "说两种浓度热时均显著升高WF",
+        "把热时较高WF解释为更容易辨别小浓度差"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.3,
+          "text": "2 g/100 g组回归斜率无显著差异，JND/WF相近。",
+          "full_credit": "2 g/100 g组回归斜率无显著差异，JND/WF相近。",
+          "partial_credit": "指出低浓度无显著效应，但未交代JND/WF。",
+          "source_keys": [
+            "R3"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B06-P01",
+          "evidence_ids": [
+            "B02-E008"
+          ]
+        },
+        {
+          "weight": 0.35,
+          "text": "5 g/100 g组约56°C时JND/WF较高，辨别敏感性降低。",
+          "full_credit": "5 g/100 g组约56°C时JND/WF较高，辨别敏感性降低。",
+          "partial_credit": "只说热时辨别较差，未限定该浓度。",
+          "source_keys": [
+            "R3"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B06-P02",
+          "evidence_ids": [
+            "B02-E008"
+          ]
+        },
+        {
+          "weight": 0.35,
+          "text": "强度和差异阈限是不同终点，故两种说法不必矛盾。",
+          "full_credit": "强度和差异阈限是不同终点，故两种说法不必矛盾。",
+          "partial_credit": "知道不矛盾但未解释测量终点差异。",
+          "source_keys": [
+            "R3b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B06-P03",
+          "evidence_ids": [
+            "B02-E009"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "按正文保留2 g/100 g阴性结果，不沿用摘要的笼统温度结论；接受55–56°C表述。",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E008",
+        "B02-E009"
+      ]
+    },
+    {
+      "id": "B07",
+      "type": "比较型",
+      "theme": "糖基化与甜味剂复配",
+      "difficulty_level": "B",
+      "question": "在以5%蔗糖为目标等甜度、将G-reb A溶液与麦芽糖醇溶液按1:1混合的感官研究中，苦涩味、甜味协同和甜后味分别有什么结果？这些结果在多大程度上支持接近蔗糖的感官质量？请说明1:1的配制基准。",
+      "gold_answer": "该复配降低了苦味和涩感，但未观察到甜味协同增强；甜后味仍可较强，正文报告其强度类似G-reb A，整体改善不足以使感官谱接近蔗糖。应区分抑苦、甜味强度协同和整体感官质量。1:1指按研究方案混合溶液，不能直接解释成等质量粉末。",
+      "difficulty_rationale": "比较不同感官属性，识别改善与协同的区别。",
+      "reasoning_chain": "定位复配条件；辨别抑苦与增甜；检视甜后味和总体结论。",
+      "critical_errors": [
+        "声称已证实甜味协同增强",
+        "把1:1写成甜味剂干粉等质量比例",
+        "声称完全等同蔗糖风味"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.25,
+          "text": "指出苦味与涩感均减弱。",
+          "full_credit": "指出苦味与涩感均减弱。",
+          "partial_credit": "只提其中一种改善。",
+          "source_keys": [
+            "J9"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B07-P01",
+          "evidence_ids": [
+            "B02-E010"
+          ]
+        },
+        {
+          "weight": 0.35,
+          "text": "未观察到甜味协同增强；苦味下降不能作为协同证据。",
+          "full_credit": "未观察到甜味协同增强；苦味下降不能作为协同证据。",
+          "partial_credit": "只说未观察协同，未解释概念区别。",
+          "source_keys": [
+            "J9",
+            "J9b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B07-P02",
+          "evidence_ids": [
+            "B02-E010",
+            "B02-E011"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "指出甜后味仍强/类似G-reb A，且整体未达到接近蔗糖的感官质量。",
+          "full_credit": "指出甜后味仍强/类似G-reb A，且整体未达到接近蔗糖的感官质量。",
+          "partial_credit": "只提甜后味问题或总体未接近蔗糖之一。",
+          "source_keys": [
+            "J9",
+            "J9b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B07-P03",
+          "evidence_ids": [
+            "B02-E010",
+            "B02-E011"
+          ]
+        },
+        {
+          "weight": 0.15,
+          "text": "1:1按等甜度溶液混合方案理解，不推广为干粉等质量通用配方。",
+          "full_credit": "1:1按等甜度溶液混合方案理解，不推广为干粉等质量通用配方。",
+          "partial_credit": "只保留本试验范围，未说明比例基准。",
+          "source_keys": [
+            "J3"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B07-P04",
+          "evidence_ids": [
+            "B02-E012"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E010",
+        "B02-E011",
+        "B02-E012"
+      ]
+    },
+    {
+      "id": "B08",
+      "type": "机制型",
+      "theme": "Neoculin的非酸性诱导",
+      "difficulty_level": "B",
+      "question": "“Neoculin只有在低pH酸溶液中才产生强烈味觉修饰”是否准确？请列举铵盐与氨基酸两类人体验证例子，并指出高浓度细胞实验的解释限制。",
+      "gold_answer": "不准确。人体验证中100 mM醋酸铵pH 8.0和100 mM氯化铵pH 6.3可诱导Neoculin强甜味；丝氨酸、苏氨酸和半胱氨酸也有该作用。不能仅用外液低pH概括。作者尝试细胞测定时，相关较高浓度超过20 mM即使无Neoculin也可引起非特异响应，因此不能把这些细胞信号直接当作特异激活证明。",
+      "difficulty_rationale": "关联非酸性条件的人体结果与测量方法限制。",
+      "reasoning_chain": "找出反例；区分整体pH与诱导物；核查细胞信号特异性。",
+      "critical_errors": [
+        "坚持只有低pH才有效",
+        "将高浓度非特异细胞响应称为特异机制的确证"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.35,
+          "text": "否定只有低pH；至少给出醋酸铵pH8.0或氯化铵pH6.3中的一个100 mM人体验证例子。",
+          "full_credit": "否定只有低pH；至少给出醋酸铵pH8.0或氯化铵pH6.3中的一个100 mM人体验证例子。",
+          "partial_credit": "准确提到铵盐，但未给出能反驳低pH的条件。",
+          "source_keys": [
+            "N2"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B08-P01",
+          "evidence_ids": [
+            "B02-E013"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "列举Ser、Thr、Cys中至少两种作为人体实验例子。",
+          "full_credit": "列举Ser、Thr、Cys中至少两种作为人体实验例子。",
+          "partial_credit": "准确列举一种。",
+          "source_keys": [
+            "N3"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B08-P02",
+          "evidence_ids": [
+            "B02-E014"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "指出高浓度细胞测定无Neoculin也有非特异响应，因此不能当作特异激活证明。",
+          "full_credit": "指出高浓度细胞测定无Neoculin也有非特异响应，因此不能当作特异激活证明。",
+          "partial_credit": "只提非特异响应或证据不能直接确证之一。",
+          "source_keys": [
+            "N2b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B08-P03",
+          "evidence_ids": [
+            "B02-E015"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E013",
+        "B02-E014",
+        "B02-E015"
+      ]
+    },
+    {
+      "id": "B09",
+      "type": "机制型",
+      "theme": "儿童甜味个体差异",
+      "difficulty_level": "B",
+      "question": "针对7–14岁儿童、检测TAS1R3、GNAT3及TAS2R38变异的蔗糖检测阈限研究：哪些基因变异与检测阈限及添加糖摄入相关？对于可能机制有哪些解释，研究能否区分这些解释？请说明所测甜味基因未出现关联的含义。",
+      "gold_answer": "不能证明。研究发现所测TAS2R38苦敏感变异与较低蔗糖检测阈限及较高报告添加糖摄入有关，而所测甜味基因变异未呈相同关联。这是关联结果；直接结合只是解释之一，还存在连锁不平衡、祖源相关混杂及饮食影响基因表达等假说。未检出特定位点关联不能推出甜味受体不参与甜味。",
+      "difficulty_rationale": "区分人群关联与受体机制确证。",
+      "reasoning_chain": "提取基因关联；列出替代解释；限定阴性结果的含义。",
+      "critical_errors": [
+        "说该实验已直接证明TAS2R38结合蔗糖",
+        "说未关联证明TAS1R3/GNAT3无任何甜味作用"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.35,
+          "text": "说明TAS2R38相关方向为较低检测阈限，并报告更高添加糖摄入；只限定所测位点与研究人群。",
+          "full_credit": "说明TAS2R38相关方向为较低检测阈限，并报告更高添加糖摄入；只限定所测位点与研究人群。",
+          "partial_credit": "基因和阈限方向正确，但漏掉摄入关联或研究限定。",
+          "source_keys": [
+            "P1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B09-P01",
+          "evidence_ids": [
+            "B02-E016"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "不能从关联证明直接结合，并给出至少两个替代解释，如连锁不平衡、祖源或饮食因素。",
+          "full_credit": "不能从关联证明直接结合，并给出至少两个替代解释，如连锁不平衡、祖源或饮食因素。",
+          "partial_credit": "指出不能证明直接结合，但只给出一个或没有替代解释。",
+          "source_keys": [
+            "P8"
+          ],
+          "relationship": "限制条件与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B09-P02",
+          "evidence_ids": [
+            "B02-E017"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "所测TAS1R3/GNAT3无相同关联不等于甜味通路没有作用。",
+          "full_credit": "所测TAS1R3/GNAT3无相同关联不等于甜味通路没有作用。",
+          "partial_credit": "只准确报告所测甜味基因未相关，未解释边界。",
+          "source_keys": [
+            "P1"
+          ],
+          "relationship": "限制条件与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B09-P03",
+          "evidence_ids": [
+            "B02-E016"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E016",
+        "B02-E017"
+      ]
+    },
+    {
+      "id": "B10",
+      "type": "比较型",
+      "theme": "甜酸相互作用与风味",
+      "difficulty_level": "B",
+      "question": "神秘果处理后，醋、柠檬与草莓、番茄的整体风味结果有何不同？请用甜味增强、酸味变化及二者对风味的贡献解释净效应。",
+      "gold_answer": "神秘果增加甜味并通过混合抑制降低酸味，而甜与酸都可能贡献风味。对醋、柠檬等以酸为主的食品，增甜带来的风味提升可能被减酸带来的损失抵消；对草莓、番茄等中等酸且本来带甜的食品，研究观察到净风味增强。因此甜味增强不等于所有食品风味均增强，也不是挥发性成分一定增加的证明。",
+      "difficulty_rationale": "从两种味觉变化解释两类食品净效应。",
+      "reasoning_chain": "增甜与减酸；分别分析主酸与甜酸食品；判断净风味。",
+      "critical_errors": [
+        "说全部酸性食品风味都会同等增强",
+        "把知觉风味增强解释为已证明挥发物生成增加"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.3,
+          "text": "神秘果增甜，同时通过混合抑制降低酸味。",
+          "full_credit": "神秘果增甜，同时通过混合抑制降低酸味。",
+          "partial_credit": "只说增甜或减酸之一。",
+          "source_keys": [
+            "U1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B10-P01",
+          "evidence_ids": [
+            "B02-E018"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "醋/柠檬的减酸可能抵消增甜风味收益，而番茄/草莓研究中呈净风味增强。",
+          "full_credit": "醋/柠檬的减酸可能抵消增甜风味收益，而番茄/草莓研究中呈净风味增强。",
+          "partial_credit": "只准确解释一类食品的结果。",
+          "source_keys": [
+            "U1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B10-P02",
+          "evidence_ids": [
+            "B02-E018"
+          ]
+        },
+        {
+          "weight": 0.3,
+          "text": "净效应依赖食品甜酸组成，不能由甜度上升保证整体风味增强。",
+          "full_credit": "净效应依赖食品甜酸组成，不能由甜度上升保证整体风味增强。",
+          "partial_credit": "只提出依赖食品，但未联系相反贡献。",
+          "source_keys": [
+            "U1"
+          ],
+          "relationship": "证据综合与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B10-P03",
+          "evidence_ids": [
+            "B02-E018"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E018"
+      ]
+    },
+    {
+      "id": "B11",
+      "type": "机制型",
+      "theme": "香气增甜的验证方法",
+      "difficulty_level": "B",
+      "question": "在香草和柠檬香气的植物基酸奶研究中，带鼻夹与不带鼻夹的比较如何帮助判断香气增甜？为什么鼻夹条件不能视为完全排除嗅觉的证明？",
+      "gold_answer": "鼻夹条件减少嗅觉输入，可与不带鼻夹条件比较以支持香气对感知甜味的贡献；研究报告两条件显著差异集中在甜味。TDS仍检测到部分香气，作者指出鼻夹未完全阻断鼻腔，因此不能将该对照当作嗅觉输入为零，也不能据此认定增甜完全来自舌上甜受体直接激活。",
+      "difficulty_rationale": "解释对照目的，并结合方法限制判定证据边界。",
+      "reasoning_chain": "比较有无嗅觉限制；定位甜味差异；检查残余香气。",
+      "critical_errors": [
+        "说鼻夹完全阻断全部嗅觉",
+        "据鼻夹结果宣称已证明香气直接激活甜味受体"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.35,
+          "text": "有无鼻夹比较可支持嗅觉对感知甜味的贡献，研究显著差异在甜味。",
+          "full_credit": "有无鼻夹比较可支持嗅觉对感知甜味的贡献，研究显著差异在甜味。",
+          "partial_credit": "只描述鼻夹降低嗅觉但未联系甜味结果。",
+          "source_keys": [
+            "G11b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B11-P01",
+          "evidence_ids": [
+            "B02-E019"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "TDS仍感知部分香气，因此鼻夹未完全阻断嗅觉。",
+          "full_credit": "TDS仍感知部分香气，因此鼻夹未完全阻断嗅觉。",
+          "partial_credit": "知道不是完全阻断，但未提残余香气证据。",
+          "source_keys": [
+            "G11"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B11-P02",
+          "evidence_ids": [
+            "B02-E020"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "不能把该行为感官对照升级成直接受体机制确证。",
+          "full_credit": "不能把该行为感官对照升级成直接受体机制确证。",
+          "partial_credit": "表达需进一步机制实验，但未说明推断边界。",
+          "source_keys": [
+            "G11"
+          ],
+          "relationship": "限制条件与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B11-P03",
+          "evidence_ids": [
+            "B02-E020"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E019",
+        "B02-E020"
+      ]
+    },
+    {
+      "id": "B12",
+      "type": "不可回答/证据边界型",
+      "theme": "儿童检测阈限",
+      "difficulty_level": "B",
+      "question": "一项7–14岁儿童研究给出了蔗糖检测阈限数据。请据此给所有7–14岁儿童规定一个精确到0.01 mM、人人适用的最低可尝甜浓度，并保证不受年龄或个体差异影响。",
+      "gold_answer": "不能给出这种普适精确阈限。研究阈限范围为0.23–153.8 mM，且与年龄、性别和部分基因变异等有关，群体范围不能变成每个人的阈限。可报告研究分布及方法，若要个体阈限需在规定条件下逐人测量。",
+      "difficulty_rationale": "用分布证据反驳群体到个体的无依据精确外推。",
+      "reasoning_chain": "识别普适要求；核查个体分布；提出个体测量。",
+      "critical_errors": [
+        "给出声称人人适用的唯一精确阈限",
+        "把样本最小值当作全部儿童阈限"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.4,
+          "text": "明确拒绝给出人人适用的唯一精确阈限。",
+          "full_credit": "明确拒绝给出人人适用的唯一精确阈限。",
+          "partial_credit": "只表示不确定，没有明确拒绝普适保证。",
+          "source_keys": [
+            "P1"
+          ],
+          "relationship": "限制条件与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B12-P01",
+          "evidence_ids": [
+            "B02-E021"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "引用0.23–153.8 mM的研究范围并指出至少一种年龄/性别/基因相关差异。",
+          "full_credit": "引用0.23–153.8 mM的研究范围并指出至少一种年龄/性别/基因相关差异。",
+          "partial_credit": "只给范围或只指出个体差异。",
+          "source_keys": [
+            "P1"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B12-P02",
+          "evidence_ids": [
+            "B02-E021"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "建议明确测量条件并进行个体检测，不把群体值当作个体保证。",
+          "full_credit": "建议明确测量条件并进行个体检测，不把群体值当作个体保证。",
+          "partial_credit": "只说需要进一步研究，未提个体测量。",
+          "source_keys": [
+            "P1"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B12-P03",
+          "evidence_ids": [
+            "B02-E021"
+          ]
+        }
+      ],
+      "should_refuse": true,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E021"
+      ]
+    },
+    {
+      "id": "B13",
+      "type": "不可回答/证据边界型",
+      "theme": "香气增甜的配方边界",
+      "difficulty_level": "B",
+      "question": "水和苹果果饮中的香草—蔗糖—果胶研究考察果胶0–0.3%（w/w）。请仅依据这项研究，精确给出1.0%果胶时香草能增加多少甜度评分，并保证绝不会抑制甜味。",
+      "gold_answer": "无法给出超出试验范围的精确评分或不抑甜保证。1.0%高于所试0–0.3%，且正文还讨论苹果体系高浓度组合样品的异常抑甜现象，作者对其解释持保留态度。需在目标基质中测试1.0%及相关香草、糖浓度，不能从范围内平均结论无限外推。",
+      "difficulty_rationale": "核对浓度外推并识别正文例外与不确定性。",
+      "reasoning_chain": "比较试验范围；检查例外；确定补充实验。",
+      "critical_errors": [
+        "编造1.0%果胶时精确甜度增量",
+        "保证所有浓度果胶绝不影响甜味"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.4,
+          "text": "拒绝给出1.0%果胶精确增量及绝不抑甜保证。",
+          "full_credit": "拒绝给出1.0%果胶精确增量及绝不抑甜保证。",
+          "partial_credit": "只拒绝精确值或只拒绝保证。",
+          "source_keys": [
+            "T1",
+            "T9b"
+          ],
+          "relationship": "限制条件与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B13-P01",
+          "evidence_ids": [
+            "B02-E022",
+            "B02-E023"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "指出1.0%超出0–0.3%范围，并说明正文异常组合结果存在、解释有不确定性。",
+          "full_credit": "指出1.0%超出0–0.3%范围，并说明正文异常组合结果存在、解释有不确定性。",
+          "partial_credit": "只指出浓度越界或正文例外之一。",
+          "source_keys": [
+            "T1",
+            "T9b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B13-P02",
+          "evidence_ids": [
+            "B02-E022",
+            "B02-E023"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "要求在目标基质、糖与香草水平下测试该果胶浓度。",
+          "full_credit": "要求在目标基质、糖与香草水平下测试该果胶浓度。",
+          "partial_credit": "只泛泛建议再试验，未交代需控制的配方条件。",
+          "source_keys": [
+            "T1",
+            "T9b"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "B13-P03",
+          "evidence_ids": [
+            "B02-E022",
+            "B02-E023"
+          ]
+        }
+      ],
+      "should_refuse": true,
+      "review_note": "不能以摘要“没有影响”覆盖正文异常样品；也不能把该异常当作确定的一般抑甜规律。",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E022",
+        "B02-E023"
+      ]
+    },
+    {
+      "id": "C09",
+      "type": "综合/应用型",
+      "theme": "香气增甜与基质迁移",
+      "difficulty_level": "C",
+      "question": "开发同时追求甜味与稠感的减糖植物基酸奶时，水/苹果果饮中的香草—蔗糖—果胶试验与植物基酸奶香气试验分别能提供哪些配方依据？请比较基质和糖水平效应、处理正文例外，并提出能分别检验甜味与稠感的目标产品验证方案。",
+      "gold_answer": "不能直接照搬。饮料试验中香草的增甜作用随基质和蔗糖水平改变：水中主要在低蔗糖水平显著，苹果果饮中低高水平都有；低浓度果胶增加黏度，整体甜味影响有限，但正文存在异常高浓度组合，不支持绝对无影响。植物基酸奶中香草/柠檬可提高感知甜味，却未明确改善口感稠度。因此应分别检验甜味和流变/口感，在酸奶中设置香气与质构因素的对照，并验证减糖后等甜度、时间表现和接受度。这些是据证据提出的方案，不是已证明的酸奶配方。",
+      "difficulty_rationale": "跨两篇文献、三种基质整合，有结果限制、异常处理和应用判断。",
+      "reasoning_chain": "比较饮料基质；核对果胶例外；对照酸奶甜味与口感；提出分离验证方案。",
+      "critical_errors": [
+        "把饮料配方声称为已验证的酸奶方案",
+        "说香草增甜必然使酸奶更稠",
+        "说任意果胶浓度绝不抑甜"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.2,
+          "text": "比较水中低糖水平增甜与苹果果饮低高糖水平均增甜，说明基质迁移有限。",
+          "full_credit": "比较水中低糖水平增甜与苹果果饮低高糖水平均增甜，说明基质迁移有限。",
+          "partial_credit": "知道基质影响增甜，但没有准确比较糖水平。",
+          "source_keys": [
+            "T9"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C09-P01",
+          "evidence_ids": [
+            "B02-E024"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "低浓度果胶增加黏度且不能保证完全无感官影响；准确提及正文异常及不确定解释。",
+          "full_credit": "低浓度果胶增加黏度且不能保证完全无感官影响；准确提及正文异常及不确定解释。",
+          "partial_credit": "只说范围内大体可用，未处理异常。",
+          "source_keys": [
+            "T9b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C09-P02",
+          "evidence_ids": [
+            "B02-E025"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "植物基酸奶中增甜与口感改善分离：香气增甜但未确证稠感改善。",
+          "full_credit": "植物基酸奶中增甜与口感改善分离：香气增甜但未确证稠感改善。",
+          "partial_credit": "只提增甜或未改善口感之一。",
+          "source_keys": [
+            "G11b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C09-P03",
+          "evidence_ids": [
+            "B02-E026"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "提出在目标酸奶中分别控制香气与质构因素，并分别测量甜味和黏度/稠感。",
+          "full_credit": "提出在目标酸奶中分别控制香气与质构因素，并分别测量甜味和黏度/稠感。",
+          "partial_credit": "有重新验证建议，但未分开两类因素和终点。",
+          "source_keys": [
+            "T1",
+            "G11b"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C09-P04",
+          "evidence_ids": [
+            "B02-E026",
+            "B02-E027"
+          ]
+        },
+        {
+          "weight": 0.15,
+          "text": "将等甜度/时间感官和接受度验证列为待开展验证，不声称现有文献已给出完整配方。",
+          "full_credit": "将等甜度/时间感官和接受度验证列为待开展验证，不声称现有文献已给出完整配方。",
+          "partial_credit": "只保留结论边界，未提出具体产品验证。",
+          "source_keys": [
+            "G10",
+            "G11b"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C09-P05",
+          "evidence_ids": [
+            "B02-E026",
+            "B02-E028"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E024",
+        "B02-E025",
+        "B02-E026",
+        "B02-E027",
+        "B02-E028"
+      ]
+    },
+    {
+      "id": "C10",
+      "type": "综合/应用型",
+      "theme": "香气增甜与消费者差异",
+      "difficulty_level": "C",
+      "question": "准备面向年轻成年人开发香草增甜饮料。结合年轻成人水溶液消费者研究与植物基酸奶鼻夹研究，如何判断性别、年龄和喜甜偏好与增甜收益的关系？请区分甜度评分与增甜效应，评价鼻夹对照，并提出目标饮料验证方案。",
+      "gold_answer": "年轻成人研究中女性更易受香草增甜影响，男性22–25岁而非19–21岁显示显著效应；喜甜分类组甜度评分不同，但跨模态增甜效应未随组别显著不同，不能因此判定喜甜者收益最大。该结果限香草水溶液，不能直接等同实际饮料。酸奶鼻夹仍可残留香气，不是完全排除嗅觉。应在目标饮料中按年龄、性别及偏好记录受试者，比较有无香草的甜度变化与接受度，不预设谁收益最大。",
+      "difficulty_rationale": "综合人群异质性和对照不完备性，逐条审查产品主张并设计验证。",
+      "reasoning_chain": "拆解三项主张；按证据逐项判断；检视基质与测量限制；提出目标产品验证。",
+      "critical_errors": [
+        "把喜甜者已证实增甜最大作为结论",
+        "说男女年龄组香草增甜完全一致",
+        "说鼻夹已完全排除嗅觉"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.2,
+          "text": "指出性别和男性年龄组异质性，不能说所有年轻成人同样有效。",
+          "full_credit": "指出性别和男性年龄组异质性，不能说所有年轻成人同样有效。",
+          "partial_credit": "只提性别或年龄之一。",
+          "source_keys": [
+            "I14"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C10-P01",
+          "evidence_ids": [
+            "B02-E029"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "区分甜度评分与增甜效应：喜甜分类组前者有差异，跨模态效应未呈相同差异。",
+          "full_credit": "区分甜度评分与增甜效应：喜甜分类组前者有差异，跨模态效应未呈相同差异。",
+          "partial_credit": "只说不能保证喜甜者最好，未解释两个终点。",
+          "source_keys": [
+            "I14"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C10-P02",
+          "evidence_ids": [
+            "B02-E029"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "指出水溶液结果受特定香草与基质限制，酸奶证据不能直接替代饮料验证。",
+          "full_credit": "指出水溶液结果受特定香草与基质限制，酸奶证据不能直接替代饮料验证。",
+          "partial_credit": "只指出其中一种迁移限制。",
+          "source_keys": [
+            "I14",
+            "G11b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C10-P03",
+          "evidence_ids": [
+            "B02-E029",
+            "B02-E030"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "以酸奶TDS残余香气说明鼻夹不完全排除嗅觉，不能把不完备对照当作机制排除。",
+          "full_credit": "以酸奶TDS残余香气说明鼻夹不完全排除嗅觉，不能把不完备对照当作机制排除。",
+          "partial_credit": "仅指出鼻夹有限制。",
+          "source_keys": [
+            "G11"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C10-P04",
+          "evidence_ids": [
+            "B02-E031"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "建议目标饮料有无香草对照，记录人群因素，分别测甜度变化与接受度，且不预定优胜亚组。",
+          "full_credit": "建议目标饮料有无香草对照，记录人群因素，分别测甜度变化与接受度，且不预定优胜亚组。",
+          "partial_credit": "给出对照验证但未区分两个终点或人群因素。",
+          "source_keys": [
+            "I14",
+            "G11"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C10-P05",
+          "evidence_ids": [
+            "B02-E029",
+            "B02-E031"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E029",
+        "B02-E030",
+        "B02-E031"
+      ]
+    },
+    {
+      "id": "C11",
+      "type": "综合/应用型",
+      "theme": "减糖阈限的跨条件应用",
+      "difficulty_level": "C",
+      "question": "若把约5 g/100 g蔗糖热水溶液的较高差异阈限用于制定冷藏乳基甜品的隐蔽减糖幅度，会有哪些证据问题？请结合温度与乳化体系脂肪水平对甜味差异敏感性的研究，说明变化方向、给出一个乳化体系定量例子，并解释浓度口径与合理验证方式。",
+      "gold_answer": "不能直接移用：蔗糖水溶液5 g/100 g组在热条件JND/WF较高，辨差较不敏感，但2 g/100 g未呈相同显著温度差异；乳化体系在固定糖水平下增加脂肪可降低WF、提高对甜度差异的敏感性，例如12%糖浓度指数时5与20 g/100 g脂肪对应约0.066与0.045。冷热水与乳化甜品的基质、参照和糖浓度分母不同。应在目标冷藏温度、实际脂肪及糖水平下做差异阈限测定，不能把一种条件的WF当作不被所有消费者发现的安全减糖百分比。",
+      "difficulty_rationale": "跨温度和基质两类实验整合，避免终点与浓度分母混淆后再给出应用判断。",
+      "reasoning_chain": "确定热水阈限方向；提取脂肪对WF的方向；检查参照/分母；设计目标条件测定。",
+      "critical_errors": [
+        "把较高WF解释为辨差更敏感",
+        "认为热水阈限直接保证冷藏乳品不被察觉",
+        "把乳化体系水相糖指数当作产品总质量含糖量"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.2,
+          "text": "5 g/100 g热水组WF/JND较高，且2 g/100 g温度效应不同，不能视为固定规律。",
+          "full_credit": "5 g/100 g热水组WF/JND较高，且2 g/100 g温度效应不同，不能视为固定规律。",
+          "partial_credit": "方向正确，但漏掉浓度条件。",
+          "source_keys": [
+            "R3",
+            "R3b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C11-P01",
+          "evidence_ids": [
+            "B02-E032",
+            "B02-E033"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "乳化体系增加脂肪可降低甜味WF、提高辨差敏感性；给出12%水相糖指数、5与20 g/100 g脂肪及WF约0.066与0.045这一对照。",
+          "full_credit": "乳化体系增加脂肪可降低甜味WF、提高辨差敏感性；给出12%水相糖指数、5与20 g/100 g脂肪及WF约0.066与0.045这一对照。",
+          "partial_credit": "方向正确但未准确提供条件和定量例子。",
+          "source_keys": [
+            "H5"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C11-P02",
+          "evidence_ids": [
+            "B02-E034"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "明确WF依赖参照，乳化体系糖浓度指数按水相计，不能与热水或产品总糖简单同口径比较。",
+          "full_credit": "明确WF依赖参照，乳化体系糖浓度指数按水相计，不能与热水或产品总糖简单同口径比较。",
+          "partial_credit": "只指出基质不同，未说明参照或分母。",
+          "source_keys": [
+            "H5n",
+            "R1"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C11-P03",
+          "evidence_ids": [
+            "B02-E035",
+            "B02-E036"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "建议在实际冷藏温度、脂肪水平和参照糖浓度下测定目标乳品JND/WF。",
+          "full_credit": "建议在实际冷藏温度、脂肪水平和参照糖浓度下测定目标乳品JND/WF。",
+          "partial_credit": "只建议产品实测，未保留关键条件。",
+          "source_keys": [
+            "H5",
+            "R3"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C11-P04",
+          "evidence_ids": [
+            "B02-E032",
+            "B02-E034"
+          ]
+        },
+        {
+          "weight": 0.15,
+          "text": "差异阈限给出规定程序下的辨别表现，不保证每名消费者都察觉不到；不直接给普适减糖幅度。",
+          "full_credit": "差异阈限给出规定程序下的辨别表现，不保证每名消费者都察觉不到；不直接给普适减糖幅度。",
+          "partial_credit": "只保留人群或条件边界之一。",
+          "source_keys": [
+            "R1",
+            "H5"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C11-P05",
+          "evidence_ids": [
+            "B02-E034",
+            "B02-E036"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E032",
+        "B02-E033",
+        "B02-E034",
+        "B02-E035",
+        "B02-E036"
+      ]
+    },
+    {
+      "id": "C12",
+      "type": "机制型",
+      "theme": "Miraculin与细胞内外酸化",
+      "difficulty_level": "C",
+      "question": "在Miraculin预处理的人甜味受体细胞体系中，为何相同外液pH的柠檬酸和盐酸不一定引起相同响应？如何结合细胞内pH测量与“外液中性、仅胞内酸化”对照，判断“胞内酸化本身就足以完全激活受体”这一说法？",
+      "gold_answer": "弱酸未解离分子可跨膜，使柠檬酸引起更强胞内酸化。研究中响应与胞内pH关系更密切，相同胞内pH时柠檬酸/盐酸响应接近。但仅胞内酸化、外液保持中性时，Miraculin处理细胞没有相应响应，说明胞内酸化不是单独充分条件，研究支持胞内外酸化共同参与完全激活。结论来自表达体系的钙响应和pH测量，不能直接给出人体主观甜度倍数。",
+      "difficulty_rationale": "结合机制、连续测量和区分充分/必要条件的干预对照。",
+      "reasoning_chain": "相同外液pH不等于相同胞内pH；比较匹配胞内pH响应；用选择性酸化检验充分条件；限定证据层级。",
+      "critical_errors": [
+        "说仅胞内酸化足以完全激活",
+        "说相同外液pH保证相同响应",
+        "把细胞钙响应换算为无依据的人体甜度倍数"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.25,
+          "text": "弱酸未解离分子跨膜，柠檬酸比HCl诱导更强胞内酸化；不能只看外液pH。",
+          "full_credit": "弱酸未解离分子跨膜，柠檬酸比HCl诱导更强胞内酸化；不能只看外液pH。",
+          "partial_credit": "提到胞内pH差异但没有解释弱酸跨膜。",
+          "source_keys": [
+            "S4"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C12-P01",
+          "evidence_ids": [
+            "B02-E037"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "相同胞内pH时两酸响应近似，提示响应与胞内pH更相关。",
+          "full_credit": "相同胞内pH时两酸响应近似，提示响应与胞内pH更相关。",
+          "partial_credit": "只说相关胞内pH，未给出匹配比较。",
+          "source_keys": [
+            "S4"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C12-P02",
+          "evidence_ids": [
+            "B02-E037"
+          ]
+        },
+        {
+          "weight": 0.3,
+          "text": "仅胞内酸化且外液中性对照无响应，反驳单独充分性，支持胞内外酸化共同作用。",
+          "full_credit": "仅胞内酸化且外液中性对照无响应，反驳单独充分性，支持胞内外酸化共同作用。",
+          "partial_credit": "只说需要胞内外酸化，没有解释关键对照。",
+          "source_keys": [
+            "S4"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C12-P03",
+          "evidence_ids": [
+            "B02-E037"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "说明为受体表达细胞的钙/pH证据，不直接等同人体感官强度或甜度倍数。",
+          "full_credit": "说明为受体表达细胞的钙/pH证据，不直接等同人体感官强度或甜度倍数。",
+          "partial_credit": "只笼统说不能外推人体。",
+          "source_keys": [
+            "S4",
+            "S4b"
+          ],
+          "relationship": "证据层级与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C12-P04",
+          "evidence_ids": [
+            "B02-E037",
+            "B02-E038"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E037",
+        "B02-E038"
+      ]
+    },
+    {
+      "id": "C13",
+      "type": "综合/应用型",
+      "theme": "味觉修饰蛋白的机制比较",
+      "difficulty_level": "C",
+      "question": "Neoculin在非低pH条件下诱导甜味的人体证据，与Miraculin在受体细胞中的胞内外酸化证据，能共同支持什么、还不能支持什么？请比较蛋白与实验条件，解释Neoculin高浓度非特异细胞响应，以及Miraculin人/小鼠受体差异对机制外推的意义。",
+      "gold_answer": "两类证据支持各自特定条件下的味觉修饰效应，不能直接证明相同激活机制。Neoculin在人体验证中可由pH8醋酸铵和某些氨基酸诱导甜味，但高浓度化合物细胞试验存在无Neoculin时的非特异响应。Miraculin表达体系中仅胞内酸化且外液中性无响应，支持胞内外酸化共同作用；该证据不能被另一蛋白的宏观pH条件替代。Miraculin对人而非小鼠受体产生效应提示物种特异性，故小鼠阴性不否定人效应。需要分别考虑蛋白、刺激物、物种与测量终点。",
+      "difficulty_rationale": "整合不同蛋白、实验层级、特异性和物种对照，逐项排除无依据跨体系推断。",
+      "reasoning_chain": "提取Neoculin人体反例；审查细胞特异性；对照Miraculin干预证据；处理物种差异；作出范围限定。",
+      "critical_errors": [
+        "说Neoculin结果已证明Miraculin无需外液酸化",
+        "以小鼠阴性直接否定人效应",
+        "把非特异响应当作特异机制确证"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.2,
+          "text": "给出Neoculin非低pH的人体例子，并限定其为该蛋白的感官证据。",
+          "full_credit": "给出Neoculin非低pH的人体例子，并限定其为该蛋白的感官证据。",
+          "partial_credit": "只说某些非酸性物质有效，未明确蛋白或证据层级。",
+          "source_keys": [
+            "N2",
+            "N3"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C13-P01",
+          "evidence_ids": [
+            "B02-E039",
+            "B02-E040"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "说明Neoculin高浓度细胞测定存在无蛋白时的非特异响应，不能确证特异机制。",
+          "full_credit": "说明Neoculin高浓度细胞测定存在无蛋白时的非特异响应，不能确证特异机制。",
+          "partial_credit": "只提实验有限制，未说明阴性对照问题。",
+          "source_keys": [
+            "N2b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C13-P02",
+          "evidence_ids": [
+            "B02-E041"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "引用Miraculin外液中性/仅胞内酸化无响应，不能由Neoculin替代得出无需外液酸化。",
+          "full_credit": "引用Miraculin外液中性/仅胞内酸化无响应，不能由Neoculin替代得出无需外液酸化。",
+          "partial_credit": "只说两蛋白不可等同，未给关键对照。",
+          "source_keys": [
+            "S4"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C13-P03",
+          "evidence_ids": [
+            "B02-E042"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "Miraculin人/小鼠受体差异支持物种特异性，小鼠阴性不能否定人体效应。",
+          "full_credit": "Miraculin人/小鼠受体差异支持物种特异性，小鼠阴性不能否定人体效应。",
+          "partial_credit": "只提物种不同，未说明阴性外推错误。",
+          "source_keys": [
+            "S4b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C13-P04",
+          "evidence_ids": [
+            "B02-E043"
+          ]
+        },
+        {
+          "weight": 0.15,
+          "text": "整合时明确分别限定蛋白、刺激条件、物种和终点，不宣称共同机制已被证明。",
+          "full_credit": "整合时明确分别限定蛋白、刺激条件、物种和终点，不宣称共同机制已被证明。",
+          "partial_credit": "只明确其中两类限定。",
+          "source_keys": [
+            "N2b",
+            "S4",
+            "S4b"
+          ],
+          "relationship": "证据综合与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C13-P05",
+          "evidence_ids": [
+            "B02-E041",
+            "B02-E042",
+            "B02-E043"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E039",
+        "B02-E040",
+        "B02-E041",
+        "B02-E042",
+        "B02-E043"
+      ]
+    },
+    {
+      "id": "C14",
+      "type": "综合/应用型",
+      "theme": "等甜度与动态感官验证",
+      "difficulty_level": "C",
+      "question": "若G-reb A复配样品已按2-AFC匹配5%蔗糖甜度，是否可以省略动态感官验证并宣称“入口和后味均等同蔗糖”？请结合G-reb A测量程序与植物基酸奶GDA/TDS证据，设计能检验这一宣称的评价方案，并说明各方法不能证明什么。",
+      "gold_answer": "不可以。G-reb A研究2-AFC把口中5秒和吐出后5秒作为整体判断，描述分析则分入口、口中与后味；按2-AFC配成等甜度后，描述分析仍有甜度差异。酸奶GDA与TDS说明香气增甜可集中在咀嚼开始，时间结构有额外信息。应在同一目标基质设置蔗糖与候选配方对照，做等甜度匹配后另测入口、强度变化与后味，可用TI测强度时间曲线、TDS测主导感觉；两者终点不同不能互换。原酸奶研究方法固定顺序且鼻夹不完全，不能据此宣称TDS优于全部其他方法或排除全部嗅觉影响。",
+      "difficulty_rationale": "联系匹配程序、动态终点和方法局限，提出可检验完整时间宣称的方案。",
+      "reasoning_chain": "识别整体匹配不能保证时间一致；引入动态证据；设计同基质对照；区分动态方法与其局限。",
+      "critical_errors": [
+        "说2-AFC等甜度已证明全部时间过程相同",
+        "将TDS主导率等同甜味强度曲线",
+        "凭该研究断言TDS优于所有其他方法"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.25,
+          "text": "区分整体10秒2-AFC判断与入口/口中/后味分段描述，并指出匹配后仍有描述差异。",
+          "full_credit": "区分整体10秒2-AFC判断与入口/口中/后味分段描述，并指出匹配后仍有描述差异。",
+          "partial_credit": "只说整体等甜不等于后味等同，未对应程序。",
+          "source_keys": [
+            "J8"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C14-P01",
+          "evidence_ids": [
+            "B02-E044"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "用酸奶GDA/TDS结果说明增甜可能集中早期，时间结构需单独评价。",
+          "full_credit": "用酸奶GDA/TDS结果说明增甜可能集中早期，时间结构需单独评价。",
+          "partial_credit": "只泛泛说应做动态测量。",
+          "source_keys": [
+            "G10",
+            "G11b"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C14-P02",
+          "evidence_ids": [
+            "B02-E045",
+            "B02-E046"
+          ]
+        },
+        {
+          "weight": 0.25,
+          "text": "在同一目标基质比较蔗糖与复配样品，匹配后另测入口、时间变化和后味。",
+          "full_credit": "在同一目标基质比较蔗糖与复配样品，匹配后另测入口、时间变化和后味。",
+          "partial_credit": "有对照和动态评价，但未保持同一基质或漏掉后味。",
+          "source_keys": [
+            "J8",
+            "G10"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C14-P03",
+          "evidence_ids": [
+            "B02-E044",
+            "B02-E045"
+          ]
+        },
+        {
+          "weight": 0.15,
+          "text": "区分TI强度时间曲线与TDS主导感觉，二者不可直接互换。",
+          "full_credit": "区分TI强度时间曲线与TDS主导感觉，二者不可直接互换。",
+          "partial_credit": "提到两种方法但未说明不同终点。",
+          "source_keys": [
+            "J8b",
+            "G5"
+          ],
+          "relationship": "方法依据与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C14-P04",
+          "evidence_ids": [
+            "B02-E047",
+            "B02-E048"
+          ]
+        },
+        {
+          "weight": 0.15,
+          "text": "方法固定顺序、鼻夹残余香气等限制使方法优越性或完全嗅觉排除结论不成立。",
+          "full_credit": "方法固定顺序、鼻夹残余香气等限制使方法优越性或完全嗅觉排除结论不成立。",
+          "partial_credit": "只准确指出一种限制而未解释其推断后果。",
+          "source_keys": [
+            "G11"
+          ],
+          "relationship": "直接支持",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C14-P05",
+          "evidence_ids": [
+            "B02-E049"
+          ]
+        }
+      ],
+      "should_refuse": false,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E044",
+        "B02-E045",
+        "B02-E046",
+        "B02-E047",
+        "B02-E048",
+        "B02-E049"
+      ]
+    },
+    {
+      "id": "C15",
+      "type": "不可回答/证据边界型",
+      "theme": "甜味抑制的长期外推",
+      "difficulty_level": "C",
+      "question": "一项56名健康年轻成人的交叉试验发现，含4 mg gymnemic acids的含片使15分钟内巧克力摄入平均减少21.3%。请据此算出每个人连续服用一年必定减轻多少公斤，并保证对其他甜食同样有效。",
+      "gold_answer": "不能作这种计算或保证。21.3%是特定急性巧克力情境中的平均摄入结果，既不是每日总能量减少比例，也不是体重终点。没有长期依从性、其他饮食与能量代偿、个体反应及其他甜食效果资料，无法推算一年个人体重。可报告短期结果，长期与真实环境效果需独立验证，不能将论文发表时提出的研究缺口说成至今全球无长期研究。",
+      "difficulty_rationale": "需拆解急性摄入、总能量、长期暴露和个体体重等多个相依外推环节。",
+      "reasoning_chain": "核对原始终点；识别摄入到能量及体重的缺失环节；检查群体到个人及食品迁移；限定可报告内容。",
+      "critical_errors": [
+        "线性年化为每个人必定减重公斤数",
+        "把巧克力摄入减少21.3%说成每日总能量下降21.3%",
+        "保证全部甜食同样有效"
+      ],
+      "answer_points": [
+        {
+          "weight": 0.4,
+          "text": "明确拒绝给出必定的一年个体减重公斤数及跨甜食保证。",
+          "full_credit": "明确拒绝给出必定的一年个体减重公斤数及跨甜食保证。",
+          "partial_credit": "只拒绝公斤数或只拒绝跨食品保证。",
+          "source_keys": [
+            "Y1",
+            "Y12"
+          ],
+          "relationship": "限制条件与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C15-P01",
+          "evidence_ids": [
+            "B02-E050",
+            "B02-E051"
+          ]
+        },
+        {
+          "weight": 0.4,
+          "text": "指出15分钟平均巧克力摄入不是总能量或体重，并识别至少两个长期外推缺口（代偿、依从性、个体反应、其他食品）。",
+          "full_credit": "指出15分钟平均巧克力摄入不是总能量或体重，并识别至少两个长期外推缺口（代偿、依从性、个体反应、其他食品）。",
+          "partial_credit": "只说明急性不等于长期，未识别两个具体缺口。",
+          "source_keys": [
+            "Y1",
+            "Y12"
+          ],
+          "relationship": "限制条件与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C15-P02",
+          "evidence_ids": [
+            "B02-E050",
+            "B02-E051"
+          ]
+        },
+        {
+          "weight": 0.2,
+          "text": "保留特定急性试验结果，并提出长期/真实环境验证，不宣称当前科学界没有任何长期研究。",
+          "full_credit": "保留特定急性试验结果，并提出长期/真实环境验证，不宣称当前科学界没有任何长期研究。",
+          "partial_credit": "只建议长期研究，未保留原始结果或时间边界。",
+          "source_keys": [
+            "Y1",
+            "Y12"
+          ],
+          "relationship": "限制条件与研究者推论",
+          "zero_credit": "未覆盖、与证据相反，或缺少使该主张成立的关键条件。",
+          "id": "C15-P03",
+          "evidence_ids": [
+            "B02-E050",
+            "B02-E051"
+          ]
+        }
+      ],
+      "should_refuse": true,
+      "review_note": "",
+      "annotation_status": "candidate",
+      "human_review_status": "待审核",
+      "reviewer_count": 0,
+      "evidence_ids": [
+        "B02-E050",
+        "B02-E051"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "source_key": "R1",
+      "title": "Temperature of sugar solutions during tasting affects sweetness difference thresholds",
+      "authors": [
+        "Rohm Harald",
+        "Wessel Bettina",
+        "Zahn Susann"
+      ],
+      "year": "2021",
+      "doi": "10.1016/j.lwt.2020.110676",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Rohm 等 - 2021 - Temperature of sugar solutions during tasting affects sweetness difference thresholds.pdf",
+      "pdf_page": 1,
+      "section": "Introduction",
+      "quote": "The difference threshold or just-noticeable-difference (JND) is defined as that stimulus concentration difference that, for a given reference concentration CR, is just perceptible by the human (Stone, 1963). For many sensory continua, the relation between JND and CR is constant in a broad concentration range and known as Weber fraction WF (Stone & Sidel, 2004).",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "62fccdffba21d2896312de7a42d78cc9884f9f99d56499b7ef21cf368518f1d6",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E001",
+      "question_id": "A08",
+      "supports": [
+        "A08-P01",
+        "A08-P02",
+        "A08-P03"
+      ],
+      "relationships": [
+        "直接支持",
+        "定义对照与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "P1",
+      "title": "Individual Differences Among Children in Sucrose Detection Thresholds",
+      "authors": [
+        "Joseph Paule Valery",
+        "Reed Danielle R.",
+        "Mennella Julie A."
+      ],
+      "year": "2016",
+      "doi": "10.1097/nnr.0000000000000138",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Joseph 等 - 2016 - Individual Differences Among Children in Sucrose Detection Thresholds Relationship With Age, Gender.pdf",
+      "pdf_page": 1,
+      "section": "Abstract, Methods and Results",
+      "quote": "Methods: Sucrose detection thresholds in 7- to 14-year-old children were tested individually using a validated, two-alternative, forced-choice, paired-comparison tracking method. Five genetic variants of taste genes were assayed: TAS1R3 and GNAT3 (sweet genes; one variant each) and the bitter receptor gene TAS2R38 (three variants). All children were measured for body weight and height. A subset of these children were measured for the percentage of body fat and waist circumference and provided added sugar intake by 24-hour dietary recall. Results: Sucrose thresholds ranged from 0.23 to 153.8 mM with most of the children completing the threshold task (216/235; 92%). Some children were biologically related (i.e., siblings), and for the genetic analysis, one sibling from each family was studied. Variants in the bitter but not the sweet genes were related to sucrose threshold and sugar intake; children with two bitter-sensitive alleles could detect sucrose at lower concentrations (F(2,165) = 4.55, p = .01; rs1726866) and reported eating more added sugar (% kcal; F(2, 62) = 3.64, p = .03) than did children with less sensitive alleles. Age, gender, and indices of obesity also were related to child-to-child differences in sucrose threshold; girls were more sensitive than boys (t(214) = 2.0, p = .05), older children were more sensitive than younger children (r(214) = .16, p = .02), and fatter (r(84) = .22, p = .05) or more centrally obese children (r(84) = .26, p = .02) were more sensitive relative to others. Discussion: Inborn differences in bitter sensitivity may affect childhood dietary sugar intake with long-term health consequences. There may be a more complex interplay between the developing bitter and sweet taste systems than previously understood.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "7753ff87639e9e75cd9462e068e4d0ccc0c760b6a223a4ccccafce5bdb6e5f10",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E002",
+      "question_id": "A08",
+      "supports": [
+        "A08-P03"
+      ],
+      "relationships": [
+        "定义对照与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "N1",
+      "title": "Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein",
+      "authors": [
+        "NAKAJIMA Ken-ichiro",
+        "KOIZUMI Ayako",
+        "IIZUKA Kisho",
+        "ITO Keisuke",
+        "MORITA Yuji",
+        "KOIZUMI Taichi",
+        "ASAKURA Tomiko",
+        "SHIMIZU-IBUKA Akiko",
+        "MISAKA Takumi",
+        "ABE Keiko"
+      ],
+      "year": "2011",
+      "doi": "10.1271/bbb.110081",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nakajima 等 - 2011 - Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein.pdf",
+      "pdf_page": 1,
+      "section": "Opening paragraph",
+      "quote": "Neoculin, a sweet protein found in the fruit of Curculigo latifolia, has the ability to change sourness into sweetness. Neoculin turns drinking water sweet, indicating that non-acidic compounds may induce the sweetness. We report that ammonium chloride and certain amino acids elicit the intense sweetness of neoculin. Neoculin can thus sweeten amino acidenriched foods.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "00fbbc7c6ed736393605c1401f2193320c2f66c3262f64955c136394256d9daa",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E003",
+      "question_id": "A09",
+      "supports": [
+        "A09-P01",
+        "A09-P02"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "U1",
+      "title": "Flavor Alterations Associated with Miracle Fruit and Gymnema sylvestre",
+      "authors": [
+        "Hudson Sonia D",
+        "Sims Charles A",
+        "Odabasi Asli Z",
+        "Colquhoun Thomas A",
+        "Snyder Derek J",
+        "Stamps Jennifer J",
+        "Dotson Shawn C",
+        "Puentes Lorenzo",
+        "Bartoshuk Linda M"
+      ],
+      "year": "2018",
+      "doi": "10.1093/chemse/bjy032",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Hudson 等 - 2018 - Flavor Alterations Associated with Miracle Fruit and Gymnema sylvestre.pdf",
+      "pdf_page": 1,
+      "section": "Abstract",
+      "quote": "As previous work had shown, miracle fruit added sweetness to acids, which secondarily reduced sourness (mixture suppression) and Gymnema sylvestre reduced sweetness in sweet foods as well as the sweetness induced by miracle fruit. In this study, multiple regression showed that both sweet and sour contribute to flavor. Gymnema sylvestre reduced the perceived sweet of predominantly sweet foods (chocolate and maple syrup) as expected; reducing the sweet, reduced the flavor. The effects of miracle fruit were complicated by its dual action: intensification of sweet and reduction of sour. Predominantly sour foods (vinegar, lemon, mustard, pickle) were sweetened by miracle fruit but any flavor enhancement associated with the added sweet appears to have been countered by the flavor reduction associated with reduced sourness. Moderately sour foods that are also sweet (tomatoes, strawberries) were sweetened by miracle fruit and thus flavor was enhanced; flavor loss through sour reduction was apparently not sufficient to counter the flavor enhancement due to increased sweet so the net result was that tomato and strawberry flavors were enhanced.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "fe3169cdc050d4e851312d6f4ff7da9bddd404cb16a55684e9c3c26484321f09",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E004",
+      "question_id": "A10",
+      "supports": [
+        "A10-P01",
+        "A10-P02"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "J1",
+      "title": "Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol",
+      "authors": [
+        "Jung Jinsil",
+        "Kim SooHyun",
+        "Park Sunghee",
+        "Hong Jae-Hee"
+      ],
+      "year": "2021",
+      "doi": "10.1007/s10068-020-00873-w",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Jung 等 - 2021 - Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol.pdf",
+      "pdf_page": 1,
+      "section": "Abstract",
+      "quote": "The relative sweetness of g-reb A compared to 5% sucrose was determined using the two-alternative forced choice method. The sensory profiles of g-reb A and its mixtures with allulose and maltitol (1:1 ratio) were compared to those of rebaudioside A, rebaudioside D, rebaudioside M, sucralose, allulose, maltitol, and sucrose using descriptive analysis conducted by eight trained panelists. The relative sweetness of g-reb A was 155, which was lower than that of rebaudioside A. In addition, the bitter taste and aftertaste, astringency, and sweet onset of g-reb A were decreased compared to those of rebaudioside A.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "791ffe73810267ff0ebcdde24cc62ce150a803dd0f158900a168f5725afb47d7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E005",
+      "question_id": "A11",
+      "supports": [
+        "A11-P01",
+        "A11-P02"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "J1",
+      "title": "Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol",
+      "authors": [
+        "Jung Jinsil",
+        "Kim SooHyun",
+        "Park Sunghee",
+        "Hong Jae-Hee"
+      ],
+      "year": "2021",
+      "doi": "10.1007/s10068-020-00873-w",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Jung 等 - 2021 - Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol.pdf",
+      "pdf_page": 1,
+      "section": "Abstract",
+      "quote": "The relative sweetness of g-reb A compared to 5% sucrose was determined using the two-alternative forced choice method. The sensory profiles of g-reb A and its mixtures with allulose and maltitol (1:1 ratio) were compared to those of rebaudioside A, rebaudioside D, rebaudioside M, sucralose, allulose, maltitol, and sucrose using descriptive analysis conducted by eight trained panelists. The relative sweetness of g-reb A was 155, which was lower than that of rebaudioside A. In addition, the bitter taste and aftertaste, astringency, and sweet onset of g-reb A were decreased compared to those of rebaudioside A.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "791ffe73810267ff0ebcdde24cc62ce150a803dd0f158900a168f5725afb47d7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E006",
+      "question_id": "A12",
+      "supports": [
+        "A12-P01",
+        "A12-P02"
+      ],
+      "relationships": [
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "J3",
+      "title": "Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol",
+      "authors": [
+        "Jung Jinsil",
+        "Kim SooHyun",
+        "Park Sunghee",
+        "Hong Jae-Hee"
+      ],
+      "year": "2021",
+      "doi": "10.1007/s10068-020-00873-w",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Jung 等 - 2021 - Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol.pdf",
+      "pdf_page": 3,
+      "section": "Characterization / Sample preparation",
+      "quote": "Samples were prepared to have a sweetness equivalent to that of the 5% sucrose solution based on results of the 2-AFC tests (Table 2). Sweetener blends were prepared by mixing G-reb A solution with Mal or Al solutions at a 1:1 ratio.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "791ffe73810267ff0ebcdde24cc62ce150a803dd0f158900a168f5725afb47d7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E007",
+      "question_id": "A12",
+      "supports": [
+        "A12-P01",
+        "A12-P02",
+        "A12-P03"
+      ],
+      "relationships": [
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "R3",
+      "title": "Temperature of sugar solutions during tasting affects sweetness difference thresholds",
+      "authors": [
+        "Rohm Harald",
+        "Wessel Bettina",
+        "Zahn Susann"
+      ],
+      "year": "2021",
+      "doi": "10.1016/j.lwt.2020.110676",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Rohm 等 - 2021 - Temperature of sugar solutions during tasting affects sweetness difference thresholds.pdf",
+      "pdf_page": 3,
+      "section": "3.2 Effects of temperature on difference thresholds",
+      "quote": "For the sample set with the nominal CR = 2 g/100 g sucrose, the regression line slopes evaluated using their standard errors were not significantly different (P > 0.05). This consequently means that the JNDs do a similar size, as have the corresponding Weber fractions (0.079–0.086). These WF are in line with, e.g., Lundgren, Pangborn, Barylko-Pikielna, and Daget (1976) and Pangborn et al. (1967) who worked with similar CR but lower than WF reported by Gilmore and Murphy (1989) who worked with CR of 5.1, 10.3 and 20.5 g/100 mL. As Schutz and Pilgrim (1957) interpreted the inverse of the regression line slope as JND, methodical aspects should also be considered. For CR = 5 g/100 g, the sample set evaluated at 56 ◦ C is characterized by a significantly lower regression line slope and, therefore, by a higher JND and WF. This does not necessarily contradict",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "62fccdffba21d2896312de7a42d78cc9884f9f99d56499b7ef21cf368518f1d6",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E008",
+      "question_id": "B06",
+      "supports": [
+        "B06-P01",
+        "B06-P02"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "R3b",
+      "title": "Temperature of sugar solutions during tasting affects sweetness difference thresholds",
+      "authors": [
+        "Rohm Harald",
+        "Wessel Bettina",
+        "Zahn Susann"
+      ],
+      "year": "2021",
+      "doi": "10.1016/j.lwt.2020.110676",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Rohm 等 - 2021 - Temperature of sugar solutions during tasting affects sweetness difference thresholds.pdf",
+      "pdf_page": 3,
+      "section": "3.2 / 4 Conclusions",
+      "quote": "Bartoshuk et al. (1982) or Green and Frankman (1988) who reported increased sweetness at higher temperature when directly comparing the samples but means that discrimination at elevated temperature is lower.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "62fccdffba21d2896312de7a42d78cc9884f9f99d56499b7ef21cf368518f1d6",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E009",
+      "question_id": "B06",
+      "supports": [
+        "B06-P03"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "J9",
+      "title": "Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol",
+      "authors": [
+        "Jung Jinsil",
+        "Kim SooHyun",
+        "Park Sunghee",
+        "Hong Jae-Hee"
+      ],
+      "year": "2021",
+      "doi": "10.1007/s10068-020-00873-w",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Jung 等 - 2021 - Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol.pdf",
+      "pdf_page": 9,
+      "section": "Results and discussion, blends",
+      "quote": "Mixing G-reb A with bulk sweeteners did not produce a synergistic increase in sweet taste (Table 5). However, the perceived intensities of bitterness and astringency for G-reb A ? Mal were significantly weaker than for G-reb A alone as well as reb A, D, and M, and they were not significantly stronger than those of Mal. In addition, both the honey flavor and sweetness onset of this mixture were significantly weaker than those of Mal but did not differ significantly from those of G-reb A. G-reb A ? Mal had a stronger sweet aftertaste than Mal, exhibiting an intensity similar to that of G-reb A.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "791ffe73810267ff0ebcdde24cc62ce150a803dd0f158900a168f5725afb47d7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E010",
+      "question_id": "B07",
+      "supports": [
+        "B07-P01",
+        "B07-P02",
+        "B07-P03"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "J9b",
+      "title": "Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol",
+      "authors": [
+        "Jung Jinsil",
+        "Kim SooHyun",
+        "Park Sunghee",
+        "Hong Jae-Hee"
+      ],
+      "year": "2021",
+      "doi": "10.1007/s10068-020-00873-w",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Jung 等 - 2021 - Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol.pdf",
+      "pdf_page": 9,
+      "section": "Conclusion",
+      "quote": "In conclusion, G-reb A and its mixture with maltitol were less bitter and astringent than Reb A, indicating an improved sensory profile, although a synergistic effect on sweetness was not observed. These findings suggest that glycosylation and blending with sugar alcohol are potential strategies for decreasing the undesirable characteristics of natural intense sweeteners. However, this reduction in undesirable attributes was not sufficient to produce a desirable sweetness quality, which is defined as a sensory profile close to that of sugar.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "791ffe73810267ff0ebcdde24cc62ce150a803dd0f158900a168f5725afb47d7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E011",
+      "question_id": "B07",
+      "supports": [
+        "B07-P02",
+        "B07-P03"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "J3",
+      "title": "Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol",
+      "authors": [
+        "Jung Jinsil",
+        "Kim SooHyun",
+        "Park Sunghee",
+        "Hong Jae-Hee"
+      ],
+      "year": "2021",
+      "doi": "10.1007/s10068-020-00873-w",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Jung 等 - 2021 - Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol.pdf",
+      "pdf_page": 3,
+      "section": "Characterization / Sample preparation",
+      "quote": "Samples were prepared to have a sweetness equivalent to that of the 5% sucrose solution based on results of the 2-AFC tests (Table 2). Sweetener blends were prepared by mixing G-reb A solution with Mal or Al solutions at a 1:1 ratio.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "791ffe73810267ff0ebcdde24cc62ce150a803dd0f158900a168f5725afb47d7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E012",
+      "question_id": "B07",
+      "supports": [
+        "B07-P04"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "N2",
+      "title": "Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein",
+      "authors": [
+        "NAKAJIMA Ken-ichiro",
+        "KOIZUMI Ayako",
+        "IIZUKA Kisho",
+        "ITO Keisuke",
+        "MORITA Yuji",
+        "KOIZUMI Taichi",
+        "ASAKURA Tomiko",
+        "SHIMIZU-IBUKA Akiko",
+        "MISAKA Takumi",
+        "ABE Keiko"
+      ],
+      "year": "2011",
+      "doi": "10.1271/bbb.110081",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nakajima 等 - 2011 - Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein.pdf",
+      "pdf_page": 2,
+      "section": "Results, non-acidic compounds",
+      "quote": "In contrast, 100 mM ammonium acetate at pH 8.0 and 100 mM ammonium chloride at pH 6.3 caused intense sweetness of neoculin",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "00fbbc7c6ed736393605c1401f2193320c2f66c3262f64955c136394256d9daa",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E013",
+      "question_id": "B08",
+      "supports": [
+        "B08-P01"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "N3",
+      "title": "Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein",
+      "authors": [
+        "NAKAJIMA Ken-ichiro",
+        "KOIZUMI Ayako",
+        "IIZUKA Kisho",
+        "ITO Keisuke",
+        "MORITA Yuji",
+        "KOIZUMI Taichi",
+        "ASAKURA Tomiko",
+        "SHIMIZU-IBUKA Akiko",
+        "MISAKA Takumi",
+        "ABE Keiko"
+      ],
+      "year": "2011",
+      "doi": "10.1271/bbb.110081",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nakajima 等 - 2011 - Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein.pdf",
+      "pdf_page": 3,
+      "section": "Results, amino acids",
+      "quote": "Finally, amino acids serine (Ser), threonine (Thr), and cysteine (Cys) also had the activity to induce the strong sweet taste of neoculin (Fig. 3B).",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "00fbbc7c6ed736393605c1401f2193320c2f66c3262f64955c136394256d9daa",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E014",
+      "question_id": "B08",
+      "supports": [
+        "B08-P02"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "N2b",
+      "title": "Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein",
+      "authors": [
+        "NAKAJIMA Ken-ichiro",
+        "KOIZUMI Ayako",
+        "IIZUKA Kisho",
+        "ITO Keisuke",
+        "MORITA Yuji",
+        "KOIZUMI Taichi",
+        "ASAKURA Tomiko",
+        "SHIMIZU-IBUKA Akiko",
+        "MISAKA Takumi",
+        "ABE Keiko"
+      ],
+      "year": "2011",
+      "doi": "10.1271/bbb.110081",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nakajima 等 - 2011 - Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein.pdf",
+      "pdf_page": 2,
+      "section": "Results, assay limitation",
+      "quote": "Although we tried to evaluate the acetic acidand ammonium ion-induced sweetness of neoculin in a cell-based assay,14) relatively high concentrations (>20 mM) of them caused non-speciﬁc cell responses even in the absence of neoculin.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "00fbbc7c6ed736393605c1401f2193320c2f66c3262f64955c136394256d9daa",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E015",
+      "question_id": "B08",
+      "supports": [
+        "B08-P03"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "P1",
+      "title": "Individual Differences Among Children in Sucrose Detection Thresholds",
+      "authors": [
+        "Joseph Paule Valery",
+        "Reed Danielle R.",
+        "Mennella Julie A."
+      ],
+      "year": "2016",
+      "doi": "10.1097/nnr.0000000000000138",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Joseph 等 - 2016 - Individual Differences Among Children in Sucrose Detection Thresholds Relationship With Age, Gender.pdf",
+      "pdf_page": 1,
+      "section": "Abstract, Methods and Results",
+      "quote": "Methods: Sucrose detection thresholds in 7- to 14-year-old children were tested individually using a validated, two-alternative, forced-choice, paired-comparison tracking method. Five genetic variants of taste genes were assayed: TAS1R3 and GNAT3 (sweet genes; one variant each) and the bitter receptor gene TAS2R38 (three variants). All children were measured for body weight and height. A subset of these children were measured for the percentage of body fat and waist circumference and provided added sugar intake by 24-hour dietary recall. Results: Sucrose thresholds ranged from 0.23 to 153.8 mM with most of the children completing the threshold task (216/235; 92%). Some children were biologically related (i.e., siblings), and for the genetic analysis, one sibling from each family was studied. Variants in the bitter but not the sweet genes were related to sucrose threshold and sugar intake; children with two bitter-sensitive alleles could detect sucrose at lower concentrations (F(2,165) = 4.55, p = .01; rs1726866) and reported eating more added sugar (% kcal; F(2, 62) = 3.64, p = .03) than did children with less sensitive alleles. Age, gender, and indices of obesity also were related to child-to-child differences in sucrose threshold; girls were more sensitive than boys (t(214) = 2.0, p = .05), older children were more sensitive than younger children (r(214) = .16, p = .02), and fatter (r(84) = .22, p = .05) or more centrally obese children (r(84) = .26, p = .02) were more sensitive relative to others. Discussion: Inborn differences in bitter sensitivity may affect childhood dietary sugar intake with long-term health consequences. There may be a more complex interplay between the developing bitter and sweet taste systems than previously understood.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "7753ff87639e9e75cd9462e068e4d0ccc0c760b6a223a4ccccafce5bdb6e5f10",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E016",
+      "question_id": "B09",
+      "supports": [
+        "B09-P01",
+        "B09-P03"
+      ],
+      "relationships": [
+        "直接支持",
+        "限制条件与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "P8",
+      "title": "Individual Differences Among Children in Sucrose Detection Thresholds",
+      "authors": [
+        "Joseph Paule Valery",
+        "Reed Danielle R.",
+        "Mennella Julie A."
+      ],
+      "year": "2016",
+      "doi": "10.1097/nnr.0000000000000138",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Joseph 等 - 2016 - Individual Differences Among Children in Sucrose Detection Thresholds Relationship With Age, Gender.pdf",
+      "pdf_page": 8,
+      "section": "Discussion, alternative hypotheses",
+      "quote": "Four hypotheses, not mutually exclusive, might account for the observed relationship between variation in the TAS2R38 gene and heightened sweet preferences and reduced sweet sensitivity among children. First, TAS2R38 alleles could lead to proteins with different capacities to bind sucrose directly. Other sweet substances, like saccharin, bind members of the bitter receptor family (Pronin et al., 2007), so this hypothesis has some experimental support. The results were mostly marked for one variant within the protein, which might point to the place in the receptor that binds sucrose (i.e., V262A). Second, the TAS2R38 genes and its alleles could be in linkage disequilibrium with nearby genes that might influence sweet taste perception and sensitivity (referring to the tendency for genes physically close on the chromosome to be coinherited during meiosis). Third, TAS2R38 allele frequency may be an especially sensitive genetic marker of racial ancestry (Guo & Reed, 2001), a variable with large and reliable effect on sweet preference (Mennella et al., 2005) and bitter taste thresholds (Guo & Reed, 2001; Mennella et al., 2010b; Mennella, Pepino, Duke, & Reed, 2010a). Fourth, differences in diet may affect sucrose threshold via changes in gene expression",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "7753ff87639e9e75cd9462e068e4d0ccc0c760b6a223a4ccccafce5bdb6e5f10",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E017",
+      "question_id": "B09",
+      "supports": [
+        "B09-P02"
+      ],
+      "relationships": [
+        "限制条件与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "U1",
+      "title": "Flavor Alterations Associated with Miracle Fruit and Gymnema sylvestre",
+      "authors": [
+        "Hudson Sonia D",
+        "Sims Charles A",
+        "Odabasi Asli Z",
+        "Colquhoun Thomas A",
+        "Snyder Derek J",
+        "Stamps Jennifer J",
+        "Dotson Shawn C",
+        "Puentes Lorenzo",
+        "Bartoshuk Linda M"
+      ],
+      "year": "2018",
+      "doi": "10.1093/chemse/bjy032",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Hudson 等 - 2018 - Flavor Alterations Associated with Miracle Fruit and Gymnema sylvestre.pdf",
+      "pdf_page": 1,
+      "section": "Abstract",
+      "quote": "As previous work had shown, miracle fruit added sweetness to acids, which secondarily reduced sourness (mixture suppression) and Gymnema sylvestre reduced sweetness in sweet foods as well as the sweetness induced by miracle fruit. In this study, multiple regression showed that both sweet and sour contribute to flavor. Gymnema sylvestre reduced the perceived sweet of predominantly sweet foods (chocolate and maple syrup) as expected; reducing the sweet, reduced the flavor. The effects of miracle fruit were complicated by its dual action: intensification of sweet and reduction of sour. Predominantly sour foods (vinegar, lemon, mustard, pickle) were sweetened by miracle fruit but any flavor enhancement associated with the added sweet appears to have been countered by the flavor reduction associated with reduced sourness. Moderately sour foods that are also sweet (tomatoes, strawberries) were sweetened by miracle fruit and thus flavor was enhanced; flavor loss through sour reduction was apparently not sufficient to counter the flavor enhancement due to increased sweet so the net result was that tomato and strawberry flavors were enhanced.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "fe3169cdc050d4e851312d6f4ff7da9bddd404cb16a55684e9c3c26484321f09",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E018",
+      "question_id": "B10",
+      "supports": [
+        "B10-P01",
+        "B10-P02",
+        "B10-P03"
+      ],
+      "relationships": [
+        "直接支持",
+        "证据综合与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G11b",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 11,
+      "section": "5 Conclusions",
+      "quote": "The results demonstrate how vanilla and lemon aromas suppressed grainlike flavor and enhanced odor intensity and perceived sweetness in plant-based yogurts. The following order between the samples was detected in perceived sweetness intensity: unflavored < lemon < vanilla. The sessions with nose clip and without nose clip differed statistically, only in perceived sweetness, demonstrating that the aromas had an impact on the perceived sweetness but not on mouthfeel properties. The study highlights that aroma compounds alone in plant-based yogurts do not easily modify mouthfeel, but aromas or aroma mixtures enhance the perceived sweetness at the beginning of mastication in plantbased yogurts. Thus, when developing healthier and tastier plant-based alternatives, the time dimension should be considered in the aroma–taste and aroma–texture interactions.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E019",
+      "question_id": "B11",
+      "supports": [
+        "B11-P01"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G11",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 11,
+      "section": "Reliability of the Methods",
+      "quote": "The nose clip condition brought substantial evidence to the results between the unflavored and flavored samples. TDS results demonstrated, however, that some aromas could be perceived even when the nose clip was on. This highlights that the nose clip did not block the nasal cavity entirely. Furthermore, we cannot compare the methods, as the panel completed both methods in the same order.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E020",
+      "question_id": "B11",
+      "supports": [
+        "B11-P02",
+        "B11-P03"
+      ],
+      "relationships": [
+        "直接支持",
+        "限制条件与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "P1",
+      "title": "Individual Differences Among Children in Sucrose Detection Thresholds",
+      "authors": [
+        "Joseph Paule Valery",
+        "Reed Danielle R.",
+        "Mennella Julie A."
+      ],
+      "year": "2016",
+      "doi": "10.1097/nnr.0000000000000138",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Joseph 等 - 2016 - Individual Differences Among Children in Sucrose Detection Thresholds Relationship With Age, Gender.pdf",
+      "pdf_page": 1,
+      "section": "Abstract, Methods and Results",
+      "quote": "Methods: Sucrose detection thresholds in 7- to 14-year-old children were tested individually using a validated, two-alternative, forced-choice, paired-comparison tracking method. Five genetic variants of taste genes were assayed: TAS1R3 and GNAT3 (sweet genes; one variant each) and the bitter receptor gene TAS2R38 (three variants). All children were measured for body weight and height. A subset of these children were measured for the percentage of body fat and waist circumference and provided added sugar intake by 24-hour dietary recall. Results: Sucrose thresholds ranged from 0.23 to 153.8 mM with most of the children completing the threshold task (216/235; 92%). Some children were biologically related (i.e., siblings), and for the genetic analysis, one sibling from each family was studied. Variants in the bitter but not the sweet genes were related to sucrose threshold and sugar intake; children with two bitter-sensitive alleles could detect sucrose at lower concentrations (F(2,165) = 4.55, p = .01; rs1726866) and reported eating more added sugar (% kcal; F(2, 62) = 3.64, p = .03) than did children with less sensitive alleles. Age, gender, and indices of obesity also were related to child-to-child differences in sucrose threshold; girls were more sensitive than boys (t(214) = 2.0, p = .05), older children were more sensitive than younger children (r(214) = .16, p = .02), and fatter (r(84) = .22, p = .05) or more centrally obese children (r(84) = .26, p = .02) were more sensitive relative to others. Discussion: Inborn differences in bitter sensitivity may affect childhood dietary sugar intake with long-term health consequences. There may be a more complex interplay between the developing bitter and sweet taste systems than previously understood.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "7753ff87639e9e75cd9462e068e4d0ccc0c760b6a223a4ccccafce5bdb6e5f10",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E021",
+      "question_id": "B12",
+      "supports": [
+        "B12-P01",
+        "B12-P02",
+        "B12-P03"
+      ],
+      "relationships": [
+        "限制条件与研究者推论",
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "T1",
+      "title": "Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matrices",
+      "authors": [
+        "Bertelsen Anne Sjoerup",
+        "Mielby Line Ahm",
+        "Byrne Derek Victor",
+        "Kidmose Ulla"
+      ],
+      "year": "2020",
+      "doi": "10.3390/foods9040395",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Bertelsen 等 - 2020 - Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matri.pdf",
+      "pdf_page": 1,
+      "section": "Abstract, study conditions",
+      "quote": "The present study investigated cross-modal aroma–sweetness–viscosity interactions in two beverage matrices: water and apple nectar. The perceptual effects of vanilla aroma (0–1 mL/kg), sucrose (2.5–7.5% w/w) and pectin (0–0.3% w/w) were studied in both matrices. For each matrix, cross-modal interactions were analyzed with descriptive analysis using a trained sensory panel.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "ea0280eb3ebc7b152b72574d4546dc2383a3807095f2a8e98c98d1aa4cf2b196",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E022",
+      "question_id": "B13",
+      "supports": [
+        "B13-P01",
+        "B13-P02",
+        "B13-P03"
+      ],
+      "relationships": [
+        "限制条件与研究者推论",
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "T9b",
+      "title": "Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matrices",
+      "authors": [
+        "Bertelsen Anne Sjoerup",
+        "Mielby Line Ahm",
+        "Byrne Derek Victor",
+        "Kidmose Ulla"
+      ],
+      "year": "2020",
+      "doi": "10.3390/foods9040395",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Bertelsen 等 - 2020 - Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matri.pdf",
+      "pdf_page": 9,
+      "section": "4.2 Pectin, anomalous sample",
+      "quote": "The addition of pectin was only found to affect sweet taste intensity significantly at the high sucrose concentration in the apple nectar matrix (Figure 3B), where it reduced the sweet taste intensity. The sample P-HS-V, which was the sample with the highest concentration of all design factors, was however evaluated similar to the three center points in terms of sweetness intensity (Figure 3B) and close to the origin of the PCA biplot (Figure 2). The sample P-HS-V therefore seems to have behaved differently than the rest of the samples in the apple nectar matrix. The suppressing effect of pectin on sweet taste intensity is, in this instance, hence questionable. The fact that pectin only affected the intensities of the synthetic fruit aroma and stale off-flavor in the aqueous matrix is in contrast to other findings. Both taste [12,26–29] and aroma [30–34], have been found to decrease when viscosity increased. That only few effects of pectin were seen, even though pectin was still found to increase viscosity, is probably due to the relatively low concentration of pectin used.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "ea0280eb3ebc7b152b72574d4546dc2383a3807095f2a8e98c98d1aa4cf2b196",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E023",
+      "question_id": "B13",
+      "supports": [
+        "B13-P01",
+        "B13-P02",
+        "B13-P03"
+      ],
+      "relationships": [
+        "限制条件与研究者推论",
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "T9",
+      "title": "Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matrices",
+      "authors": [
+        "Bertelsen Anne Sjoerup",
+        "Mielby Line Ahm",
+        "Byrne Derek Victor",
+        "Kidmose Ulla"
+      ],
+      "year": "2020",
+      "doi": "10.3390/foods9040395",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Bertelsen 等 - 2020 - Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matri.pdf",
+      "pdf_page": 9,
+      "section": "4.1 Concentration and matrix",
+      "quote": "In terms of the effect of vanilla aroma in relation to the concentration of sucrose, the addition of vanilla aroma only significantly increased the sweet taste intensity at the low sucrose concentration in the aqueous matrix (Figure 3A). The fact that the cross-modal effect of aroma on sweet taste intensity is more pronounced at lower sucrose concentrations is also in accordance with previous literature [17,19,20,39,46]. However, this is not in accordance with the results from the apple nectar matrix, where the addition of vanilla aroma increased sweet taste intensity independently of the sucrose concentration (Figure 3B).",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "ea0280eb3ebc7b152b72574d4546dc2383a3807095f2a8e98c98d1aa4cf2b196",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E024",
+      "question_id": "C09",
+      "supports": [
+        "C09-P01"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "T9b",
+      "title": "Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matrices",
+      "authors": [
+        "Bertelsen Anne Sjoerup",
+        "Mielby Line Ahm",
+        "Byrne Derek Victor",
+        "Kidmose Ulla"
+      ],
+      "year": "2020",
+      "doi": "10.3390/foods9040395",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Bertelsen 等 - 2020 - Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matri.pdf",
+      "pdf_page": 9,
+      "section": "4.2 Pectin, anomalous sample",
+      "quote": "The addition of pectin was only found to affect sweet taste intensity significantly at the high sucrose concentration in the apple nectar matrix (Figure 3B), where it reduced the sweet taste intensity. The sample P-HS-V, which was the sample with the highest concentration of all design factors, was however evaluated similar to the three center points in terms of sweetness intensity (Figure 3B) and close to the origin of the PCA biplot (Figure 2). The sample P-HS-V therefore seems to have behaved differently than the rest of the samples in the apple nectar matrix. The suppressing effect of pectin on sweet taste intensity is, in this instance, hence questionable. The fact that pectin only affected the intensities of the synthetic fruit aroma and stale off-flavor in the aqueous matrix is in contrast to other findings. Both taste [12,26–29] and aroma [30–34], have been found to decrease when viscosity increased. That only few effects of pectin were seen, even though pectin was still found to increase viscosity, is probably due to the relatively low concentration of pectin used.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "ea0280eb3ebc7b152b72574d4546dc2383a3807095f2a8e98c98d1aa4cf2b196",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E025",
+      "question_id": "C09",
+      "supports": [
+        "C09-P02"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G11b",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 11,
+      "section": "5 Conclusions",
+      "quote": "The results demonstrate how vanilla and lemon aromas suppressed grainlike flavor and enhanced odor intensity and perceived sweetness in plant-based yogurts. The following order between the samples was detected in perceived sweetness intensity: unflavored < lemon < vanilla. The sessions with nose clip and without nose clip differed statistically, only in perceived sweetness, demonstrating that the aromas had an impact on the perceived sweetness but not on mouthfeel properties. The study highlights that aroma compounds alone in plant-based yogurts do not easily modify mouthfeel, but aromas or aroma mixtures enhance the perceived sweetness at the beginning of mastication in plantbased yogurts. Thus, when developing healthier and tastier plant-based alternatives, the time dimension should be considered in the aroma–taste and aroma–texture interactions.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E026",
+      "question_id": "C09",
+      "supports": [
+        "C09-P03",
+        "C09-P04",
+        "C09-P05"
+      ],
+      "relationships": [
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "T1",
+      "title": "Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matrices",
+      "authors": [
+        "Bertelsen Anne Sjoerup",
+        "Mielby Line Ahm",
+        "Byrne Derek Victor",
+        "Kidmose Ulla"
+      ],
+      "year": "2020",
+      "doi": "10.3390/foods9040395",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Bertelsen 等 - 2020 - Ternary Cross-Modal Interactions between Sweetness, Aroma, and Viscosity in Different Beverage Matri.pdf",
+      "pdf_page": 1,
+      "section": "Abstract, study conditions",
+      "quote": "The present study investigated cross-modal aroma–sweetness–viscosity interactions in two beverage matrices: water and apple nectar. The perceptual effects of vanilla aroma (0–1 mL/kg), sucrose (2.5–7.5% w/w) and pectin (0–0.3% w/w) were studied in both matrices. For each matrix, cross-modal interactions were analyzed with descriptive analysis using a trained sensory panel.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "ea0280eb3ebc7b152b72574d4546dc2383a3807095f2a8e98c98d1aa4cf2b196",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E027",
+      "question_id": "C09",
+      "supports": [
+        "C09-P04"
+      ],
+      "relationships": [
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G10",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 10,
+      "section": "Discussion, dynamic perception",
+      "quote": "While GDA results indicate that vanilla aromas enhanced sweetness, TDS results also demonstrate the same: sweetness and vanilla flavor were evaluated at the beginning of the evaluation, highlighting that the interacting properties are perceived simultaneously [38]. Furthermore, it has been captured by Charles et al. that fruity aroma enhances sweetness at the beginning of the evaluation in apples [37]. They hypothesize that volatile compounds are released quickly from the apple tissue, eliciting the sweetness. This emphasizes that the interaction’s timing depends on when the volatile compounds are released, which, in contrast, depends on the aroma compound, its vapor pressure, and the food matrix composition [39,52,53]. Our results also highlight that the first period of mastication is essential for sensory interaction. Thus, the time dimension should be considered when evaluating the aroma–taste and aroma–texture interactions.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E028",
+      "question_id": "C09",
+      "supports": [
+        "C09-P05"
+      ],
+      "relationships": [
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "I14",
+      "title": "Individual Differences in Sweetness Ratings and Cross-Modal Aroma-Taste Interactions",
+      "authors": [
+        "Bertelsen Anne Sjoerup",
+        "Mielby Line Ahm",
+        "Alexi Niki",
+        "Byrne Derek Victor",
+        "Kidmose Ulla"
+      ],
+      "year": "2020",
+      "doi": "10.3390/foods9020146",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Bertelsen 等 - 2020 - Individual Differences in Sweetness Ratings and Cross-Modal Aroma-Taste Interactions.pdf",
+      "pdf_page": 14,
+      "section": "6 Conclusions",
+      "quote": "Among young adult consumers, females were found more susceptible to the sweetness enhancing effect of vanilla aroma than males were. Furthermore, different age effects were found for males and females. For males, a significant cross-modal effect of vanilla aroma on sweet taste intensity was only found for the 22–25-year-olds, but not the 19–21-year-olds. While for females, the 22–25-year-olds were generally found to rate samples sweeter than the 19–21-year-olds. Finally, subjects were separated according to their sweet liker status. Interestingly, the groups identified were found to differ in their ratings of sweet taste intensity, but not in cross-modal effects. Sweet likers, a cluster with a predominance of men, rated sweet taste intensity significantly lower than the sweet dislikers, which were predominantly women. These results indicate that, even within a relatively small target group of young adults, individual differences in perception and in cross-modal interactions exist. These results could be used for more targeted product development and marketing in order to successfully aid sugar reduction and improve healthy eating. Furthermore, these results contribute to our understanding of cross-modal interactions and sensory integration. However, as results are restricted to the aroma and matrix tested, it would be interesting to further investigate this relevant target group with a more realistic matrix and more different aromas.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "763104efb846cfc220d8836798ee40277c001955560370809638fce93598001d",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E029",
+      "question_id": "C10",
+      "supports": [
+        "C10-P01",
+        "C10-P02",
+        "C10-P03",
+        "C10-P05"
+      ],
+      "relationships": [
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G11b",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 11,
+      "section": "5 Conclusions",
+      "quote": "The results demonstrate how vanilla and lemon aromas suppressed grainlike flavor and enhanced odor intensity and perceived sweetness in plant-based yogurts. The following order between the samples was detected in perceived sweetness intensity: unflavored < lemon < vanilla. The sessions with nose clip and without nose clip differed statistically, only in perceived sweetness, demonstrating that the aromas had an impact on the perceived sweetness but not on mouthfeel properties. The study highlights that aroma compounds alone in plant-based yogurts do not easily modify mouthfeel, but aromas or aroma mixtures enhance the perceived sweetness at the beginning of mastication in plantbased yogurts. Thus, when developing healthier and tastier plant-based alternatives, the time dimension should be considered in the aroma–taste and aroma–texture interactions.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E030",
+      "question_id": "C10",
+      "supports": [
+        "C10-P03"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G11",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 11,
+      "section": "Reliability of the Methods",
+      "quote": "The nose clip condition brought substantial evidence to the results between the unflavored and flavored samples. TDS results demonstrated, however, that some aromas could be perceived even when the nose clip was on. This highlights that the nose clip did not block the nasal cavity entirely. Furthermore, we cannot compare the methods, as the panel completed both methods in the same order.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E031",
+      "question_id": "C10",
+      "supports": [
+        "C10-P04",
+        "C10-P05"
+      ],
+      "relationships": [
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "R3",
+      "title": "Temperature of sugar solutions during tasting affects sweetness difference thresholds",
+      "authors": [
+        "Rohm Harald",
+        "Wessel Bettina",
+        "Zahn Susann"
+      ],
+      "year": "2021",
+      "doi": "10.1016/j.lwt.2020.110676",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Rohm 等 - 2021 - Temperature of sugar solutions during tasting affects sweetness difference thresholds.pdf",
+      "pdf_page": 3,
+      "section": "3.2 Effects of temperature on difference thresholds",
+      "quote": "For the sample set with the nominal CR = 2 g/100 g sucrose, the regression line slopes evaluated using their standard errors were not significantly different (P > 0.05). This consequently means that the JNDs do a similar size, as have the corresponding Weber fractions (0.079–0.086). These WF are in line with, e.g., Lundgren, Pangborn, Barylko-Pikielna, and Daget (1976) and Pangborn et al. (1967) who worked with similar CR but lower than WF reported by Gilmore and Murphy (1989) who worked with CR of 5.1, 10.3 and 20.5 g/100 mL. As Schutz and Pilgrim (1957) interpreted the inverse of the regression line slope as JND, methodical aspects should also be considered. For CR = 5 g/100 g, the sample set evaluated at 56 ◦ C is characterized by a significantly lower regression line slope and, therefore, by a higher JND and WF. This does not necessarily contradict",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "62fccdffba21d2896312de7a42d78cc9884f9f99d56499b7ef21cf368518f1d6",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E032",
+      "question_id": "C11",
+      "supports": [
+        "C11-P01",
+        "C11-P04"
+      ],
+      "relationships": [
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "R3b",
+      "title": "Temperature of sugar solutions during tasting affects sweetness difference thresholds",
+      "authors": [
+        "Rohm Harald",
+        "Wessel Bettina",
+        "Zahn Susann"
+      ],
+      "year": "2021",
+      "doi": "10.1016/j.lwt.2020.110676",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Rohm 等 - 2021 - Temperature of sugar solutions during tasting affects sweetness difference thresholds.pdf",
+      "pdf_page": 3,
+      "section": "3.2 / 4 Conclusions",
+      "quote": "Bartoshuk et al. (1982) or Green and Frankman (1988) who reported increased sweetness at higher temperature when directly comparing the samples but means that discrimination at elevated temperature is lower.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "62fccdffba21d2896312de7a42d78cc9884f9f99d56499b7ef21cf368518f1d6",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E033",
+      "question_id": "C11",
+      "supports": [
+        "C11-P01"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "H5",
+      "title": "Quantification of sensory difference thresholds for fat and sweetness in dairy-based emulsions",
+      "authors": [
+        "Hoppert Karin",
+        "Zahn Susann",
+        "Puschmann Antje",
+        "Ullmann Ines",
+        "Rohm Harald"
+      ],
+      "year": "2012",
+      "doi": "10.1016/j.foodqual.2012.03.008",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Hoppert 等 - 2012 - Quantification of sensory difference thresholds for fat and sweetness in dairy-based emulsions.pdf",
+      "pdf_page": 5,
+      "section": "5.2 Results and discussion",
+      "quote": "At constant sugar concentration of 3%, k decreased by less than 0.01 when the fat content was raised from 5 g/100 g to 20 g/100 g (0.067 vs. 0.058, respectively). At 12% sugar concentration, k = 0.066 in case of 5 g/100 g fat, but pronouncedly lower (k = 0.045) for emulsions with 20 g/100 g fat content. This indicates that, despite identical sweetness of the emulsions, the perceptional sensitivity towards sweetness differences in emulsions increases when their fat content is higher.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "8eff94d4663b564bffa22b7e596d7550a7b05b13144d41ea30b32acce19c5572",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E034",
+      "question_id": "C11",
+      "supports": [
+        "C11-P02",
+        "C11-P04",
+        "C11-P05"
+      ],
+      "relationships": [
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "H5n",
+      "title": "Quantification of sensory difference thresholds for fat and sweetness in dairy-based emulsions",
+      "authors": [
+        "Hoppert Karin",
+        "Zahn Susann",
+        "Puschmann Antje",
+        "Ullmann Ines",
+        "Rohm Harald"
+      ],
+      "year": "2012",
+      "doi": "10.1016/j.foodqual.2012.03.008",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Hoppert 等 - 2012 - Quantification of sensory difference thresholds for fat and sweetness in dairy-based emulsions.pdf",
+      "pdf_page": 5,
+      "section": "Table 3 footnote a",
+      "quote": "Reference sugar concentration is expressed as sugar in the aqueous phase (see Table 1). Values in the columns denote difference increments from reference concentration.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "8eff94d4663b564bffa22b7e596d7550a7b05b13144d41ea30b32acce19c5572",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E035",
+      "question_id": "C11",
+      "supports": [
+        "C11-P03"
+      ],
+      "relationships": [
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "R1",
+      "title": "Temperature of sugar solutions during tasting affects sweetness difference thresholds",
+      "authors": [
+        "Rohm Harald",
+        "Wessel Bettina",
+        "Zahn Susann"
+      ],
+      "year": "2021",
+      "doi": "10.1016/j.lwt.2020.110676",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Rohm 等 - 2021 - Temperature of sugar solutions during tasting affects sweetness difference thresholds.pdf",
+      "pdf_page": 1,
+      "section": "Introduction",
+      "quote": "The difference threshold or just-noticeable-difference (JND) is defined as that stimulus concentration difference that, for a given reference concentration CR, is just perceptible by the human (Stone, 1963). For many sensory continua, the relation between JND and CR is constant in a broad concentration range and known as Weber fraction WF (Stone & Sidel, 2004).",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "62fccdffba21d2896312de7a42d78cc9884f9f99d56499b7ef21cf368518f1d6",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E036",
+      "question_id": "C11",
+      "supports": [
+        "C11-P03",
+        "C11-P05"
+      ],
+      "relationships": [
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "S4",
+      "title": "Intracellular acidification is required for full activation of the sweet taste receptor by miraculin",
+      "authors": [
+        "Sanematsu Keisuke",
+        "Kitagawa Masayuki",
+        "Yoshida Ryusuke",
+        "Nirasawa Satoru",
+        "Shigemura Noriatsu",
+        "Ninomiya Yuzo"
+      ],
+      "year": "2016",
+      "doi": "10.1038/srep22807",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Sanematsu 等 - 2016 - Intracellular acidification is required for full activation of the sweet taste receptor by miraculin.pdf",
+      "pdf_page": 4,
+      "section": "Results, intracellular pH",
+      "quote": "In addition, we monitored intracellular pH (pHi) in HEK293 cells stimulated with weak and strong acids at different extracellular pH (pHo) (Fig. 3e and Supplementary Table S4) and examined the relationship between sweet-inducing effect of MCL and pHi (Fig. 3f). Undissociated acids, mainly weak acids, can enter into the intracellular region through the cell membrane, inducing acidification intracellularly. Heightened intracellular acidification was induced by citric acid compared with HCl (Fig. 3e and Supplementary Table S4). At the same pHi, the calcium responses to citric acid and HCl after MCL were essentially the same (Fig. 3f). The pHi-dependent curve of citric acid was close to that of HCl (Fig. 3f), indicating that sweet-inducing effect of MCL is mainly proportional to pHi. Bathing cells in buffer containing NaHCO3 and sodium acetate at neutral pH induces intracellular acidification without changing extracellular pH22. We also tested whether such procedures inducing selective intracellular acidification (pHi: ~6.8 and pHo: 7.2) fully activate the miraculin-bound receptor. After application of MCL, HEK293 cells exhibited no response to these solutions (Supplementary Fig. S2), indicating that both extracellular and intracellular acidification are required for full activation of the sweet taste receptor by MCL.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "a8d441d22311ecac6f4fb48af2fcba8ecc7a9000a5d9e13d27c130d8b5fafadb",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E037",
+      "question_id": "C12",
+      "supports": [
+        "C12-P01",
+        "C12-P02",
+        "C12-P03",
+        "C12-P04"
+      ],
+      "relationships": [
+        "直接支持",
+        "证据层级与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "S4b",
+      "title": "Intracellular acidification is required for full activation of the sweet taste receptor by miraculin",
+      "authors": [
+        "Sanematsu Keisuke",
+        "Kitagawa Masayuki",
+        "Yoshida Ryusuke",
+        "Nirasawa Satoru",
+        "Shigemura Noriatsu",
+        "Ninomiya Yuzo"
+      ],
+      "year": "2016",
+      "doi": "10.1038/srep22807",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Sanematsu 等 - 2016 - Intracellular acidification is required for full activation of the sweet taste receptor by miraculin.pdf",
+      "pdf_page": 4,
+      "section": "Discussion, species specificity",
+      "quote": "MCL induces taste-modifying effects in humans, chimpanzees and rhesus monkeys but not in rodents2,4,5,23. In accordance with those psychophysical and electrophysiological studies, MCL interacted with the human, but not mouse sweet receptor in our sweet receptor assay (Fig. 2), indicating the species-specific effect of MCL.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "a8d441d22311ecac6f4fb48af2fcba8ecc7a9000a5d9e13d27c130d8b5fafadb",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E038",
+      "question_id": "C12",
+      "supports": [
+        "C12-P04"
+      ],
+      "relationships": [
+        "证据层级与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "N2",
+      "title": "Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein",
+      "authors": [
+        "NAKAJIMA Ken-ichiro",
+        "KOIZUMI Ayako",
+        "IIZUKA Kisho",
+        "ITO Keisuke",
+        "MORITA Yuji",
+        "KOIZUMI Taichi",
+        "ASAKURA Tomiko",
+        "SHIMIZU-IBUKA Akiko",
+        "MISAKA Takumi",
+        "ABE Keiko"
+      ],
+      "year": "2011",
+      "doi": "10.1271/bbb.110081",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nakajima 等 - 2011 - Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein.pdf",
+      "pdf_page": 2,
+      "section": "Results, non-acidic compounds",
+      "quote": "In contrast, 100 mM ammonium acetate at pH 8.0 and 100 mM ammonium chloride at pH 6.3 caused intense sweetness of neoculin",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "00fbbc7c6ed736393605c1401f2193320c2f66c3262f64955c136394256d9daa",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E039",
+      "question_id": "C13",
+      "supports": [
+        "C13-P01"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "N3",
+      "title": "Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein",
+      "authors": [
+        "NAKAJIMA Ken-ichiro",
+        "KOIZUMI Ayako",
+        "IIZUKA Kisho",
+        "ITO Keisuke",
+        "MORITA Yuji",
+        "KOIZUMI Taichi",
+        "ASAKURA Tomiko",
+        "SHIMIZU-IBUKA Akiko",
+        "MISAKA Takumi",
+        "ABE Keiko"
+      ],
+      "year": "2011",
+      "doi": "10.1271/bbb.110081",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nakajima 等 - 2011 - Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein.pdf",
+      "pdf_page": 3,
+      "section": "Results, amino acids",
+      "quote": "Finally, amino acids serine (Ser), threonine (Thr), and cysteine (Cys) also had the activity to induce the strong sweet taste of neoculin (Fig. 3B).",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "00fbbc7c6ed736393605c1401f2193320c2f66c3262f64955c136394256d9daa",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E040",
+      "question_id": "C13",
+      "supports": [
+        "C13-P01"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "N2b",
+      "title": "Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein",
+      "authors": [
+        "NAKAJIMA Ken-ichiro",
+        "KOIZUMI Ayako",
+        "IIZUKA Kisho",
+        "ITO Keisuke",
+        "MORITA Yuji",
+        "KOIZUMI Taichi",
+        "ASAKURA Tomiko",
+        "SHIMIZU-IBUKA Akiko",
+        "MISAKA Takumi",
+        "ABE Keiko"
+      ],
+      "year": "2011",
+      "doi": "10.1271/bbb.110081",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Nakajima 等 - 2011 - Non-Acidic Compounds Induce the Intense Sweet Taste of Neoculin, a Taste-Modifying Protein.pdf",
+      "pdf_page": 2,
+      "section": "Results, assay limitation",
+      "quote": "Although we tried to evaluate the acetic acidand ammonium ion-induced sweetness of neoculin in a cell-based assay,14) relatively high concentrations (>20 mM) of them caused non-speciﬁc cell responses even in the absence of neoculin.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "00fbbc7c6ed736393605c1401f2193320c2f66c3262f64955c136394256d9daa",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E041",
+      "question_id": "C13",
+      "supports": [
+        "C13-P02",
+        "C13-P05"
+      ],
+      "relationships": [
+        "直接支持",
+        "证据综合与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "S4",
+      "title": "Intracellular acidification is required for full activation of the sweet taste receptor by miraculin",
+      "authors": [
+        "Sanematsu Keisuke",
+        "Kitagawa Masayuki",
+        "Yoshida Ryusuke",
+        "Nirasawa Satoru",
+        "Shigemura Noriatsu",
+        "Ninomiya Yuzo"
+      ],
+      "year": "2016",
+      "doi": "10.1038/srep22807",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Sanematsu 等 - 2016 - Intracellular acidification is required for full activation of the sweet taste receptor by miraculin.pdf",
+      "pdf_page": 4,
+      "section": "Results, intracellular pH",
+      "quote": "In addition, we monitored intracellular pH (pHi) in HEK293 cells stimulated with weak and strong acids at different extracellular pH (pHo) (Fig. 3e and Supplementary Table S4) and examined the relationship between sweet-inducing effect of MCL and pHi (Fig. 3f). Undissociated acids, mainly weak acids, can enter into the intracellular region through the cell membrane, inducing acidification intracellularly. Heightened intracellular acidification was induced by citric acid compared with HCl (Fig. 3e and Supplementary Table S4). At the same pHi, the calcium responses to citric acid and HCl after MCL were essentially the same (Fig. 3f). The pHi-dependent curve of citric acid was close to that of HCl (Fig. 3f), indicating that sweet-inducing effect of MCL is mainly proportional to pHi. Bathing cells in buffer containing NaHCO3 and sodium acetate at neutral pH induces intracellular acidification without changing extracellular pH22. We also tested whether such procedures inducing selective intracellular acidification (pHi: ~6.8 and pHo: 7.2) fully activate the miraculin-bound receptor. After application of MCL, HEK293 cells exhibited no response to these solutions (Supplementary Fig. S2), indicating that both extracellular and intracellular acidification are required for full activation of the sweet taste receptor by MCL.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "a8d441d22311ecac6f4fb48af2fcba8ecc7a9000a5d9e13d27c130d8b5fafadb",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E042",
+      "question_id": "C13",
+      "supports": [
+        "C13-P03",
+        "C13-P05"
+      ],
+      "relationships": [
+        "直接支持",
+        "证据综合与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "S4b",
+      "title": "Intracellular acidification is required for full activation of the sweet taste receptor by miraculin",
+      "authors": [
+        "Sanematsu Keisuke",
+        "Kitagawa Masayuki",
+        "Yoshida Ryusuke",
+        "Nirasawa Satoru",
+        "Shigemura Noriatsu",
+        "Ninomiya Yuzo"
+      ],
+      "year": "2016",
+      "doi": "10.1038/srep22807",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Sanematsu 等 - 2016 - Intracellular acidification is required for full activation of the sweet taste receptor by miraculin.pdf",
+      "pdf_page": 4,
+      "section": "Discussion, species specificity",
+      "quote": "MCL induces taste-modifying effects in humans, chimpanzees and rhesus monkeys but not in rodents2,4,5,23. In accordance with those psychophysical and electrophysiological studies, MCL interacted with the human, but not mouse sweet receptor in our sweet receptor assay (Fig. 2), indicating the species-specific effect of MCL.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "a8d441d22311ecac6f4fb48af2fcba8ecc7a9000a5d9e13d27c130d8b5fafadb",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E043",
+      "question_id": "C13",
+      "supports": [
+        "C13-P04",
+        "C13-P05"
+      ],
+      "relationships": [
+        "直接支持",
+        "证据综合与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "J8",
+      "title": "Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol",
+      "authors": [
+        "Jung Jinsil",
+        "Kim SooHyun",
+        "Park Sunghee",
+        "Hong Jae-Hee"
+      ],
+      "year": "2021",
+      "doi": "10.1007/s10068-020-00873-w",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Jung 等 - 2021 - Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol.pdf",
+      "pdf_page": 8,
+      "section": "Results and discussion, protocol dependence",
+      "quote": "It must be noted that there were significant differences in sweetness among the samples despite them being formulated to have iso-sweetness to 5% sucrose solution based on the 2-AFC test results (Table 5). This result may be attributable to differences in the tasting protocol. Gwak et al. (2012) suggested that the overall sweetness of a sweetener might be influenced by its temporal profile. In the present study, relative sweetness was determined by assessing sweetness for 5 s while holding a sample in the mouth and then for 5 s after it was expectorated. However, in the descriptive analysis, the measurement of sweetness was divided into three phases: onset, sweetness perceived when holding the sample in the mouth for 5 s, and aftertaste.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "791ffe73810267ff0ebcdde24cc62ce150a803dd0f158900a168f5725afb47d7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E044",
+      "question_id": "C14",
+      "supports": [
+        "C14-P01",
+        "C14-P03"
+      ],
+      "relationships": [
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G10",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 10,
+      "section": "Discussion, dynamic perception",
+      "quote": "While GDA results indicate that vanilla aromas enhanced sweetness, TDS results also demonstrate the same: sweetness and vanilla flavor were evaluated at the beginning of the evaluation, highlighting that the interacting properties are perceived simultaneously [38]. Furthermore, it has been captured by Charles et al. that fruity aroma enhances sweetness at the beginning of the evaluation in apples [37]. They hypothesize that volatile compounds are released quickly from the apple tissue, eliciting the sweetness. This emphasizes that the interaction’s timing depends on when the volatile compounds are released, which, in contrast, depends on the aroma compound, its vapor pressure, and the food matrix composition [39,52,53]. Our results also highlight that the first period of mastication is essential for sensory interaction. Thus, the time dimension should be considered when evaluating the aroma–taste and aroma–texture interactions.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E045",
+      "question_id": "C14",
+      "supports": [
+        "C14-P02",
+        "C14-P03"
+      ],
+      "relationships": [
+        "直接支持",
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G11b",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 11,
+      "section": "5 Conclusions",
+      "quote": "The results demonstrate how vanilla and lemon aromas suppressed grainlike flavor and enhanced odor intensity and perceived sweetness in plant-based yogurts. The following order between the samples was detected in perceived sweetness intensity: unflavored < lemon < vanilla. The sessions with nose clip and without nose clip differed statistically, only in perceived sweetness, demonstrating that the aromas had an impact on the perceived sweetness but not on mouthfeel properties. The study highlights that aroma compounds alone in plant-based yogurts do not easily modify mouthfeel, but aromas or aroma mixtures enhance the perceived sweetness at the beginning of mastication in plantbased yogurts. Thus, when developing healthier and tastier plant-based alternatives, the time dimension should be considered in the aroma–taste and aroma–texture interactions.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E046",
+      "question_id": "C14",
+      "supports": [
+        "C14-P02"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "J8b",
+      "title": "Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol",
+      "authors": [
+        "Jung Jinsil",
+        "Kim SooHyun",
+        "Park Sunghee",
+        "Hong Jae-Hee"
+      ],
+      "year": "2021",
+      "doi": "10.1007/s10068-020-00873-w",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Jung 等 - 2021 - Sweetness profiles of glycosylated rebaudioside A and its binary mixtures with allulose and maltitol.pdf",
+      "pdf_page": 8,
+      "section": "Results and discussion, time-intensity",
+      "quote": "In the present study, the sweetness onset of Sucral appeared slower than that of Suc, which was inconsistent with results reported by Kim et al. (2015), who tracked changes in sweetness over time using a time-intensity test in which panelists focused on only one attribute at a time, i.e., sweetness. In contrast, panelists in the present study attempted to detect the onset of sweetness while holding a sample in their mouth; this protocol might have allowed some sensory interactions, such as the suppression of sweetness by bitterness, to influence the panelists’ perception of sweetness.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "791ffe73810267ff0ebcdde24cc62ce150a803dd0f158900a168f5725afb47d7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E047",
+      "question_id": "C14",
+      "supports": [
+        "C14-P04"
+      ],
+      "relationships": [
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G5",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 5,
+      "section": "TDS method",
+      "quote": "In order to familiarize the panelists with the TDS method, a warm-up session with oat-based yogurt was organized in the last training session. TDS questions were asked after the GDA. In total, seven attributes, including thickness, stickiness, melting sensation, sweetness, grain-like flavor, vanilla flavor, and lemon flavor, were included in the TDS. Panelists were instructed to evaluate the samples’ sensory properties and select the term that caught their attention at each moment of the evaluation [43]. They were instructed to consume the sample for at least 5 s and no more than 30 s. The software showed the clock during the evaluation.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E048",
+      "question_id": "C14",
+      "supports": [
+        "C14-P04"
+      ],
+      "relationships": [
+        "方法依据与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "G11",
+      "title": "The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with Static and Dynamic Methods",
+      "authors": [
+        "Greis Maija",
+        "Kukkonen Roosa",
+        "Lampi Anna-Maija",
+        "Seppä Laila",
+        "Partanen Riitta",
+        "Sandell Mari"
+      ],
+      "year": "2022",
+      "doi": "10.3390/foods11142030",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Greis 等 - 2022 - The Impact of Vanilla and Lemon Aromas on Sensory Perception in Plant-Based Yogurts Measured with St.pdf",
+      "pdf_page": 11,
+      "section": "Reliability of the Methods",
+      "quote": "The nose clip condition brought substantial evidence to the results between the unflavored and flavored samples. TDS results demonstrated, however, that some aromas could be perceived even when the nose clip was on. This highlights that the nose clip did not block the nasal cavity entirely. Furthermore, we cannot compare the methods, as the panel completed both methods in the same order.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "585cfcc18042ed3c782910ad7901284279e8ec6b9c5f7c072b17b5f3c52bf927",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E049",
+      "question_id": "C14",
+      "supports": [
+        "C14-P05"
+      ],
+      "relationships": [
+        "直接支持"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "Y1",
+      "title": "Consuming Gymnema sylvestre Reduces the Desire for High-Sugar Sweet Foods",
+      "authors": [
+        "Turner Sophie",
+        "Diako Charles",
+        "Kruger Rozanne",
+        "Wong Marie",
+        "Wood Warrick",
+        "Rutherfurd-Markwick Kay",
+        "Ali Ajmol"
+      ],
+      "year": "2020",
+      "doi": "10.3390/nu12041046",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Turner 等 - 2020 - Consuming Gymnema sylvestre Reduces the Desire for High-Sugar Sweet Foods.pdf",
+      "pdf_page": 1,
+      "section": "Abstract, Methods and Results",
+      "quote": "Methods. This study utilized a single-blind, crossover design comparing the consumption of a mint (dissolving tablet) containing 4 mg of gymnemic acids with an isocaloric placebo in 56 healthy young men and women. Participants were given samples of their favourite chocolate (varied between 14–18 g; energy varied between 292–370 kJ) and were directed to rate on their hunger on 100-mm visual analogue scales 30 s prior to consuming high-sugar sweet food (chocolate). They then consumed the GS mint or placebo mint and rated their perceived pleasantness and desire for more chocolate on separate visual analogue scales immediately following consumption of the high-sugar sweet food before being offered up to five additional servings (and asked to rate hunger, pleasantness and desire to eat more chocolate between each ingestion period). Results. The number of chocolate bars eaten decreased by 0.48 bars (21.3%) within a 15-min period of consumption of the GS mint (p = 0.006). Desire to eat more of the high-sugar sweet food (p = 0.011) and pleasantness of the high-sugar sweet food (p < 0.001) was reduced after GS mint intake.",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "d67b0cc69706d873d3d92557efd6615518d51a1dc243da84d5f95d2bfcf97db7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E050",
+      "question_id": "C15",
+      "supports": [
+        "C15-P01",
+        "C15-P02",
+        "C15-P03"
+      ],
+      "relationships": [
+        "限制条件与研究者推论"
+      ],
+      "human_verification": "待核对"
+    },
+    {
+      "source_key": "Y12",
+      "title": "Consuming Gymnema sylvestre Reduces the Desire for High-Sugar Sweet Foods",
+      "authors": [
+        "Turner Sophie",
+        "Diako Charles",
+        "Kruger Rozanne",
+        "Wong Marie",
+        "Wood Warrick",
+        "Rutherfurd-Markwick Kay",
+        "Ali Ajmol"
+      ],
+      "year": "2020",
+      "doi": "10.3390/nu12041046",
+      "pdf_path": "SweetSeek_paper_database/sweetness/papers/Turner 等 - 2020 - Consuming Gymnema sylvestre Reduces the Desire for High-Sugar Sweet Foods.pdf",
+      "pdf_page": 12,
+      "section": "Limitations and future research",
+      "quote": "To the best of our knowledge no evidence exists about the effects of long-term (chronic) intake of gymnema-products for its anti-sweetness effects. The expected length of sweet taste suppression for one GS mint is 30 to 60 min (based on manufacturer guidelines). Future research should explore the effects of chronic consumption of gymnema sylvestre products and the impact of consumption on free-living, non-diabetic adults, including whether the GS mint would be effective at altering sugar consumption habits",
+      "quote_normalization": "仅合并PDF提取文本的换行与连续空白；未翻译、删句或拼接不连续原文。",
+      "pdf_sha256": "d67b0cc69706d873d3d92557efd6615518d51a1dc243da84d5f95d2bfcf97db7",
+      "verification": "已由AI从本地PDF定位；待人工核对",
+      "kb_hit_text": null,
+      "evidence_id": "B02-E051",
+      "question_id": "C15",
+      "supports": [
+        "C15-P01",
+        "C15-P02",
+        "C15-P03"
+      ],
+      "relationships": [
+        "限制条件与研究者推论"
+      ],
+      "human_verification": "待核对"
+    }
+  ]
+}

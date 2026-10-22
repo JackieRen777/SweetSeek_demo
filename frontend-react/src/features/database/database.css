@@ -1,5 +1,10 @@
 .sdb-shell{--ink:#132238;--muted:#687789;--line:#dfe7ee;--blue:#357bd8;--blue-soft:#eef5fc;--green:#278263;--amber:#b57719;--red:#bc4a4a;--shadow-sm:0 2px 6px rgba(0,0,0,.05);--shadow-md:0 3px 10px rgba(0,0,0,.08);--shadow-lg:0 4px 16px rgba(0,0,0,.1);display:grid;grid-template-columns:244px minmax(0,1fr);width:100%;height:100%;background:#f5f7fa;color:var(--ink);text-align:left}
 .sdb-shell *{box-sizing:border-box;letter-spacing:0}
+/* Keep the legal footer close to each page's final content at every breakpoint. */
+.sdb-main > .sdb-page{padding-bottom:20px}
+.sdb-main > .sdb-home{min-height:0}
+.sdb-home > .sdb-home-content{padding-bottom:16px}
+.sdb-home-content > .sdb-release-summary{padding-bottom:20px;border-bottom:0}
 .sdb-shell{position:relative;overflow:hidden}
 .sdb-main{position:relative;background:#f5f7fa}
 .sdb-pubchem-cell{display:flex;flex-direction:column;align-items:flex-start;gap:3px}.sdb-discrepancy{display:inline-flex;align-items:center;gap:4px;color:#a53f36;font-size:10px;font-weight:800}
@@ -34,7 +39,7 @@
 .sdb-product-brand>span:last-child{display:flex;flex-direction:column}.sdb-product-brand strong{font-size:17px;line-height:1.15}.sdb-product-brand small{font-size:10px;color:var(--muted);margin-top:3px}
 .sdb-product-header nav{display:flex;height:100%;align-items:stretch}.sdb-product-header nav button{position:relative;border:0;background:transparent;padding:0 13px;color:#526173;font-size:14px;font-weight:700;display:flex;align-items:center;gap:5px;white-space:nowrap}.sdb-product-header nav button:hover{color:#276cb8}.sdb-product-header nav button.active{color:#2269b7}.sdb-product-header nav button.active:after{content:"";position:absolute;left:13px;right:13px;bottom:0;height:3px;background:#357bd8}.sdb-product-header nav .sdb-nav-lock{width:11px!important;height:11px}
 .sdb-header-actions{justify-self:end;display:flex;align-items:center;gap:13px}.sdb-return{height:34px;border:1px solid #d7e1e9;background:#fff;border-radius:5px;padding:0 10px;display:flex;align-items:center;gap:6px;color:#415267;font-size:11px;font-weight:700}.sdb-return:hover{border-color:#93b4d6;color:#2669b3}.sdb-return svg{width:14px}.sdb-menu{display:none}
-.sdb-mobile-context{display:none}.sdb-main{flex:1;height:auto;padding:0;overflow:auto;background:#f7f9fb}.sdb-home{min-height:100%;background:#f7f9fb}.sdb-home-content{max-width:1320px;margin:0 auto;padding:0 48px 80px}
+.sdb-mobile-context{display:none}.sdb-main{flex:1;height:auto;padding:0;overflow:auto;background:#f7f9fb}.sdb-home{min-height:calc(100% - var(--footer-height));background:#f7f9fb}.sdb-home-content{max-width:1320px;margin:0 auto;padding:0 48px 24px}
 
 /* Portal hero */
 .sdb-hero{position:relative;overflow:hidden;background:#eef5f8;border-bottom:1px solid #dce6eb}.sdb-hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.42),rgba(255,255,255,0) 66%);pointer-events:none}.sdb-hero-inner{position:relative;min-height:510px;max-width:1320px;margin:0 auto;padding:58px 48px 48px;display:grid;grid-template-columns:minmax(0,1fr) minmax(560px,600px);gap:46px;align-items:center}
