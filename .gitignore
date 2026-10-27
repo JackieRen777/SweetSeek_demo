@@ -161,6 +161,12 @@ data/citations/crossref-cache.json
 
 # Runtime PID files
 *.pid
+/runtime/
+# Local experiment outputs and materialized index snapshots are not release assets.
+Experiment/development/*/
+!Experiment/development/versions/
+Experiment/resources/index_snapshot_*/
+Experiment/annotations/*.inspect.ndjson
 
 # Personal idea pool (not part of the codebase)
 inspirations/

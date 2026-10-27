@@ -18,7 +18,10 @@ for command in git npm python3 rsync ssh tar; do require_command "$command"; don
 
 cd "$PROJECT_ROOT"
 [[ "$(git branch --show-current)" == main ]] || die "production releases require the main branch"
-[[ -z "$(git status --porcelain --untracked-files=normal)" ]] || \
+# These local research assets are tested locally but never sent to production.
+release_paths=(. ':!Experiment' ':!evaluation' ':!tests' ':!services/sweet_*'
+  ':!docs/ui-versions' ':!scripts/revise_intro_manual_20261023.py')
+[[ -z "$(git status --porcelain --untracked-files=normal -- "${release_paths[@]}")" ]] || \
   die "working tree is not clean; commit the exact version before deployment"
 
 commit="$(git rev-parse HEAD)"
@@ -61,8 +64,8 @@ rm -rf "$asset_dir"
 mkdir -p "$asset_dir"
 source_archive="sweetseek-source-$commit.tar.gz"
 frontend_archive="sweetseek-frontend-$commit.tar.gz"
-git archive --format=tar.gz --output="$asset_dir/$source_archive" HEAD
-tar -czf "$asset_dir/$frontend_archive" -C frontend-react/dist .
+git archive --format=tar.gz --output="$asset_dir/$source_archive" HEAD -- "${release_paths[@]}"
+COPYFILE_DISABLE=1 tar --no-xattrs -czf "$asset_dir/$frontend_archive" -C frontend-react/dist .
 cp "$requirements_path" "$asset_dir/requirements-resolved-py311-linux.txt"
 cp "$archive_path" "$asset_dir/$archive_name"
 

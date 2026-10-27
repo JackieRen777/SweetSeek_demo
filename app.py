@@ -34,6 +34,7 @@ from logger import setup_logger
 from services.dependencies import build_services
 from knowledge_paths import get_domain_paths, get_runtime_metadata_path
 from services.sweetmeta_api import create_sweetmeta_blueprint
+from services.usage_analytics import create_usage_blueprint
 
 # NOTE: 文件中的函数多数通过 Flask 的 @app.route 装饰器在运行时被调用。
 # 静态分析工具（如 vulture）会将这些运行时注册的路由误判为未使用，
@@ -101,6 +102,7 @@ def validate_config():
 
 app = Flask(__name__)
 app.register_blueprint(create_sweetmeta_blueprint())
+app.register_blueprint(create_usage_blueprint())
 
 _legacy_structure_tools = os.getenv("STRUCTURE_TOOLS_ENABLED", "false").strip().lower() in {
     "1", "true", "yes"

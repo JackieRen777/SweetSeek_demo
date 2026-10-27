@@ -309,6 +309,7 @@ else
 fi
 
 install -d -o www -g www -m 0750 "$BASE/shared/logs"
+install -d -o www -g www -m 0750 "$BASE/shared/analytics"
 cat > "$STATE/release.env.next" <<ENV
 PERSIST_DIR=$BASE/indexes/sweetness
 DUAL_PROTEIN_PERSIST_DIR=$BASE/indexes/dual_protein
@@ -329,6 +330,7 @@ EMBED_BATCH_SIZE=8
 EMBED_NUM_THREADS=1
 EMBED_DISABLE_TORCH_DYNAMO=true
 LOG_DIR=$BASE/shared/logs
+USAGE_ANALYTICS_DB_PATH=$BASE/shared/analytics/usage.sqlite3
 SWEETMETA_DB_PATH=$RELEASE/outputs/sweetmeta-reviewed-v107/$SWEETMETA_DATABASE
 RAG_EAGER_INIT=false
 RAG_ALLOW_AUTO_BUILD=false

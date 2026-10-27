@@ -1,6 +1,7 @@
 import type { ResearchQAConfig } from '../encapsulation/researchQAConfig';
 
 export const proteoglycanQAConfig: ResearchQAConfig = {
+  analyticsDomain: 'proteoglycan',
   apiBase: '/api/proteoglycan',
   title: 'Pro-glycan Q&A',
   subtitle: 'Protein-polysaccharide interactions and functional systems',

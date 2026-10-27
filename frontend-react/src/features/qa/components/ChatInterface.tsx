@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import UnifiedQAInterface from '../../../components/ui/UnifiedQAInterface';
+import { trackQuestionSent } from '../../../lib/usageAnalytics';
 import AnswerContent from '../../encapsulation/components/AnswerContent';
 import type { EncapsulationReference } from '../../encapsulation/types';
 
@@ -88,6 +89,7 @@ const ChatInterface: React.FC = () => {
   const send = async () => {
     const question = input.trim();
     if (!question || typing) return;
+    trackQuestionSent('sweetness');
 
     setInput('');
     setTyping(true);

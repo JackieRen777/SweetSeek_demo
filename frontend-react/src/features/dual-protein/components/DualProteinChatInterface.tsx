@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import UnifiedQAInterface from '../../../components/ui/UnifiedQAInterface';
+import { trackQuestionSent } from '../../../lib/usageAnalytics';
 import AnswerContent from '../../encapsulation/components/AnswerContent';
 import type { EncapsulationReference } from '../../encapsulation/types';
 
@@ -85,6 +86,7 @@ const DualProteinChatInterface: React.FC = () => {
   const send = async () => {
     const question = input.trim();
     if (!question || typing) return;
+    trackQuestionSent('dual-protein');
     setInput('');
     setTyping(true);
     setStatus('正在检索文献...');

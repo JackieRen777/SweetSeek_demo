@@ -226,7 +226,7 @@ function App() {
           {/* Section 1: Hero */}
           <div className="w-full h-[100vh] pt-[120px] overflow-hidden relative">
             <ErrorBoundary name="HeroSection">
-              <Hero onNext={() => navigateTo(1)} />
+              <Hero onNext={() => navigateTo(1)} active={!activeFeature && activeScreen === 0} />
             </ErrorBoundary>
           </div>
 

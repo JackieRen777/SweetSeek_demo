@@ -4,6 +4,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ProteoglycanChatInterface from './ProteoglycanChatInterface';
 
+vi.mock('../../../lib/usageAnalytics', () => ({ trackQuestionSent: vi.fn() }));
+
 describe('Pro-glycan Q&A', () => {
   beforeEach(() => {
     vi.useFakeTimers();

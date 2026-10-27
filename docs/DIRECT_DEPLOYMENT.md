@@ -32,9 +32,12 @@ Build, upload, activate, verify, and observe:
 bash scripts/maintenance/deploy/deploy_from_local.sh
 ```
 
-The script deliberately refuses dirty worktrees. It never uploads `.env`, the
-local deploy configuration, untracked files, local databases, indexes, or
-dependency directories because the source archive is produced from `HEAD`.
+The script refuses uncommitted production changes. Local research changes may
+remain in the working tree. The source archive is produced from `HEAD`, with
+`Experiment/`, `evaluation/`, test files, experimental `services/sweet_*`
+modules, local UI snapshots, and the experiment document-generation script
+explicitly excluded. These exclusions apply even to already tracked files.
+Local databases, indexes, credentials and dependency directories are not sent.
 
 The GitHub workflow remains available as a secondary deployment path. A local
 release is not considered fully backed up until its commit has later been

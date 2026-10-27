@@ -95,7 +95,7 @@ class SweetnessQueryExpander:
                 matched_concepts.add(standard)
         
         # 为每个匹配的概念添加同义词
-        for concept in matched_concepts:
+        for concept in sorted(matched_concepts):
             # 添加甜味剂同义词
             if concept in self.sweetener_synonyms:
                 expanded_terms.update(self.sweetener_synonyms[concept])
@@ -105,13 +105,13 @@ class SweetnessQueryExpander:
                 expanded_terms.update(self.concept_expansion[concept])
         
         # 构建扩展查询
-        all_terms = [query] + list(expanded_terms)
+        all_terms = [query] + sorted(expanded_terms)
         search_query = " OR ".join(all_terms[:10])  # 限制最多10个术语
         
         return {
             'original': query,
-            'matched_concepts': list(matched_concepts),
-            'expanded_terms': list(expanded_terms),
+            'matched_concepts': sorted(matched_concepts),
+            'expanded_terms': sorted(expanded_terms),
             'search_query': search_query
         }
     

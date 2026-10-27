@@ -5,6 +5,7 @@ import AnswerContent from './AnswerContent';
 import type { ChatMessage, EncapsulationReference } from '../types';
 import { isNearBottom } from '../scrollUtils';
 import { encapsulationQAConfig, type ResearchQAConfig } from '../researchQAConfig';
+import { trackQuestionSent } from '../../../lib/usageAnalytics';
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const CONVERSATION_REVEAL_MS = 320;
@@ -88,6 +89,7 @@ const EncapsulationChatInterface: React.FC<{ config?: ResearchQAConfig }> = ({
   const send = async () => {
     const question = input.trim();
     if (!question || typing) return;
+    trackQuestionSent(config.analyticsDomain);
 
     const assistantId = makeId();
     if (phase === 'intro') {

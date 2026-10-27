@@ -1,4 +1,7 @@
+import type { QADomain } from '../../lib/usageAnalytics';
+
 export interface ResearchQAConfig {
+  analyticsDomain: QADomain;
   apiBase: string;
   title: string;
   subtitle: string;
@@ -10,6 +13,7 @@ export interface ResearchQAConfig {
 }
 
 export const encapsulationQAConfig: ResearchQAConfig = {
+  analyticsDomain: 'encapsulation',
   apiBase: '/api/encapsulation',
   title: 'Explore encapsulation science',
   subtitle: 'from precise encapsulation to targeted release',
